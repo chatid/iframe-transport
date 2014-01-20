@@ -19,7 +19,9 @@
     return t == 'function' || (!!(t == 'object' && object[property])) || t == 'unknown';
   }
 
-  var support = {};
+  var support = {
+    storageEventTarget: ('onstorage' in document) ? document : window
+  };
 
   if (has(window, 'addEventListener')) {
     support.on = function(target, name, callback) {
@@ -153,6 +155,11 @@
         if (evt.origin == self.parentOrigin) {
           self._receiveMessage(JSON.parse(evt.data));
         }
+      });
+
+      var target = support.storageEventTarget;
+      support.on(target, 'storage', function(evt) {
+        console.log('storage evt', evt);
       });
     },
 

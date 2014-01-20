@@ -12,7 +12,7 @@
       store = new IFS.Parent('http://127.0.0.1:4000', '/example/child/index.html', 'chatid', function() {
         store.set('herp', 'sucka', function() {
           store.get('herp', function(resp) {
-            alert('got ' + resp);
+            console.log('got', resp);
           })
         });
       });

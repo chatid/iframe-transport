@@ -4,12 +4,12 @@
 
     <title>Iframe Storage | Parent</title>
 
-    <script type='text/javascript' src='../../vendor/domready.js'></script>
-    <script type='text/javascript' src='../../ifs.js'></script>
+    <script type='text/javascript' src='../vendor/domready.js'></script>
+    <script type='text/javascript' src='../ifs.js'></script>
     <script type='text/javascript'>
     var store;
     domready(function() {
-      store = new IFS.Parent('http://127.0.0.1:4000', '/example/child/index.html', 'chatid', function() {
+      store = new IFS.Parent('http://127.0.0.1:4000', '/example/child.html', 'chatid', function() {
         store.set('herp', 'sucka', function() {
           store.get('herp', function(resp) {
             console.log('got', resp);

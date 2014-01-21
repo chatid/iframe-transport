@@ -7,41 +7,15 @@
 
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define(['domready'], factory);
+    define('ift', ['domready'], factory);
   } else {
-    root.IFS = factory(root.domready);
+    root.IFT = factory(root.domready);
   }
 }(this, function() {
 
-  // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
-  function has(object, property){
-    var t = typeof object[property];
-    return t == 'function' || (!!(t == 'object' && object[property])) || t == 'unknown';
-  }
+  var IFT, Parent, Child;
 
-  var support = {
-    storageEventTarget: ('onstorage' in document ? document : window)
-  };
-
-  if (has(window, 'addEventListener')) {
-    support.on = function(target, name, callback) {
-      target.addEventListener(name, callback, false);
-    }
-    support.off = function(target, name, callback) {
-      target.removeEventListener(name, callback, false);
-    }
-  } else if (has(window, 'attachEvent')) {
-    support.on = function(object, name, callback) {
-      object.attachEvent('on' + name, callback);
-    }
-    support.off = function(object, name, callback) {
-      object.detachEvent('on' + name, callback);
-    }
-  }
-
-  var IFS = {};
-
-  IFS.Parent = function(childOrigin, path, name, callback) {
+  Parent = function(childOrigin, path, name, callback) {
     this.childOrigin = childOrigin;
     this.childUri = childOrigin + path;
     this.name = name;
@@ -53,23 +27,19 @@
     this._listen();
   };
 
-  IFS.Parent.prototype = {
+  Parent.prototype = {
 
-    get: function(key, callback) {
-      this._callMethod('get', [key], callback);
-    },
-
-    set: function(key, value, options, callback) {
-      if (typeof options === 'function') {
-        callback = options;
-        options = {};
+    send: function(method, args, callback) {
+      var params = {
+        method: method,
+        args: args
+      };
+      if (typeof callback === 'function') {
+        params.id = this._addCall(callback);
       }
 
-      this._callMethod('set', [key, value, options], callback);
-    },
-
-    unset: function(key, callback) {
-      this._callMethod('unset', [key], callback);
+      var message = JSON.stringify(params);
+      this.iframe.contentWindow.postMessage(message, this.childOrigin);
     },
 
     _listen: function() {
@@ -84,19 +54,6 @@
     _addCall: function(callback) {
       this._queue[++this._counter] = callback;
       return this._counter;
-    },
-
-    _callMethod: function(method, args, callback) {
-      var params = {
-        method: method,
-        args: args
-      };
-      if (typeof callback === 'function') {
-        params.id = this._addCall(callback);
-      }
-
-      var message = JSON.stringify(params);
-      this.iframe.contentWindow.postMessage(message, this.childOrigin);
     },
 
     _receiveMessage: function(message) {
@@ -128,26 +85,15 @@
 
   };
 
-  IFS.Child = function(parentOrigin) {
+  Child = function(parentOrigin, client) {
     this.parent = window.parent;
     this.parentOrigin = parentOrigin;
+    this.client = client;
 
     this._listen();
   };
 
-  IFS.Child.prototype = {
-
-    get: function(key) {
-      return localStorage.getItem(key);
-    },
-
-    set: function(key, value, options) {
-      return localStorage.setItem(key, value);
-    },
-
-    unset: function(key) {
-      return localStorage.removeItem(key);
-    },
+  Child.prototype = {
 
     _listen: function() {
       var self = this;
@@ -155,11 +101,6 @@
         if (evt.origin == self.parentOrigin) {
           self._receiveMessage(JSON.parse(evt.data));
         }
-      });
-
-      var target = support.storageEventTarget;
-      support.on(target, 'storage', function(evt) {
-        console.log('storage evt', evt);
       });
     },
 
@@ -179,16 +120,22 @@
           method = message.method,
           args = message.args || [];
 
-      if (!method || !this[method])
+      if (!method || !this.client[method])
         return;
 
-      var result = this[method].apply(this, args);
+      var result = this.client[method].apply(this, args);
 
       if (id !== undefined && id !== null) this._fireCallback(id, result);
     }
 
   };
 
-  return IFS;
+  IFT = {
+    Parent: Parent,
+    Child: Child,
+    Client: {}
+  }
+
+  return IFT;
 
 }));

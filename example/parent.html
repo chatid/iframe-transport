@@ -5,11 +5,14 @@
     <title>Iframe Storage | Parent</title>
 
     <script type='text/javascript' src='../vendor/domready.js'></script>
-    <script type='text/javascript' src='../ifs.js'></script>
+    <script type='text/javascript' src='../library/support.js'></script>
+    <script type='text/javascript' src='../library/ift.js'></script>
+    <script type='text/javascript' src='../library/client/local-storage.js'></script>
     <script type='text/javascript'>
-    var store;
+    var store, ift;
     domready(function() {
-      store = new IFS.Parent('http://127.0.0.1:4000', '/example/child.html', 'chatid', function() {
+      ift = new IFT.Parent('http://127.0.0.1:4000', '/example/child.html', 'chatid', function() {
+        store = new IFT.Client.LS.Parent(ift);
         store.set('herp', 'sucka', function() {
           store.get('herp', function(resp) {
             console.log('got', resp);

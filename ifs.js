@@ -20,7 +20,7 @@
   }
 
   var support = {
-    storageEventTarget: ('onstorage' in document) ? document : window
+    storageEventTarget: ('onstorage' in document ? document : window)
   };
 
   if (has(window, 'addEventListener')) {
@@ -62,7 +62,7 @@
     set: function(key, value, options, callback) {
       if (typeof options === 'function') {
         callback = options;
-        options = {}
+        options = {};
       }
 
       this._callMethod('set', [key, value, options], callback);

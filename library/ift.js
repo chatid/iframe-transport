@@ -67,8 +67,8 @@
 
     _createIframe: function(uri, name, callback) {
       var iframe = document.createElement('iframe');
-      iframe.id = 'ifs_' + name;
-      iframe.name = 'ifs_' + name;
+      iframe.id = 'ift_' + name;
+      iframe.name = 'ift_' + name;
       iframe.style.position = 'absolute';
       iframe.style.top = '-2000px';
       iframe.style.left = '0px';

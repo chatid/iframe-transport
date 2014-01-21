@@ -8,7 +8,8 @@
     <script type='text/javascript' src='../library/ift.js'></script>
     <script type='text/javascript' src='../library/client/local-storage.js'></script>
     <script type='text/javascript'>
-    var ift = new IFT.Child('http://127.0.0.1:8000', new IFT.Client.LS.Child());
+    var ift = new IFT.Child('http://127.0.0.1:8000');
+    var client = ift.client('ls');
     </script>
 
   </head>

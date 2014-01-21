@@ -12,12 +12,18 @@
     var store, ift;
     domready(function() {
       ift = new IFT.Parent('http://127.0.0.1:4000', '/example/child.html', 'chatid', function() {
-        store = new IFT.Client.LS.Parent(ift);
+        store = ift.client('ls');
+
+        store.on('change', function() {
+          console.log('change event', arguments);
+        });
+
         store.set('herp', 'sucka', function() {
           store.get('herp', function(resp) {
             console.log('got', resp);
-          })
+          });
         });
+
       });
     });
     </script>

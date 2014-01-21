@@ -13,16 +13,15 @@
   }
 }(this, function(IFT) {
 
-  var Parent, Child;
+  var Parent = IFT.Client.extend({
 
-  Parent = function(ift) {
-    this.ift = ift;
-  }
-
-  Parent.prototype = {
+    constructor: function(ift, id) {
+      this.id = id || 'ls';
+      IFT.Client.apply(this, arguments);
+    },
 
     get: function(key, callback) {
-      this.ift.send('get', [key], callback);
+      this.send('invoke', 'get', [key], callback);
     },
 
     set: function(key, value, options, callback) {
@@ -31,20 +30,24 @@
         options = {};
       }
 
-      this.ift.send('set', [key, value, options], callback);
+      options = options || {};
+
+      this.send('invoke', 'set', [key, value, options], callback);
     },
 
     unset: function(key, callback) {
-      this.ift.send('unset', [key], callback);
+      this.send('invoke', 'unset', [key], callback);
     }
 
-  };
+  });
 
-  Child = function() {
-    this._listen();
-  };
+  var Child = IFT.Client.extend({
 
-  Child.prototype = {
+    constructor: function(ift, id) {
+      this.id = id || 'ls';
+      this._listen();
+      IFT.Client.apply(this, arguments);
+    },
 
     get: function(key) {
       return localStorage.getItem(key);
@@ -59,18 +62,17 @@
     },
 
     _listen: function() {
+      var self = this;
       var target = support.storageEventTarget;
       support.on(target, 'storage', function(evt) {
-        console.log('storage evt', evt);
+        self.send('trigger', 'change', [evt.key, evt.oldValue, evt.newValue]);
       });
     }
 
-  };
+  });
 
-  IFT.Client.LS = {
-    Parent: Parent,
-    Child: Child
-  }
+  IFT.Client.register('ls', 'parent', Parent);
+  IFT.Client.register('ls', 'child', Child);
 
   return IFT;
 

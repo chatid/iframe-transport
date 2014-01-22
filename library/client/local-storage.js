@@ -71,8 +71,7 @@
 
   });
 
-  IFT.Client.register('ls', 'parent', Parent);
-  IFT.Client.register('ls', 'child', Child);
+  IFT.Client.register('ls', Parent, Child);
 
   return IFT;
 

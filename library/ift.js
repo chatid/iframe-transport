@@ -176,10 +176,11 @@
 
   mixin(Client, {
 
-    register: function(id, level, ctor) {
+    register: function(id, parent, child) {
       this._map = this._map || {};
       this._map[id] = this._map[id] || {};
-      this._map[id][level] = ctor;
+      this._map[id].parent = parent;
+      this._map[id].child = child;
     },
 
     map: function(id, level) {

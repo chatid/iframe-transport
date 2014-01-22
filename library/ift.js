@@ -1,7 +1,6 @@
 /*
- * IFrameStorage
+ * IFrameTransport
  *
- * Persist data from any domain.
  * Targets modern browsers, IE8+
 */
 

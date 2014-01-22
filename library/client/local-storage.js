@@ -1,5 +1,5 @@
 /*
- * IFrameStorage
+ * IFrameTransport - LocalStorage Client
  *
  * Persist data from any domain.
  * Targets modern browsers, IE8+

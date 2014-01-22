@@ -65,8 +65,9 @@
     },
 
     _onStorage: function(evt) {
-      if (this._writing)
+      if (this._writing) {
         return this._writing = false;
+      }
 
       this.send('trigger', 'change', [evt.key, evt.oldValue, evt.newValue]);
     }

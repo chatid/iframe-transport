@@ -49,20 +49,25 @@
 
   var Events = {
 
-    on: function(name, callback) {
+    on: function(name, callback, context) {
       this._events || (this._events = {});
-      (this._events[name] = this._events[name] || []).push(callback);
+      (this._events[name] = this._events[name] || []).push({
+        callback: callback,
+        context: context || this
+      });
       return this;
     },
 
-    off: function(name, callback) {
+    off: function(name, callback, context) {
       if (!this._events) return this;
 
       var listeners = this._events[name],
           i = listeners.length;
       while (i--) {
-        if (listeners[i] === callback) {
-          listeners.splice(i, 1);
+        if (listeners[i].callback === callback) {
+          if (listeners[i].context === context) {
+            listeners.splice(i, 1);
+          }
         }
       }
     },
@@ -74,7 +79,7 @@
       var listeners = this._events[name] || [],
           i = listeners.length;
       while (i--) {
-        listeners[i].apply(listeners[i], args);
+        listeners[i].callback.apply(listeners[i].context, args);
       }
     }
 
@@ -82,50 +87,13 @@
 
   var Transport = function(targetOrigin) {
     this.targetOrigin = targetOrigin;
-    this._counter = 0;
-    this._callbacks = {};
-    this._clients = {};
     this._listen();
   };
 
-  mixin(Transport.prototype, {
-
-    invoke: function(target, method, args, callback) {
-      var params = {
-        target: target,
-        type: 'method',
-        method: method,
-        args: args
-      };
-      if (typeof callback === 'function') {
-        params.callbackId = this._addCall(callback);
-      }
-
-      this.send(params);
-    },
-
-    trigger: function(target, name, args) {
-      var params = {
-        target: target,
-        type: 'event',
-        name: name,
-        args: args
-      };
-
-      this.send(params);
-    },
-
-    callback: function(callbackId, args) {
-      var params = {
-        type: 'callback',
-        callbackId: callbackId,
-        args: args
-      };
-
-      this.send(params);
-    },
+  mixin(Transport.prototype, Events, {
 
     client: function(target) {
+      this._clients = this._clients || {};
       if (!this._clients[target]) {
         var ctor = IFT.Client.map(target, this.level);
         this._clients[target] = new ctor(this, target);
@@ -133,7 +101,42 @@
       return this._clients[target];
     },
 
+    _invoke: function(target, method, args, callback) {
+      var params = {
+        target: target,
+        type: 'method',
+        args: [method].concat(args)
+      };
+      if (typeof callback === 'function') {
+        params.args.push({ callbackId: this._addCall(callback) });
+      }
+
+      this.send(params);
+    },
+
+    _trigger: function(target, name, args) {
+      var params = {
+        target: target,
+        type: 'event',
+        args: [name].concat(args)
+      };
+
+      this.send(params);
+    },
+
+    _callback: function(target, callbackId, args) {
+      var params = {
+        target: target,
+        type: 'callback',
+        args: [callbackId].concat(args)
+      };
+
+      this.send(params);
+    },
+
     _addCall: function(callback) {
+      this._callbacks = this._callbacks || {};
+      this._counter = this._counter || 0;
       this._callbacks[++this._counter] = callback;
       return this._counter;
     },
@@ -142,28 +145,11 @@
       var self = this;
       support.on(window, 'message', function(evt) {
         if (evt.origin == self.targetOrigin) {
-          self._receive(JSON.parse(evt.data));
+          var message = JSON.parse(evt.data);
+          var name = message.target + ':' + message.type;
+          self.trigger.apply(self, [name].concat(message.args));
         }
       });
-    },
-
-    _receive: function(message) {
-      switch (message.type) {
-        case 'method':
-          var client = this._clients[message.target];
-          var result = client[message.method].apply(client, message.args);
-          if (message.callbackId) this.callback(message.callbackId, [result]);
-          break;
-        case 'event':
-          var args = [message.name].concat(message.args)
-          var client = this._clients[message.target];
-          client.trigger.apply(client, args);
-          break;
-        case 'callback':
-          this._callbacks[message.callbackId].apply(this, message.args);
-          this._callbacks[message.callbackId] = null;
-          break;
-      }
     }
 
   });
@@ -171,6 +157,10 @@
   var Client = IFT.Client = function(ift, target) {
     this.ift = ift;
     this.target = target;
+
+    this.ift.on(this.target + ':method', this._invoke, this);
+    this.ift.on(this.target + ':event', this._trigger, this);
+    this.ift.on(this.target + ':callback', this._callback, this);
   };
 
   mixin(Client, {
@@ -196,7 +186,24 @@
     send: function(method) {
       var args = slice.call(arguments, 1);
       args = [this.target].concat(args);
-      this.ift[method].apply(this.ift, args);
+      this.ift['_' + method].apply(this.ift, args);
+    },
+
+    _invoke: function(method) {
+      var args = slice.call(arguments, 1), last = args[args.length - 1];
+      var result = this[method].apply(this, args);
+      if (last.callbackId) this.send('callback', last.callbackId, [result]);
+    },
+
+    _trigger: function() {
+      var args = slice.call(arguments, 0);
+      this.trigger.apply(this, args);
+    },
+
+    _callback: function(id) {
+      var args = slice.call(arguments, 1);
+      this.ift._callbacks[id].apply(this, args);
+      this.ift._callbacks[id] = null;
     }
 
   });

@@ -1,4 +1,5 @@
 var support = {
+  ignoreMyWrites: ('onstorage' in document),
   storageEventTarget: ('onstorage' in document ? document : window)
 };
 
@@ -17,9 +18,9 @@ if (support.has(window, 'addEventListener')) {
   }
 } else if (support.has(window, 'attachEvent')) {
   support.on = function(object, name, callback) {
-    object.attachEvent('on' + name, callback);
+    object.attachEvent('on' + name, function() { callback(window.event) });
   }
   support.off = function(object, name, callback) {
-    object.detachEvent('on' + name, callback);
+    object.detachEvent('on' + name, function() { callback(window.event) });
   }
 }

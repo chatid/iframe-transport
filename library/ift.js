@@ -150,8 +150,8 @@
     _receive: function(message) {
       switch (message.type) {
         case 'method':
-          var fn = this._clients[message.target][message.method];
-          var result = fn.apply(this, message.args);
+          var client = this._clients[message.target];
+          var result = client[message.method].apply(client, message.args);
           if (message.callbackId) this.callback(message.callbackId, [result]);
           break;
         case 'event':

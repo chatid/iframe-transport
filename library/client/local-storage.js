@@ -23,9 +23,7 @@
       if (typeof options === 'function') {
         callback = options;
         options = {};
-      }
-
-      options = options || {};
+      } else options = options || {};
 
       this.send('invoke', 'set', [key, value, options], callback);
     },
@@ -58,9 +56,11 @@
     _listen: function() {
       var self = this;
       var target = support.storageEventTarget;
-      support.on(target, 'storage', function(evt) {
-        self.send('trigger', 'change', [evt.key, evt.oldValue, evt.newValue]);
-      });
+      support.on(target, 'storage', function(evt) { self._onStorage(evt); });
+    },
+
+    _onStorage: function(evt) {
+      this.send('trigger', 'change', [evt.key, evt.oldValue, evt.newValue]);
     }
 
   });

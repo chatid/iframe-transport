@@ -15,11 +15,6 @@
 
   var Parent = IFT.Client.extend({
 
-    constructor: function(ift, id) {
-      this.id = id || 'ls';
-      IFT.Client.apply(this, arguments);
-    },
-
     get: function(key, callback) {
       this.send('invoke', 'get', [key], callback);
     },
@@ -43,8 +38,7 @@
 
   var Child = IFT.Client.extend({
 
-    constructor: function(ift, id) {
-      this.id = id || 'ls';
+    constructor: function() {
       this._listen();
       IFT.Client.apply(this, arguments);
     },

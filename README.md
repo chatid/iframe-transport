@@ -1,7 +1,13 @@
-iframe-store
-------------
+iframe-transport
+----------------
 
-Persist data across domains using `postMessage` and `localStorage`.
+Wrapper around `postMessage` providing method invocation, callbacks, and event triggering.
+
+### Clients
+
+**LocalStorage Client**
+
+Persist data across domains.
 
 ### Example
 

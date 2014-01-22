@@ -33,7 +33,7 @@
     var parent = this;
     var child;
 
-    if (props && support.has(props, 'constructor')) {
+    if (props && props.hasOwnProperty('constructor')) {
       child = props.constructor;
     } else {
       child = function(){ return parent.apply(this, arguments); };
@@ -91,10 +91,10 @@
 
   mixin(Transport.prototype, {
 
-    invoke: function(id, method, args, callback) {
+    invoke: function(target, method, args, callback) {
       var params = {
+        target: target,
         type: 'method',
-        id: id,
         method: method,
         args: args
       };
@@ -105,10 +105,10 @@
       this.send(params);
     },
 
-    trigger: function(id, name, args) {
+    trigger: function(target, name, args) {
       var params = {
+        target: target,
         type: 'event',
-        id: id,
         name: name,
         args: args
       };
@@ -126,12 +126,12 @@
       this.send(params);
     },
 
-    client: function(id) {
-      if (!this._clients[id]) {
-        var ctor = IFT.Client.map(id, this.level);
-        this._clients[id] = new ctor(this);
+    client: function(target) {
+      if (!this._clients[target]) {
+        var ctor = IFT.Client.map(target, this.level);
+        this._clients[target] = new ctor(this, target);
       }
-      return this._clients[id];
+      return this._clients[target];
     },
 
     _addCall: function(callback) {
@@ -151,13 +151,13 @@
     _receive: function(message) {
       switch (message.type) {
         case 'method':
-          var fn = this._clients[message.id][message.method];
+          var fn = this._clients[message.target][message.method];
           var result = fn.apply(this, message.args);
           if (message.callbackId) this.callback(message.callbackId, [result]);
           break;
         case 'event':
           var args = [message.name].concat(message.args)
-          var client = this._clients[message.id];
+          var client = this._clients[message.target];
           client.trigger.apply(client, args);
           break;
         case 'callback':
@@ -169,23 +169,23 @@
 
   });
 
-  var Client = IFT.Client = function(ift, id) {
+  var Client = IFT.Client = function(ift, target) {
     this.ift = ift;
-    this.id = this.id || id;
+    this.target = target;
   };
 
   mixin(Client, {
 
-    register: function(id, parent, child) {
+    register: function(target, parent, child) {
       this._map = this._map || {};
-      this._map[id] = this._map[id] || {};
-      this._map[id].parent = parent;
-      this._map[id].child = child;
+      this._map[target] = this._map[target] || {};
+      this._map[target].parent = parent;
+      this._map[target].child = child;
     },
 
-    map: function(id, level) {
+    map: function(target, level) {
       var ctor;
-      if (this._map && this._map[id] && (ctor = this._map[id][level])) {
+      if (this._map && this._map[target] && (ctor = this._map[target][level])) {
         return ctor;
       }
     }
@@ -196,7 +196,7 @@
 
     send: function(method) {
       var args = slice.call(arguments, 1);
-      args = [this.id].concat(args);
+      args = [this.target].concat(args);
       this.ift[method].apply(this.ift, args);
     }
 
@@ -204,7 +204,7 @@
 
   Transport.extend = Client.extend = extend;
 
-  var Parent = IFT.Parent = Transport.extend({
+  IFT.Parent = Transport.extend({
 
     constructor: function(childOrigin, path, name, callback) {
       this.childOrigin = childOrigin;
@@ -242,9 +242,9 @@
 
   });
 
-  var Child = IFT.Child = Transport.extend({
+  IFT.Child = Transport.extend({
 
-    constructor: function(parentOrigin, client) {
+    constructor: function(parentOrigin) {
       this.parentOrigin = parentOrigin;
       this.parent = window.parent;
 

@@ -15,7 +15,7 @@ if (support.has(window, 'addEventListener')) {
   support.off = function(target, name, callback) {
     target.removeEventListener(name, callback, false);
   }
-} else if (has(window, 'attachEvent')) {
+} else if (support.has(window, 'attachEvent')) {
   support.on = function(object, name, callback) {
     object.attachEvent('on' + name, callback);
   }

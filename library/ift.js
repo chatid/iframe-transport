@@ -83,7 +83,7 @@
   var Transport = function(targetOrigin) {
     this.targetOrigin = targetOrigin;
     this._counter = 0;
-    this._queue = {};
+    this._callbacks = {};
     this._clients = {};
     this._listen();
   };
@@ -134,7 +134,7 @@
     },
 
     _addCall: function(callback) {
-      this._queue[++this._counter] = callback;
+      this._callbacks[++this._counter] = callback;
       return this._counter;
     },
 
@@ -160,8 +160,8 @@
           client.trigger.apply(client, args);
           break;
         case 'callback':
-          this._queue[message.callbackId].apply(this, message.args);
-          this._queue[message.callbackId] = null;
+          this._callbacks[message.callbackId].apply(this, message.args);
+          this._callbacks[message.callbackId] = null;
           break;
       }
     }

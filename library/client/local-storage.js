@@ -46,6 +46,7 @@
     },
 
     set: function(key, value, options) {
+      if (support.ignoreMyWrites) this._writing = true;
       return localStorage.setItem(key, value);
     },
 
@@ -57,9 +58,16 @@
       var self = this;
       var target = support.storageEventTarget;
       support.on(target, 'storage', function(evt) { self._onStorage(evt); });
+
+      if (support.ignoreMyWrites) {
+        support.on(target, 'storagecommit', function(evt) { this._writing = false; });
+      }
     },
 
     _onStorage: function(evt) {
+      if (this._writing)
+        return this._writing = false;
+
       this.send('trigger', 'change', [evt.key, evt.oldValue, evt.newValue]);
     }
 

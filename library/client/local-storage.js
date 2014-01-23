@@ -31,8 +31,8 @@
       this.send('invoke', 'set', [key, value, options], callback);
     },
 
-    unset: function(key, callback) {
-      this.send('invoke', 'unset', [key], callback);
+    unset: function(keys, callback) {
+      this.send('invoke', 'unset', [keys], callback);
     }
 
   });
@@ -53,8 +53,9 @@
       return localStorage.setItem(key, value);
     },
 
-    unset: function(key) {
-      return localStorage.removeItem(key);
+    unset: function(keys) {
+      if (!(keys instanceof Array)) keys = [keys];
+      for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
     },
 
     _listen: function() {

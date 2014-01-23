@@ -6,14 +6,50 @@
 */
 
 (function (root, factory) {
-  if (typeof define === 'function' && define.amd) define('ift', ['domready'], factory);
-  else root.IFT = factory(root.domready);
+  if (typeof define === 'function' && define.amd) define('ift', factory);
+  else root.IFT = factory();
 }(this, function() {
 
   var slice = [].slice;
 
   var IFT = {};
 
+  // Support
+  // -------
+
+  var support = IFT.support = {
+    ignoreMyWrites: ('onstorage' in document),
+    storageEventTarget: ('onstorage' in document ? document : window)
+  };
+
+  // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
+  support.has = function(object, property){
+    var t = typeof object[property];
+    return t == 'function' || (!!(t == 'object' && object[property])) || t == 'unknown';
+  }
+
+  if (support.has(window, 'addEventListener')) {
+    support.on = function(target, name, callback) {
+      target.addEventListener(name, callback, false);
+    }
+    support.off = function(target, name, callback) {
+      target.removeEventListener(name, callback, false);
+    }
+  } else if (support.has(window, 'attachEvent')) {
+    support.on = function(object, name, callback) {
+      object.attachEvent('on' + name, function() { callback(window.event) });
+    }
+    support.off = function(object, name, callback) {
+      object.detachEvent('on' + name, function() { callback(window.event) });
+    }
+  }
+
+
+  // Utility
+  // -------
+
+  // (ref `_.extend`)
+  // Extend a given object with all the properties in passed-in object(s).
   var mixin = function(obj) {
     var args = slice.call(arguments, 1),
         props;
@@ -26,6 +62,8 @@
     }
   }
 
+  // (ref Backbone `extend`)
+  // Helper function to correctly set up the prototype chain, for subclasses.
   var extend = function(props) {
     var parent = this;
     var child;
@@ -45,6 +83,11 @@
     return child;
   };
 
+  // Events
+  // ------
+
+  // (ref `Backbone.Events`)
+  // A module that can be mixed in to *any object* to provide it with custom events.
   var Events = {
 
     on: function(name, callback, context) {
@@ -56,16 +99,16 @@
       return this;
     },
 
-    off: function(name, callback, context) {
+    off: function(name, callback) {
       if (!this._events) return this;
 
       var listeners = this._events[name],
-          i = listeners.length;
+          i = listeners.length,
+          listener;
       while (i--) {
-        if (listeners[i].callback === callback) {
-          if (listeners[i].context === context) {
-            listeners.splice(i, 1);
-          }
+        listener = listeners[i];
+        if (listener.callback === callback) {
+          listeners.splice(i, 1);
         }
       }
     },
@@ -83,6 +126,11 @@
 
   };
 
+  // Transport
+  // ---------
+
+  // Base class for wrapping `iframe#postMessage` to facilitate method invocations and
+  // callbacks and trigger events.
   var Transport = function(targetOrigin) {
     this.targetOrigin = targetOrigin;
     this._listen();
@@ -90,19 +138,22 @@
 
   mixin(Transport.prototype, Events, {
 
-    client: function(target) {
+    // Issue a new or return an existing client of a given type.
+    client: function(type) {
       this._clients = this._clients || {};
-      if (!this._clients[target]) {
-        var ctor = IFT.Client.map(target, this.level);
-        this._clients[target] = new ctor(this, target);
+      if (!this._clients[type]) {
+        var ctor = IFT.Client.map(type, this.level);
+        this._clients[type] = new ctor(this, type);
       }
-      return this._clients[target];
+      return this._clients[type];
     },
 
-    _invoke: function(target, method, args, callback) {
+    // Send a `postMessage` that invokes a method. Optionally include a `callbackId` if a
+    // callback is provided.
+    _invoke: function(type, method, args, callback) {
       var params = {
-        target: target,
-        type: 'method',
+        type: type,
+        action: 'method',
         args: [method].concat(args)
       };
       if (typeof callback === 'function') {
@@ -112,26 +163,29 @@
       this.send(params);
     },
 
-    _trigger: function(target, name, args) {
+    // Send a `postMessage` that triggers an event.
+    _trigger: function(type, name, args) {
       var params = {
-        target: target,
-        type: 'event',
+        type: type,
+        action: 'event',
         args: [name].concat(args)
       };
 
       this.send(params);
     },
 
-    _callback: function(target, callbackId, args) {
+    // Send a `postMessage` that invokes a callback.
+    _callback: function(type, callbackId, args) {
       var params = {
-        target: target,
-        type: 'callback',
+        type: type,
+        action: 'callback',
         args: [callbackId].concat(args)
       };
 
       this.send(params);
     },
 
+    // Associate a unique `callbackId` with the given callback function.
     _addCall: function(callback) {
       this._callbacks = this._callbacks || {};
       this._counter = this._counter || 0;
@@ -139,12 +193,14 @@
       return this._counter;
     },
 
+    // Listen for incoming `message`s on the iframe. Parse and trigger an event for
+    // listening clients to act on.
     _listen: function() {
       var self = this;
       support.on(window, 'message', function(evt) {
         if (evt.origin == self.targetOrigin) {
           var message = JSON.parse(evt.data);
-          var name = message.target + ':' + message.type;
+          var name = message.type + ':' + message.action;
           self.trigger.apply(self, [name].concat(message.args));
         }
       });
@@ -152,52 +208,65 @@
 
   });
 
-  var Client = IFT.Client = function(ift, target) {
-    this.ift = ift;
-    this.target = target;
+  // Client
+  // ------
 
-    this.ift.on(this.target + ':method', this._invoke, this);
-    this.ift.on(this.target + ':event', this._trigger, this);
-    this.ift.on(this.target + ':callback', this._callback, this);
+  // Base class for defining client APIs that may communicate over the iframe transport.
+  // Clients may invoke methods with callbacks and trigger events.
+  var Client = IFT.Client = function(ift, type) {
+    this.ift = ift;
+    this.type = type;
+
+    // Listen for incoming actions to be processed by this client.
+    this.ift.on(this.type + ':method', this._invoke, this);
+    this.ift.on(this.type + ':event', this._trigger, this);
+    this.ift.on(this.type + ':callback', this._callback, this);
   };
 
+  // Static methods provide a library of available clients.
   mixin(Client, {
 
-    register: function(target, parent, child) {
+    // Register a client by unique type, providing parent and child constructor objects.
+    register: function(type, parent, child) {
       this._map = this._map || {};
-      this._map[target] = this._map[target] || {};
-      this._map[target].parent = parent;
-      this._map[target].child = child;
+      this._map[type] = this._map[type] || {};
+      this._map[type].parent = parent;
+      this._map[type].child = child;
     },
 
-    map: function(target, level) {
+    // Given a unique client type, obtain parent or child constructor object.
+    map: function(type, level) {
       var ctor;
-      if (this._map && this._map[target] && (ctor = this._map[target][level])) {
+      if (this._map && this._map[type] && (ctor = this._map[type][level])) {
         return ctor;
       }
     }
 
   });
 
+  // Client instance methods for sending actions or processing incoming actions.
   mixin(Client.prototype, Events, {
 
+    // Send a method invocation, callback, or event.
     send: function(method) {
       var args = slice.call(arguments, 1);
-      args = [this.target].concat(args);
+      args = [this.type].concat(args);
       this.ift['_' + method].apply(this.ift, args);
     },
 
+    // Process an incoming method invocation.
     _invoke: function(method) {
       var args = slice.call(arguments, 1), last = args[args.length - 1];
       var result = this[method].apply(this, args);
       if (last.callbackId) this.send('callback', last.callbackId, [result]);
     },
 
+    // Process an incoming event.
     _trigger: function() {
-      var args = slice.call(arguments, 0);
-      this.trigger.apply(this, args);
+      this.trigger.apply(this, arguments);
     },
 
+    // Process an incoming callback.
     _callback: function(id) {
       var args = slice.call(arguments, 1);
       this.ift._callbacks[id].apply(this, args);
@@ -206,8 +275,13 @@
 
   });
 
+  // Set up inheritance for the transport and client.
   Transport.extend = Client.extend = extend;
 
+  // IFT.Parent
+  // ----------
+
+  // Implement the transport class from the parent's perspective.
   IFT.Parent = Transport.extend({
 
     constructor: function(childOrigin, path, name, callback) {
@@ -246,6 +320,10 @@
 
   });
 
+  // IFT.Child
+  // ---------
+
+  // Implement the transport class from the child's perspective.
   IFT.Child = Transport.extend({
 
     constructor: function(parentOrigin) {

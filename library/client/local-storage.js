@@ -10,6 +10,12 @@
   else root.IFT = factory(root.IFT);
 }(this, function(IFT) {
 
+  var support = IFT.support;
+
+  // Parent
+  // ------
+
+  // Implement the LocalStorage client from the parent's perspective.
   var Parent = IFT.Client.extend({
 
     get: function(key, callback) {
@@ -31,6 +37,7 @@
 
   });
 
+  // Implement the LocalStorage client from the child's perspective.
   var Child = IFT.Client.extend({
 
     constructor: function() {
@@ -71,6 +78,7 @@
 
   });
 
+  // Register this client in the library under the unique type: `ls`.
   IFT.Client.register('ls', Parent, Child);
 
   return IFT;

@@ -50,7 +50,6 @@
     },
 
     set: function(key, value, options) {
-      if (support.ignoreMyWrites) this._writing = true;
       return localStorage.setItem(key, value);
     },
 
@@ -60,26 +59,48 @@
 
     _listen: function() {
       var self = this;
-      var target = support.storageEventTarget;
-      support.on(target, 'storage', function(evt) { self._onStorage(evt); });
-
-      if (support.ignoreMyWrites) {
-        support.on(target, 'storagecommit', function() { this._writing = false; });
-      }
+      support.on(window, 'storage', function(evt) { self._onStorage(evt); });
     },
 
     _onStorage: function(evt) {
-      if (this._writing) {
-        return this._writing = false;
-      }
-
       this.send('trigger', 'change', [evt.key, evt.oldValue, evt.newValue]);
     }
 
   });
 
+  var compatibleChild = Child;
+
+  // IE triggers the "storage" event even for those which originated from this window.
+  if (support.ignoreMyWrites) {
+
+    // Use "storagecommit" event to track if the write likely came from this window.
+    compatibleChild = Child.extend({
+
+      set: function(key, value, options) {
+        this._writing = true;
+        return Child.prototype.set.apply(this, arguments);
+      },
+
+      // IE8 triggers "storage" on `document` while IE9+ trigger it on `window`. IE*
+      // triggers "storagecommit" on `document`.
+      _listen: function() {
+        var self = this, target = support.storageEventTarget;
+        support.on(target, 'storage', function(evt) { self._onStorage(evt); });
+        support.on(document, 'storagecommit', function() { self._writing = false });
+      },
+
+      _onStorage: function(evt) {
+        if (this._writing) return this._writing = false;
+        if (evt.newValue && evt.oldValue == evt.newValue) return;
+        Child.prototype._onStorage.apply(this, arguments);
+      }
+
+    });
+
+  }
+
   // Register this client in the library under the unique type: `ls`.
-  IFT.Client.register('ls', Parent, Child);
+  IFT.Client.register('ls', Parent, compatibleChild);
 
   return IFT;
 

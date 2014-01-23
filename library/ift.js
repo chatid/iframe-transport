@@ -18,8 +18,8 @@
   // -------
 
   var support = IFT.support = {
-    ignoreMyWrites: ('onstorage' in document),
-    storageEventTarget: ('onstorage' in document ? document : window)
+    ignoreMyWrites: ('onstoragecommit' in document),
+    storageEventTarget: ('onstorage' in window ? window : document)
   };
 
   // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
@@ -64,21 +64,23 @@
 
   // (ref Backbone `extend`)
   // Helper function to correctly set up the prototype chain, for subclasses.
-  var extend = function(props) {
+  var extend = function(protoProps, staticProps) {
     var parent = this;
     var child;
 
-    if (props && props.hasOwnProperty('constructor')) {
-      child = props.constructor;
+    if (protoProps && protoProps.hasOwnProperty('constructor')) {
+      child = protoProps.constructor;
     } else {
       child = function(){ return parent.apply(this, arguments); };
     }
+
+    mixin(child, parent, staticProps);
 
     var Surrogate = function(){ this.constructor = child; };
     Surrogate.prototype = parent.prototype;
     child.prototype = new Surrogate;
 
-    mixin(child.prototype, props);
+    mixin(child.prototype, protoProps);
 
     return child;
   };

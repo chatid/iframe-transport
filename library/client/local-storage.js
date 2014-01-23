@@ -89,6 +89,7 @@
         support.on(document, 'storagecommit', function() { self._writing = false });
       },
 
+      // TODO: IE8 will trigger even if the value didn't change.
       _onStorage: function(evt) {
         if (this._writing) return this._writing = false;
         if (evt.newValue && evt.oldValue == evt.newValue) return;

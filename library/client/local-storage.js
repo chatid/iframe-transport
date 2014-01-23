@@ -1,16 +1,13 @@
 /*
  * IFrameTransport - LocalStorage Client
  *
- * Persist data from any domain.
+ * Persist data across domains.
  * Targets modern browsers, IE8+
 */
 
 (function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define('ift-ls-client', ['ift'], factory);
-  } else {
-    root.IFT = factory(root.IFT);
-  }
+  if (typeof define === 'function' && define.amd) define('ift-ls-client', ['ift'], factory);
+  else root.IFT = factory(root.IFT);
 }(this, function(IFT) {
 
   var Parent = IFT.Client.extend({
@@ -60,7 +57,7 @@
       support.on(target, 'storage', function(evt) { self._onStorage(evt); });
 
       if (support.ignoreMyWrites) {
-        support.on(target, 'storagecommit', function(evt) { this._writing = false; });
+        support.on(target, 'storagecommit', function() { this._writing = false; });
       }
     },
 

@@ -1,15 +1,13 @@
 /*
  * IFrameTransport
  *
+ * Invoke methods with callbacks and trigger events across domains.
  * Targets modern browsers, IE8+
 */
 
 (function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define('ift', ['domready'], factory);
-  } else {
-    root.IFT = factory(root.domready);
-  }
+  if (typeof define === 'function' && define.amd) define('ift', ['domready'], factory);
+  else root.IFT = factory(root.domready);
 }(this, function() {
 
   var slice = [].slice;

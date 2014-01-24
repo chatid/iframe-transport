@@ -229,11 +229,10 @@
   mixin(Client, {
 
     // Register a client by unique type, providing parent and child constructor objects.
-    register: function(type, parent, child) {
+    register: function(type, ctors) {
       this._map = this._map || {};
       this._map[type] = this._map[type] || {};
-      this._map[type].parent = parent;
-      this._map[type].child = child;
+      mixin(this._map[type], ctors);
     },
 
     // Given a unique client type, obtain parent or child constructor object.
@@ -330,7 +329,7 @@
 
     constructor: function(parentOrigin) {
       this.parentOrigin = parentOrigin;
-      this.parent = window.parent;
+      if (window.parent !== window) this.parent = window.parent;
 
       Transport.apply(this, arguments);
     },
@@ -338,8 +337,10 @@
     level: 'child',
 
     send: function(params) {
-      var message = JSON.stringify(params);
-      this.parent.postMessage(message, this.parentOrigin);
+      if (this.parent) {
+        var message = JSON.stringify(params);
+        this.parent.postMessage(message, this.parentOrigin);
+      }
     }
 
   });

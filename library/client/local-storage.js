@@ -12,11 +12,13 @@
 
   var support = IFT.support;
 
+  IFT.Client.LS = {};
+
   // Parent
   // ------
 
   // Implement the LocalStorage client from the parent's perspective.
-  var Parent = IFT.Client.extend({
+  var Parent = IFT.Client.LS.Parent = IFT.Client.extend({
 
     get: function(key, callback) {
       this.send('invoke', 'get', [key], callback);
@@ -38,7 +40,7 @@
   });
 
   // Implement the LocalStorage client from the child's perspective.
-  var Child = IFT.Client.extend({
+  var Child = IFT.Client.LS.Child = IFT.Client.extend({
 
     constructor: function() {
       this._listen();
@@ -102,7 +104,10 @@
   }
 
   // Register this client in the library under the unique type: `ls`.
-  IFT.Client.register('ls', Parent, compatibleChild);
+  IFT.Client.register('ls', {
+    parent: Parent,
+    child: compatibleChild
+  });
 
   return IFT;
 

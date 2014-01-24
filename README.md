@@ -22,4 +22,4 @@ Open `http://127.0.0.1:8000/example/parent.html`
 
 ### TODO
 
-* Experiment with only triggering events from `ift`.
+* Add tests

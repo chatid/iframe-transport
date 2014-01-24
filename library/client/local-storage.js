@@ -66,7 +66,11 @@
     },
 
     _onStorage: function(evt) {
-      this.send('trigger', 'change', [evt.key, evt.oldValue, evt.newValue]);
+      this.send('trigger', 'change', [{
+        key: evt.key,
+        oldValue: evt.oldValue,
+        newValue: evt.newValue
+      }]);
     }
 
   });

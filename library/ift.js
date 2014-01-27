@@ -140,16 +140,6 @@
 
   mixin(Transport.prototype, Events, {
 
-    // Issue a new or return an existing client of a given type.
-    client: function(type) {
-      this._clients = this._clients || {};
-      if (!this._clients[type]) {
-        var ctor = IFT.Client.map(type, this.level);
-        this._clients[type] = new ctor(this, type);
-      }
-      return this._clients[type];
-    },
-
     // Send a `postMessage` that invokes a method. Optionally include a `callbackId` if a
     // callback is provided.
     _invoke: function(type, method, args, callback) {
@@ -215,35 +205,14 @@
 
   // Base class for defining client APIs that may communicate over the iframe transport.
   // Clients may invoke methods with callbacks and trigger events.
-  var Client = IFT.Client = function(ift, type) {
+  var Client = IFT.Client = function(ift) {
     this.ift = ift;
-    this.type = type;
 
     // Listen for incoming actions to be processed by this client.
     this.ift.on(this.type + ':method', this._invoke, this);
     this.ift.on(this.type + ':event', this._trigger, this);
     this.ift.on(this.type + ':callback', this._callback, this);
   };
-
-  // Static methods provide a library of available clients.
-  mixin(Client, {
-
-    // Register a client by unique type, providing parent and child constructor objects.
-    register: function(type, ctors) {
-      this._map = this._map || {};
-      this._map[type] = this._map[type] || {};
-      mixin(this._map[type], ctors);
-    },
-
-    // Given a unique client type, obtain parent or child constructor object.
-    map: function(type, level) {
-      var ctor;
-      if (this._map && this._map[type] && (ctor = this._map[type][level])) {
-        return ctor;
-      }
-    }
-
-  });
 
   // Client instance methods for sending actions or processing incoming actions.
   mixin(Client.prototype, Events, {

@@ -20,6 +20,8 @@
   // Implement the LocalStorage client from the parent's perspective.
   var Parent = IFT.Client.LS.Parent = IFT.Client.extend({
 
+    type: 'ls',
+
     get: function(key, callback) {
       this.send('invoke', 'get', [key], callback);
     },
@@ -39,25 +41,41 @@
 
   });
 
+  // Wrap localStorage so it may be swapped out.
+  var lsWrapper = {
+    get: function(key) {
+      return localStorage.getItem(key);
+    },
+    set: function(key, value) {
+      return localStorage.setItem(key, value);
+    },
+    unset: function(keys) {
+      if (!(keys instanceof Array)) keys = [keys];
+      for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
+    }
+  };
+
   // Implement the LocalStorage client from the child's perspective.
   var Child = IFT.Client.LS.Child = IFT.Client.extend({
 
-    constructor: function() {
+    constructor: function(ift, storage) {
+      this.storage = storage || lsWrapper;
       this._listen();
       IFT.Client.apply(this, arguments);
     },
 
+    type: 'ls',
+
     get: function(key) {
-      return localStorage.getItem(key);
+      return this.storage.get(key);
     },
 
     set: function(key, value, options) {
-      return localStorage.setItem(key, value);
+      return this.storage.set(key, value);
     },
 
     unset: function(keys) {
-      if (!(keys instanceof Array)) keys = [keys];
-      for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
+      return this.storage.unset(keys);
     },
 
     _listen: function() {
@@ -75,13 +93,11 @@
 
   });
 
-  var compatibleChild = Child;
-
   // IE triggers the "storage" event even for those which originated from this window.
   if (support.ignoreMyWrites) {
 
     // Use "storagecommit" event to track if the write likely came from this window.
-    compatibleChild = Child.extend({
+    var compatibleChild = IFT.Client.LS.Child = Child.extend({
 
       set: function(key, value, options) {
         this._writing = true;
@@ -106,12 +122,6 @@
     });
 
   }
-
-  // Register this client in the library under the unique type: `ls`.
-  IFT.Client.register('ls', {
-    parent: Parent,
-    child: compatibleChild
-  });
 
   return IFT;
 

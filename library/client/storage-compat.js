@@ -38,11 +38,11 @@
       evt = evt || {};
 
       // For all IE
-      if (uid == myUid) {
-        return {};
-      } else if (!support.storageEventProvidesKey) {
-        // For IE8
-        return {
+      if (uid == myUid) return {};
+
+      // For IE8
+      if (!support.storageEventProvidesKey) {
+        evt = {
           key: key,
           newValue: this.get(key)
         };

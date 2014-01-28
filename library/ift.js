@@ -17,10 +17,7 @@
   // Support
   // -------
 
-  var support = IFT.support = {
-    ignoreMyWrites: ('onstoragecommit' in document),
-    storageEventTarget: ('onstorage' in window ? window : document)
-  };
+  var support = IFT.support = {};
 
   // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
   support.has = function(object, property){
@@ -48,9 +45,11 @@
   // Utility
   // -------
 
+  var util = IFT.util = {};
+
   // (ref `_.extend`)
   // Extend a given object with all the properties in passed-in object(s).
-  var mixin = function(obj) {
+  var mixin = IFT.util.mixin = function(obj) {
     var args = slice.call(arguments, 1),
         props;
     for (var i = 0; i < args.length; i++) {
@@ -64,7 +63,7 @@
 
   // (ref Backbone `extend`)
   // Helper function to correctly set up the prototype chain, for subclasses.
-  var extend = function(protoProps, staticProps) {
+  var extend = IFT.util.extend = function(protoProps, staticProps) {
     var parent = this;
     var child;
 
@@ -90,7 +89,7 @@
 
   // (ref `Backbone.Events`)
   // A module that can be mixed in to *any object* to provide it with custom events.
-  var Events = {
+  var Events = IFT.Events = {
 
     on: function(name, callback, context) {
       this._events || (this._events = {});

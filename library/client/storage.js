@@ -1,26 +1,36 @@
 /*
- * IFrameTransport - LocalStorage Client
+ * IFrameTransport - Storage Client
  *
  * Persist data across domains.
  * Targets modern browsers, IE8+
 */
 
 (function (root, factory) {
-  if (typeof define === 'function' && define.amd) define('ift-ls-client', ['ift'], factory);
+  if (typeof define === 'function' && define.amd) define('ift-store-client', ['ift'], factory);
   else root.IFT = factory(root.IFT);
 }(this, function(IFT) {
 
-  var support = IFT.support;
+  var support = IFT.support,
+      util = IFT.util;
 
-  IFT.Client.LS = {};
+  util.mixin(support, {
+    storageEventTarget: ('onstorage' in window ? window : document)
+  });
+
+  var Store = IFT.Client.Store = {};
+
+  var StoreClient = IFT.Client.extend({
+    type: 'store',
+    get: function() {},
+    set: function() {},
+    unset: function() {},
+  });
 
   // Parent
   // ------
 
   // Implement the LocalStorage client from the parent's perspective.
-  var Parent = IFT.Client.LS.Parent = IFT.Client.extend({
-
-    type: 'ls',
+  var Parent = Store.Parent = StoreClient.extend({
 
     get: function(key, callback) {
       this.send('invoke', 'get', [key], callback);
@@ -56,15 +66,13 @@
   };
 
   // Implement the LocalStorage client from the child's perspective.
-  var Child = IFT.Client.LS.Child = IFT.Client.extend({
+  var Child = Store.Child = StoreClient.extend({
 
     constructor: function(ift, storage) {
       this.storage = storage || lsWrapper;
-      this._listen();
+      this.listen();
       IFT.Client.apply(this, arguments);
     },
-
-    type: 'ls',
 
     get: function(key) {
       return this.storage.get(key);
@@ -78,50 +86,28 @@
       return this.storage.unset(keys);
     },
 
-    _listen: function() {
-      var self = this;
-      support.on(window, 'storage', function(evt) { self._onStorage(evt); });
-    },
+    onStorage: function(evt) {
+      if (evt) {
+        // IE9+: Don't trigger if value didn't change
+        if (evt.oldValue === evt.newValue) return;
+      } else {
+        // IE8: Don't throw an exception as `evt` is undefined
+        evt = {};
+      }
 
-    _onStorage: function(evt) {
       this.send('trigger', 'change', [{
         key: evt.key,
         oldValue: evt.oldValue,
         newValue: evt.newValue
       }]);
+    },
+
+    listen: function() {
+      var self = this, target = support.storageEventTarget;
+      support.on(target, 'storage', function(evt) { self.onStorage(evt); });
     }
 
   });
-
-  // IE triggers the "storage" event even for those which originated from this window.
-  if (support.ignoreMyWrites) {
-
-    // Use "storagecommit" event to track if the write likely came from this window.
-    var compatibleChild = IFT.Client.LS.Child = Child.extend({
-
-      set: function(key, value, options) {
-        this._writing = true;
-        return Child.prototype.set.apply(this, arguments);
-      },
-
-      // IE8 triggers "storage" on `document` while IE9+ trigger it on `window`. IE*
-      // triggers "storagecommit" on `document`.
-      _listen: function() {
-        var self = this, target = support.storageEventTarget;
-        support.on(target, 'storage', function(evt) { self._onStorage(evt); });
-        support.on(document, 'storagecommit', function() { self._writing = false });
-      },
-
-      // TODO: IE8 will trigger even if the value didn't change.
-      _onStorage: function(evt) {
-        if (this._writing) return this._writing = false;
-        if (evt.newValue && evt.oldValue == evt.newValue) return;
-        Child.prototype._onStorage.apply(this, arguments);
-      }
-
-    });
-
-  }
 
   return IFT;
 

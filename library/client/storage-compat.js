@@ -7,7 +7,7 @@
 
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define('ift-store-client-compat', ['ift-store-client', 'cookie'], factory);
+    define('ift-client-storage-compat', ['ift-client-storage', 'cookie'], factory);
   } else root.IFT = factory(root.IFT, root.Cookie);
 }(this, function(IFT, Cookie) {
 
@@ -21,10 +21,10 @@
 
   if (!support.myWritesTrigger) return IFT;
 
-  var Child = IFT.Client.Store.Child,
+  var Child = IFT.Client.Storage.Child,
       myUid = Math.floor(Math.random() * 1000) + '' + +new Date;
 
-  var compatibleChild = IFT.Client.Store.Child = Child.extend({
+  var compatibleChild = IFT.Client.Storage.Child = Child.extend({
 
     set: function(key, value, options) {
       Cookie.set('version', myUid + ':' + key);

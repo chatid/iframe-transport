@@ -6,7 +6,7 @@
 */
 
 (function (root, factory) {
-  if (typeof define === 'function' && define.amd) define('ift-store-client', ['ift'], factory);
+  if (typeof define === 'function' && define.amd) define('ift-storage-client', ['ift'], factory);
   else root.IFT = factory(root.IFT);
 }(this, function(IFT) {
 
@@ -17,10 +17,10 @@
     storageEventTarget: ('onstorage' in window ? window : document)
   });
 
-  var Store = IFT.Client.Store = {};
+  var Storage = IFT.Client.Storage = {};
 
-  var StoreClient = IFT.Client.extend({
-    type: 'store',
+  var StorageClient = IFT.Client.extend({
+    type: 'storage',
     get: function() {},
     set: function() {},
     unset: function() {},
@@ -30,7 +30,7 @@
   // ------
 
   // Implement the LocalStorage client from the parent's perspective.
-  var Parent = Store.Parent = StoreClient.extend({
+  var Parent = Storage.Parent = StorageClient.extend({
 
     get: function(key, callback) {
       this.send('invoke', 'get', [key], callback);
@@ -66,7 +66,7 @@
   };
 
   // Implement the LocalStorage client from the child's perspective.
-  var Child = Store.Child = StoreClient.extend({
+  var Child = Storage.Child = StorageClient.extend({
 
     constructor: function(ift, storage) {
       this.storage = storage || lsWrapper;

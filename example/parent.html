@@ -8,17 +8,17 @@
     <script type='text/javascript' src='../library/ift.js'></script>
     <script type='text/javascript' src='../library/client/local-storage.js'></script>
     <script type='text/javascript'>
-    var store, ift;
+    var storage, ift;
     domready(function() {
       ift = new IFT.Parent('http://127.0.0.1:4000', '/example/child.html', 'chatid', function() {
-        store = ift.client('ls');
+        storage = new IFT.Client.Storage.Child(ift);
 
-        store.on('change', function() {
+        storage.on('change', function() {
           console.log('change event', arguments);
         });
 
-        store.set('herp', 'sucka', function() {
-          store.get('herp', function(resp) {
+        storage.set('herp', 'sucka', function() {
+          storage.get('herp', function(resp) {
             console.log('got', resp);
           });
         });

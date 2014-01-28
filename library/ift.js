@@ -218,10 +218,10 @@
   mixin(Client.prototype, Events, {
 
     // Send a method invocation, callback, or event.
-    send: function(method) {
+    send: function(action) {
       var args = slice.call(arguments, 1);
       args = [this.type].concat(args);
-      this.ift['_' + method].apply(this.ift, args);
+      this.ift['_' + action].apply(this.ift, args);
     },
 
     // Process an incoming method invocation.

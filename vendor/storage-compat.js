@@ -12,8 +12,9 @@
 }(this, function(Cookie) {
 
   var support = {
-    storageEventTarget: ('storage' in window ? window : document),
-    storageEventProvidesKey: !('storage' in document)
+    myWritesTrigger: ('onstoragecommit' in document),
+    storageEventTarget: ('onstorage' in window ? window : document),
+    storageEventProvidesKey: !('onstorage' in document)
   };
 
   // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
@@ -54,37 +55,63 @@
     }
   };
 
-  var StorageCompat = function(storage, events) {
+  // StorageCompat
+  // -------------
+
+  // If necessary, wrap some storage interface to properly trigger "storage" events in IE.
+  var StorageCompat = function(storage, onStorage) {
     this.storage = storage || lsWrapper;
 
-    if (!events) return;
-    var self = this, target = support.storageEventTarget;
-    support.on(target, 'storage', function(evt) { self.onStorage(evt); });
+    if (support.myWritesTrigger) {
+      this.onStorage = onStorage;
+      this.listen();
+    } else {
+      return this.storage;
+    }
   };
 
   StorageCompat.prototype = {
 
-    get: function(key) {
+    get: function() {
+      return this.storage.get.apply(this.storage, arguments);
+    },
+
+    // Before setting the value, set a version flag indicating that the last write came
+    // from this window and targeted the given key.
+    set: function(key) {
       Cookie.set('version', myUid + ':' + key);
-      return this.storage.get(key);
+      return this.storage.set.apply(this.storage, arguments);
     },
 
-    set: function(key, value, options) {
-      return this.storage.set(key, value, options)
+    unset: function() {
+      return this.storage.unset.apply(this.storage, arguments);
     },
 
-    unset: function(key) {
-      return this.storage.unset(key);
+    listen: function() {
+      var self = this, target = support.storageEventTarget;
+      support.on(target, 'storage', function(evt) {
+        // IE8: to accurately determine `evt.newValue`, we must read it during the event
+        // callback. Oddly, it returns the old value instead of the new one until the call
+        // stack clears. More oddly, I was unable to reproduce this with a minimal test
+        // case, yet it always seems to behave this way here.
+        if (!support.storageEventProvidesKey) {
+          setTimeout(function() {
+            self._onStorage(evt);
+          }, 0);
+        } else {
+          self._onStorage(evt);
+        }
+      });
     },
 
-    parseEvent: function(evt) {
+    // Ignore the event if it was originated by this window. Tell IE8 which `key` changed
+    // and grab it's `newValue`.
+    _onStorage: function(evt) {
       var ref = (Cookie.get('version') || ':').split(':'),
           uid = ref[0], key = ref[1];
 
-      evt = evt || {};
-
       // For all IE
-      if (uid == myUid) return {};
+      if (uid == myUid) return;
 
       // For IE8
       if (!support.storageEventProvidesKey) {
@@ -94,11 +121,7 @@
         };
       }
 
-      return evt;
-    },
-
-    onStorage: function(evt) {
-
+      this.onStorage(evt);
     }
 
   };

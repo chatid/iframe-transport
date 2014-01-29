@@ -6,7 +6,7 @@
 */
 
 (function (root, factory) {
-  if (typeof define === 'function' && define.amd) define('ift-storage-client', ['ift'], factory);
+  if (typeof define === 'function' && define.amd) define('ift-client-storage', ['ift'], factory);
   else root.IFT = factory(root.IFT);
 }(this, function(IFT) {
 

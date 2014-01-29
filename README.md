@@ -20,6 +20,15 @@ $ http-server -p 4000
 
 Open `http://127.0.0.1:8000/example/parent.html`
 
+### Vendor libs
+
+IFT and LSClient have no required dependencies. For compatibility and implementation
+support, the following libraries are included with the project:
+
+* https://github.com/carhartl/jquery-cookie (fork)
+* https://github.com/ded/domready
+* https://github.com/chatid/localstorage-events
+
 ### TODO
 
 * Add tests

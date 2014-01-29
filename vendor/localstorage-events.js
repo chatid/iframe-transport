@@ -1,5 +1,5 @@
 /*
- * StorageCompat
+ * LocalStorage Events
  *
  * Use a cookie to capture which key changed for IE8
  * Use a cookie to ignore "storage" events that I triggered
@@ -7,8 +7,8 @@
 
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define('storage-compat', ['cookie'], factory);
-  } else root.StorageCompat = factory(root.Cookie);
+    define('localstorage-events', ['cookie'], factory);
+  } else root.LSEvents = factory(root.Cookie);
 }(this, function(Cookie) {
 
   var support = {
@@ -55,11 +55,11 @@
     }
   };
 
-  // StorageCompat
+  // LSEvents
   // -------------
 
   // If necessary, wrap some storage interface to properly trigger "storage" events in IE.
-  var StorageCompat = function(storage, onStorage) {
+  var LSEvents = function(storage, onStorage) {
     this.storage = storage || lsWrapper;
 
     if (support.myWritesTrigger) {
@@ -70,7 +70,7 @@
     }
   };
 
-  StorageCompat.prototype = {
+  LSEvents.prototype = {
 
     get: function() {
       return this.storage.get.apply(this.storage, arguments);
@@ -126,6 +126,6 @@
 
   };
 
-  return StorageCompat;
+  return LSEvents;
 
 }));

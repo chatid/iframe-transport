@@ -7,9 +7,9 @@
 
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define('ift-client-storage-compat', ['storage-compat', 'ift-client-storage'], factory);
-  } else root.IFT = factory(root.StorageCompat, root.IFT);
-}(this, function(StorageCompat, IFT) {
+    define('ift-client-storage-compat', ['localstorage-events', 'ift-client-storage'], factory);
+  } else root.IFT = factory(root.LSEvents, root.IFT);
+}(this, function(LSEvents, IFT) {
 
   var support = IFT.support,
       util = IFT.util;
@@ -28,12 +28,12 @@
     constructor: function(ift, storage) {
       Child.apply(this, arguments);
       var self = this;
-      this.storage = new StorageCompat(this.storage, function() {
+      this.storage = new LSEvents(this.storage, function() {
         self.onStorage.apply(self, arguments);
       });
     },
 
-    // `storageCompat` will handle "storage" events for us.
+    // `LSEvents` will handle "storage" events for us.
     listen: function() {}
 
   });

@@ -79,7 +79,7 @@
     },
 
     set: function(key, value, options) {
-      return this.storage.set(key, value);
+      return this.storage.set(key, value, options);
     },
 
     unset: function(keys) {

@@ -197,6 +197,19 @@
       this._counter = this._counter || 0;
       this._callbacks[++this._counter] = callback;
       return this._counter;
+    },
+
+    // Listen for incoming `message`s on the iframe. Parse and trigger an event for
+    // listening clients to act on.
+    _listen: function() {
+      var self = this;
+      support.on(window, 'message', function(evt) {
+        if (evt.origin == self.targetOrigin) {
+          var message = JSON.parse(evt.data);
+          var name = message.type + ':' + message.action;
+          self.trigger.apply(self, [name].concat(message.args));
+        }
+      });
     }
 
   });
@@ -240,8 +253,10 @@
     // Process an incoming callback.
     _callback: function(id) {
       var args = slice.call(arguments, 1);
-      this.ift._callbacks[id].apply(this, args);
-      this.ift._callbacks[id] = null;
+      if (callback = this.ift._callbacks[id]) {
+        callback.apply(this, args);
+        this.ift._callbacks[id] = null;
+      }
     }
 
   });
@@ -272,7 +287,13 @@
     },
 
     _createIframe: function(uri, name, callback) {
-      var iframe = document.createElement('iframe');
+      var iframe = document.getElementById('ift_' + name);
+      if (iframe) {
+        setTimeout(callback, 0);
+        return iframe;
+      }
+
+      iframe = document.createElement('iframe');
       iframe.id = 'ift_' + name;
       iframe.name = 'ift_' + name;
       iframe.style.position = 'absolute';
@@ -282,7 +303,10 @@
       iframe.border = iframe.frameBorder = 0;
       iframe.allowTransparency = true;
 
-      this.on('ift:ready', callback);
+      this.on('ift:ready', function ready() {
+        this.off('ift:ready', ready, this);
+        callback();
+      }, this);
 
       document.body.appendChild(iframe);
 

@@ -32,3 +32,4 @@ support, the following libraries are included with the project:
 ### TODO
 
 * Add tests
+* IFT#destroy

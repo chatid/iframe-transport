@@ -132,12 +132,27 @@
 
   // Base class for wrapping `iframe#postMessage` to facilitate method invocations and
   // callbacks and trigger events.
-  var Transport = function(targetOrigin) {
-    this.targetOrigin = targetOrigin;
-    this._listen();
+  var Transport = function(targetOrigins) {
+    this.targetOrigins = {};
+    for (i = 0; i < (targetOrigins || []).length; i++)
+      this.targetOrigins[targetOrigins[i]] = 1;
+    this.listen();
   };
 
   mixin(Transport.prototype, Events, {
+
+    // Listen for incoming `message`s on the iframe. Parse and trigger an event for
+    // listening clients to act on.
+    listen: function() {
+      var self = this;
+      support.on(window, 'message', function(evt) {
+        if (self.targetOrigins[evt.origin]) {
+          var message = JSON.parse(evt.data);
+          var name = message.type + ':' + message.action;
+          self.trigger.apply(self, [name].concat(message.args));
+        }
+      });
+    },
 
     // Send a `postMessage` that invokes a method. Optionally include a `callbackId` if a
     // callback is provided.
@@ -182,19 +197,6 @@
       this._counter = this._counter || 0;
       this._callbacks[++this._counter] = callback;
       return this._counter;
-    },
-
-    // Listen for incoming `message`s on the iframe. Parse and trigger an event for
-    // listening clients to act on.
-    _listen: function() {
-      var self = this;
-      support.on(window, 'message', function(evt) {
-        if (evt.origin == self.targetOrigin) {
-          var message = JSON.parse(evt.data);
-          var name = message.type + ':' + message.action;
-          self.trigger.apply(self, [name].concat(message.args));
-        }
-      });
     }
 
   });
@@ -259,7 +261,7 @@
       this.name = name;
       this.iframe = this._createIframe(this.childUri, this.name, callback);
 
-      Transport.apply(this, arguments);
+      Transport.call(this, [childOrigin]);
     },
 
     level: 'parent',
@@ -280,7 +282,7 @@
       iframe.border = iframe.frameBorder = 0;
       iframe.allowTransparency = true;
 
-      support.on(iframe, 'load', callback);
+      this.on('ift:ready', callback);
 
       document.body.appendChild(iframe);
 
@@ -295,8 +297,7 @@
   // Implement the transport class from the child's perspective.
   IFT.Child = Transport.extend({
 
-    constructor: function(parentOrigin) {
-      this.parentOrigin = parentOrigin;
+    constructor: function() {
       if (window.parent !== window) this.parent = window.parent;
 
       Transport.apply(this, arguments);
@@ -307,8 +308,16 @@
     send: function(params) {
       if (this.parent) {
         var message = JSON.stringify(params);
-        this.parent.postMessage(message, this.parentOrigin);
+        this.parent.postMessage(message, '*');
       }
+    },
+
+    listen: function() {
+      Transport.prototype.listen.apply(this, arguments);
+      this.send({
+        type: 'ift',
+        action: 'ready'
+      });
     }
 
   });

@@ -164,7 +164,7 @@
         args: [method].concat(args)
       };
       if (typeof callback === 'function') {
-        params.args.push({ callbackId: this._addCall(callback) });
+        params.args.push({ callbackId: this._createCallback(callback) });
       }
 
       this.send(params);
@@ -193,7 +193,7 @@
     },
 
     // Associate a unique `callbackId` with the given callback function.
-    _addCall: function(callback) {
+    _createCallback: function(callback) {
       this._callbacks = this._callbacks || {};
       this._counter = this._counter || 0;
       this._callbacks[++this._counter] = callback;

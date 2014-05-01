@@ -91,7 +91,7 @@
         // IE9+: Don't trigger if value didn't change
         if (evt.oldValue === evt.newValue) return;
       } else {
-        // IE8: Don't throw an exception as `evt` is undefined
+        // IE8: `evt` is undefined
         evt = {};
       }
 

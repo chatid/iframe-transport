@@ -48,7 +48,7 @@
   var util = IFT.util = {};
 
   // (ref `_.extend`)
-  // Extend a given object with all the properties in passed-in object(s).
+  // Extend a given object with all the properties of the passed-in object(s).
   var mixin = IFT.util.mixin = function(obj) {
     var args = slice.call(arguments, 1),
         props;
@@ -88,7 +88,7 @@
   // ------
 
   // (ref `Backbone.Events`)
-  // A module that can be mixed in to *any object* to provide it with custom events.
+  // A module that can be mixed in to any object to provide it with custom events.
   var Events = IFT.Events = {
 
     on: function(name, callback, context) {

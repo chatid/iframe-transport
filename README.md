@@ -1,6 +1,8 @@
 iframe-transport
 ----------------
 
+![Testling Badge](https://ci.testling.com/chatid/iframe-transport.png)
+
 Wrapper around `postMessage` providing method invocation, callbacks, and event triggering.
 
 ### Clients

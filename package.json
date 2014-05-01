@@ -1,0 +1,50 @@
+{
+  "name": "iframe-transport",
+  "version": "0.0.0",
+  "description": "Thin postMessage wrapper for processing method calls, callbacks, and events",
+  "main": "library/ift.js",
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "dependencies": {
+    "browserify": "~3.44.2",
+    "tape": "~2.12.3",
+    "testling": "~1.6.1"
+  },
+  "devDependencies": {
+    "tape": "^2.12.3",
+    "phantomjs": "^1.9.7-5"
+  },
+  "scripts": {
+    "test": "browserify test/*.js | testling"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/chatid/iframe-transport.git"
+  },
+  "keywords": [
+    "postMessage",
+    "iframe",
+    "cross domain messaging"
+  ],
+  "author": "Misha Ponizil <misha.ponizil@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chatid/iframe-transport/issues"
+  },
+  "homepage": "https://github.com/chatid/iframe-transport",
+  "testling": {
+    "files": "test/*.js",
+    "browsers": [
+      "ie/8..latest",
+      "chrome/22..latest",
+      "firefox/16..latest",
+      "safari/latest",
+      "opera/11.0..latest",
+      "iphone/6",
+      "ipad/6",
+      "android-browser/latest"
+    ]
+  }
+}

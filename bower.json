@@ -14,9 +14,7 @@
   "keywords": [
     "postMessage",
     "iframe",
-    "cross",
-    "domain",
-    "messaging"
+    "cross domain messaging"
   ],
   "license": "MIT",
   "ignore": [

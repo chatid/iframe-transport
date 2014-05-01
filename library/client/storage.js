@@ -7,6 +7,7 @@
 
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) define('ift-client-storage', ['ift'], factory);
+  else if (typeof exports === 'object') module.exports = factory(require('ift'));
   else root.IFT = factory(root.IFT);
 }(this, function(IFT) {
 

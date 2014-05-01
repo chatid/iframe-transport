@@ -134,8 +134,9 @@
   // callbacks and trigger events.
   var Transport = function(targetOrigins) {
     this.targetOrigins = {};
-    for (i = 0; i < (targetOrigins || []).length; i++)
+    for (var i = 0; i < (targetOrigins || []).length; i++) {
       this.targetOrigins[targetOrigins[i]] = 1;
+    }
     this.listen();
   };
 

@@ -23,7 +23,7 @@
     type: 'storage',
     get: function() {},
     set: function() {},
-    unset: function() {},
+    unset: function() {}
   });
 
   // Parent

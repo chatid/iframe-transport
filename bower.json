@@ -27,7 +27,9 @@
     "tests"
   ],
   "dependencies": {
-    "localstorage-events": "git@github.com:chatid/localstorage-events.git",
+    "localstorage-events": "git@github.com:chatid/localstorage-events.git"
+  },
+  "devDependencies": {
     "domready": "~1.0.5"
   }
 }

@@ -6,9 +6,9 @@
 */
 
 (function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define('ift-client-storage-compat', ['localstorage-events', 'ift-client-storage'], factory);
-  } else root.IFT = factory(root.LSEvents, root.IFT);
+  if (typeof define === 'function' && define.amd) define('ift-client-storage-compat', ['localstorage-events', 'ift-client-storage'], factory);
+  else if (typeof exports === 'object') module.exports = factory(require('localstorage-events'), require('./storage'));
+  else root.IFT = factory(root.LSEvents, root.IFT);
 }(this, function(LSEvents, IFT) {
 
   var support = IFT.support,

@@ -198,19 +198,6 @@
       this._counter = this._counter || 0;
       this._callbacks[++this._counter] = callback;
       return this._counter;
-    },
-
-    // Listen for incoming `message`s on the iframe. Parse and trigger an event for
-    // listening clients to act on.
-    _listen: function() {
-      var self = this;
-      support.on(window, 'message', function(evt) {
-        if (evt.origin == self.targetOrigin) {
-          var message = JSON.parse(evt.data);
-          var name = message.type + ':' + message.action;
-          self.trigger.apply(self, [name].concat(message.args));
-        }
-      });
     }
 
   });

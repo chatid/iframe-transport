@@ -20,6 +20,10 @@
 
   var Storage = IFT.Client.Storage = {};
 
+  // StorageClient
+  // -------------
+
+  // Base class for parent and child clients.
   var StorageClient = IFT.Client.extend({
     type: 'storage',
     get: function() {},

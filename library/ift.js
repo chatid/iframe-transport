@@ -260,9 +260,9 @@
   IFT.Parent = Transport.extend({
 
     constructor: function(childOrigin, path, name, callback) {
-      this.childOrigin = childOrigin;
-      this.childUri = childOrigin + path;
-      this.name = name;
+      this.childOrigin = childOrigin || 'http://127.0.0.1:8000';
+      this.childUri = childOrigin + path || '/child.html';
+      this.name = name || 'default';
       this.iframe = this._createIframe(this.childUri, this.name, callback);
 
       Transport.call(this, [childOrigin]);
@@ -294,7 +294,7 @@
 
       this.on('ift:ready', function ready() {
         this.off('ift:ready', ready, this);
-        callback();
+        if (typeof callback === 'function') callback();
       }, this);
 
       document.body.appendChild(iframe);

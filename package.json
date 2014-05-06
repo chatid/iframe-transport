@@ -17,7 +17,8 @@
     "phantomjs": "^1.9.7-5"
   },
   "scripts": {
-    "test": "browserify test/*.js | testling"
+    "test": "browserify test/*.js | testling",
+    "bundle": "browserify test/*.js -o test.js"
   },
   "repository": {
     "type": "git",

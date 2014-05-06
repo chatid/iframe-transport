@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset='utf8'>
+<title>Quilt Test Suite Child</title>
+<script src='../library/ift.js'></script>
+<script>
+var ift = new IFT.Child(['http://127.0.0.1:8080']);
+var TestClient = IFT.Client.extend({
+  test: function() {
+    return 'cb';
+  }
+});
+new TestClient(ift);
+</script>

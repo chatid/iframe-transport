@@ -14,11 +14,13 @@
   },
   "devDependencies": {
     "tape": "^2.12.3",
-    "phantomjs": "^1.9.7-5"
+    "phantomjs": "^1.9.7-5",
+    "watchify": "^0.8.3"
   },
   "scripts": {
     "test": "browserify test/*.js | testling",
-    "bundle": "browserify test/*.js -o test.js"
+    "bundle": "browserify test/*.js -o test.js",
+    "watch": "watchify test/*.js -o test.js"
   },
   "repository": {
     "type": "git",

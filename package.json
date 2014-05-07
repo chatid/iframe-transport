@@ -7,20 +7,20 @@
     "example": "example",
     "test": "test"
   },
-  "dependencies": {
-    "browserify": "~3.44.2",
-    "tape": "~2.12.3",
-    "testling": "~1.6.1"
-  },
   "devDependencies": {
+    "browserify": "~3.44.2",
     "tape": "^2.12.3",
     "phantomjs": "^1.9.7-5",
-    "watchify": "^0.8.3"
+    "watchify": "^0.8.3",
+    "colors": "^0.6.2",
+    "connect": "^2.15.0",
+    "parseurl": "^1.0.1",
+    "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa"
   },
   "scripts": {
-    "test": "browserify test/*.js | testling",
-    "bundle": "browserify test/*.js -o test.js",
-    "watch": "watchify test/*.js -o test.js"
+    "test": "testling",
+    "bundle": "browserify test/library/*.js -o test.js",
+    "watch": "watchify test/library/*.js -o test.js"
   },
   "repository": {
     "type": "git",
@@ -38,7 +38,8 @@
   },
   "homepage": "https://github.com/chatid/iframe-transport",
   "testling": {
-    "files": "test/*.js",
+    "files": "test/library/*.js",
+    "server": "test/server.js",
     "browsers": [
       "ie/8..latest",
       "chrome/latest",

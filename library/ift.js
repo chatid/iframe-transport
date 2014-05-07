@@ -146,11 +146,12 @@
     // Listen for incoming `message`s on the iframe. Parse and trigger an event for
     // listening clients to act on.
     listen: function() {
-      var self = this;
+      var self = this, message, name;
       support.on(window, 'message', function(evt) {
         if (self.targetOrigins[evt.origin]) {
-          var message = JSON.parse(evt.data);
-          var name = message.channel + ':' + message.action;
+          try { message = JSON.parse(evt.data); }
+          catch (e) { return; }
+          name = message.channel + ':' + message.action;
           self.trigger.apply(self, [name].concat(message.args));
         }
       });
@@ -220,6 +221,8 @@
   // Client instance methods for sending actions or processing incoming actions.
   mixin(Client.prototype, Events, {
 
+    channel: 'default',
+
     // Send a method invocation, callback, or event.
     send: function(action) {
       var args = slice.call(arguments, 1),
@@ -262,7 +265,7 @@
   IFT.Parent = Transport.extend({
 
     constructor: function(childOrigin, path, name, callback) {
-      this.childOrigin = childOrigin || 'http://127.0.0.1:8000';
+      this.childOrigin = childOrigin || 'http://localhost:8000';
       this.childUri = childOrigin + path || '/child.html';
       this.name = name || 'default';
       this.iframe = this._createIframe(this.childUri, this.name, callback);

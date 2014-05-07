@@ -1,7 +1,7 @@
 var test = require('tape');
-var IFT = require('../library/ift');
+var IFT = require('../../library/ift');
 var config = {
-  IFT_HOST: 'http://127.0.0.1:8000',
+  IFT_HOST: 'http://localhost:8080',
   IFT_PATH: '/test/child.html'
 };
 

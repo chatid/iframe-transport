@@ -18,7 +18,7 @@
     "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa"
   },
   "scripts": {
-    "test": "testling",
+    "test": "browserify test/library/*.js -o test.js && testling",
     "bundle": "browserify test/library/*.js -o test.js",
     "watch": "watchify test/library/*.js -o test.js"
   },

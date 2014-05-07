@@ -7,6 +7,23 @@ var config = {
 
 module.exports = function() {
 
+  test('Events.', function(t) {
+    t.plan(2);
+    var obj = {}, cb;
+    IFT.util.mixin(obj, IFT.Events);
+    obj.on('test', cb = function() {
+      t.pass('"test" event fired.');
+    });
+    obj.trigger('test');
+    obj.trigger('test');
+    obj.off('test');
+    obj.trigger('test');
+    obj.on('test', cb);
+    obj.off();
+    obj.trigger('test');
+    t.end();
+  });
+
   test('Transport correctly defines level.', function(t) {
     t.plan(2);
 

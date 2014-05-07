@@ -102,14 +102,18 @@
     },
 
     off: function(name, callback) {
+      var names;
       if (!this._events) return this;
-
+      if (!name) {
+        this._events = void 0;
+        return this;
+      }
       var listeners = this._events[name],
           i = listeners.length,
           listener;
       while (i--) {
         listener = listeners[i];
-        if (listener.callback === callback) {
+        if (!callback || listener.callback === callback) {
           listeners.splice(i, 1);
         }
       }
@@ -158,6 +162,7 @@
 
     destroy: function() {
       support.off(window, 'message', this.onMessage);
+      this.off();
     },
 
     // Send a `postMessage` that invokes a method. Optionally include a `callbackId` if a
@@ -233,6 +238,10 @@
           sendMethod = '_send' + action.replace(/^(\w)/, camel);
       args = [this.channel].concat(args);
       this.ift[sendMethod].apply(this.ift, args);
+    },
+
+    destroy: function() {
+      this.off();
     },
 
     // Process an incoming method invocation.

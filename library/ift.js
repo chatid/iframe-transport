@@ -143,11 +143,10 @@
 
   mixin(Transport.prototype, Events, {
 
-    // Listen for incoming `message`s on the iframe. Parse and trigger an event for
-    // listening clients to act on.
+    // Parse and trigger an event for listening clients to act on.
     listen: function() {
       var self = this, message, name;
-      support.on(window, 'message', function(evt) {
+      support.on(window, 'message', this.onMessage = function(evt) {
         if (self.targetOrigins[evt.origin]) {
           try { message = JSON.parse(evt.data); }
           catch (e) { return; }
@@ -155,6 +154,10 @@
           self.trigger.apply(self, [name].concat(message.args));
         }
       });
+    },
+
+    destroy: function() {
+      support.off(window, 'message', this.onMessage);
     },
 
     // Send a `postMessage` that invokes a method. Optionally include a `callbackId` if a
@@ -236,7 +239,7 @@
     _receiveInvoke: function(method) {
       var args = slice.call(arguments, 1), last = args[args.length - 1];
       var result = this[method].apply(this, args);
-      if (last.callbackId) this.send('callback', last.callbackId, [result]);
+      if (last && last.callbackId) this.send('callback', last.callbackId, [result]);
     },
 
     // Process an incoming event.
@@ -278,6 +281,11 @@
     send: function(params) {
       var message = JSON.stringify(params);
       this.iframe.contentWindow.postMessage(message, this.childOrigin);
+    },
+
+    destroy: function() {
+      Transport.prototype.destroy.apply(this, arguments);
+      this.iframe.parentNode.removeChild(this.iframe);
     },
 
     _createIframe: function(uri, name, callback) {

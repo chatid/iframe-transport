@@ -1,7 +1,6 @@
 var fs = require('fs');
 var http = require('http');
 var connect = require('connect');
-var parseurl = require('parseurl');
 var url = require('url');
 
 var middleware = connect();
@@ -13,13 +12,8 @@ var testJS = fs.readFileSync('test.js').toString();
 var childHTML = fs.readFileSync('test/child.html').toString();
 
 middleware.use(function(req, res, next) {
-  var originalUrl = url.parse(req.originalUrl || req.url);
-  var path = parseurl(req).pathname;
-  if (path === '/test.js') {
-    res.writeHead(200, {'Content-Type': 'application/javascript'});
-    res.write(testJS.replace('http://localhost:8080', 'http://localhost:' + childPort));
-    res.end();
-  } else if (path === '/test/child.html') {
+  var parsed = url.parse(req.originalUrl || req.url);
+  if (parsed.pathname === '/test/child.html') {
     parentPort = url.parse(req.headers.referer).port || parentPort;
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.write(childHTML.replace('http://localhost:8000', 'http://localhost:' + parentPort));

@@ -14,7 +14,6 @@
     "watchify": "^0.8.3",
     "colors": "^0.6.2",
     "connect": "^2.15.0",
-    "parseurl": "^1.0.1",
     "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa"
   },
   "scripts": {

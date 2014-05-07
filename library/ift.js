@@ -158,7 +158,7 @@
 
     // Send a `postMessage` that invokes a method. Optionally include a `callbackId` if a
     // callback is provided.
-    _invoke: function(type, method, args, callback) {
+    _sendInvoke: function(type, method, args, callback) {
       var params = {
         type: type,
         action: 'method',
@@ -172,7 +172,7 @@
     },
 
     // Send a `postMessage` that triggers an event.
-    _trigger: function(type, name, args) {
+    _sendTrigger: function(type, name, args) {
       var params = {
         type: type,
         action: 'event',
@@ -183,7 +183,7 @@
     },
 
     // Send a `postMessage` that invokes a callback.
-    _callback: function(type, callbackId, args) {
+    _sendCallback: function(type, callbackId, args) {
       var params = {
         type: type,
         action: 'callback',
@@ -212,9 +212,9 @@
     this.ift = ift;
 
     // Listen for incoming actions to be processed by this client.
-    this.ift.on(this.type + ':method', this._invoke, this);
-    this.ift.on(this.type + ':event', this._trigger, this);
-    this.ift.on(this.type + ':callback', this._callback, this);
+    this.ift.on(this.type + ':method', this._receiveInvoke, this);
+    this.ift.on(this.type + ':event', this._receiveTrigger, this);
+    this.ift.on(this.type + ':callback', this._receiveCallback, this);
   };
 
   // Client instance methods for sending actions or processing incoming actions.
@@ -222,25 +222,27 @@
 
     // Send a method invocation, callback, or event.
     send: function(action) {
-      var args = slice.call(arguments, 1);
+      var args = slice.call(arguments, 1),
+          camel = function(match, letter) { return letter.toUpperCase() },
+          sendMethod = '_send' + action.replace(/^(\w)/, camel);
       args = [this.type].concat(args);
-      this.ift['_' + action].apply(this.ift, args);
+      this.ift[sendMethod].apply(this.ift, args);
     },
 
     // Process an incoming method invocation.
-    _invoke: function(method) {
+    _receiveInvoke: function(method) {
       var args = slice.call(arguments, 1), last = args[args.length - 1];
       var result = this[method].apply(this, args);
       if (last.callbackId) this.send('callback', last.callbackId, [result]);
     },
 
     // Process an incoming event.
-    _trigger: function() {
+    _receiveTrigger: function() {
       this.trigger.apply(this, arguments);
     },
 
     // Process an incoming callback.
-    _callback: function(id) {
+    _receiveCallback: function(id) {
       var args = slice.call(arguments, 1);
       if (callback = this.ift._callbacks[id]) {
         callback.apply(this, args);

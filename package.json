@@ -17,9 +17,9 @@
     "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa"
   },
   "scripts": {
-    "test": "browserify test/library/*.js -o test.js && testling",
-    "bundle": "browserify test/library/*.js -o test.js",
-    "watch": "watchify test/library/*.js -o test.js"
+    "test": "browserify test/*.js | testling",
+    "bundle": "browserify test/*.js -o test.js",
+    "watch": "watchify test/*.js -o test.js"
   },
   "repository": {
     "type": "git",
@@ -37,8 +37,7 @@
   },
   "homepage": "https://github.com/chatid/iframe-transport",
   "testling": {
-    "files": "test/library/*.js",
-    "server": "test/server.js",
+    "files": "test/*.js",
     "browsers": [
       "ie/8..latest",
       "chrome/latest",

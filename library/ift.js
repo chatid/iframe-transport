@@ -150,7 +150,7 @@
       support.on(window, 'message', function(evt) {
         if (self.targetOrigins[evt.origin]) {
           var message = JSON.parse(evt.data);
-          var name = message.type + ':' + message.action;
+          var name = message.channel + ':' + message.action;
           self.trigger.apply(self, [name].concat(message.args));
         }
       });
@@ -158,9 +158,9 @@
 
     // Send a `postMessage` that invokes a method. Optionally include a `callbackId` if a
     // callback is provided.
-    _sendInvoke: function(type, method, args, callback) {
+    _sendInvoke: function(channel, method, args, callback) {
       var params = {
-        type: type,
+        channel: channel,
         action: 'method',
         args: [method].concat(args)
       };
@@ -172,9 +172,9 @@
     },
 
     // Send a `postMessage` that triggers an event.
-    _sendTrigger: function(type, name, args) {
+    _sendTrigger: function(channel, name, args) {
       var params = {
-        type: type,
+        channel: channel,
         action: 'event',
         args: [name].concat(args)
       };
@@ -183,9 +183,9 @@
     },
 
     // Send a `postMessage` that invokes a callback.
-    _sendCallback: function(type, callbackId, args) {
+    _sendCallback: function(channel, callbackId, args) {
       var params = {
-        type: type,
+        channel: channel,
         action: 'callback',
         args: [callbackId].concat(args)
       };
@@ -212,9 +212,9 @@
     this.ift = ift;
 
     // Listen for incoming actions to be processed by this client.
-    this.ift.on(this.type + ':method', this._receiveInvoke, this);
-    this.ift.on(this.type + ':event', this._receiveTrigger, this);
-    this.ift.on(this.type + ':callback', this._receiveCallback, this);
+    this.ift.on(this.channel + ':method', this._receiveInvoke, this);
+    this.ift.on(this.channel + ':event', this._receiveTrigger, this);
+    this.ift.on(this.channel + ':callback', this._receiveCallback, this);
   };
 
   // Client instance methods for sending actions or processing incoming actions.
@@ -225,7 +225,7 @@
       var args = slice.call(arguments, 1),
           camel = function(match, letter) { return letter.toUpperCase() },
           sendMethod = '_send' + action.replace(/^(\w)/, camel);
-      args = [this.type].concat(args);
+      args = [this.channel].concat(args);
       this.ift[sendMethod].apply(this.ift, args);
     },
 
@@ -330,7 +330,7 @@
     listen: function() {
       Transport.prototype.listen.apply(this, arguments);
       this.send({
-        type: 'ift',
+        channel: 'ift',
         action: 'ready'
       });
     }

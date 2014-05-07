@@ -25,7 +25,7 @@
 
   // Base class for parent and child clients.
   var StorageClient = IFT.Client.extend({
-    type: 'storage',
+    channel: 'storage',
     get: function() {},
     set: function() {},
     unset: function() {}

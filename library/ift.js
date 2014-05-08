@@ -102,7 +102,6 @@
     },
 
     off: function(name, callback) {
-      var names;
       if (!this._events) return this;
       if (!name) {
         this._events = void 0;

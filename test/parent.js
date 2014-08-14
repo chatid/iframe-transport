@@ -7,7 +7,7 @@ var config = {
 
 module.exports = function() {
 
-  test('Events.', function(t) {
+  test("Events.", function(t) {
     t.plan(2);
     var obj = {}, cb;
     IFT.util.mixin(obj, IFT.Events);
@@ -24,7 +24,7 @@ module.exports = function() {
     t.end();
   });
 
-  test('Transport correctly defines level.', function(t) {
+  test("Transport correctly defines level.", function(t) {
     t.plan(2);
 
     var parent, child;
@@ -40,7 +40,7 @@ module.exports = function() {
     t.end();
   });
 
-  test('Invoke and callback.', function(t) {
+  test("Invoke and callback.", function(t) {
     t.plan(1);
 
     var ift, client;
@@ -55,7 +55,7 @@ module.exports = function() {
     });
   });
 
-  test('Trigger.', function(t) {
+  test("Trigger.", function(t) {
     t.plan(1);
 
     var ift, client;

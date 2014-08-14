@@ -108,8 +108,8 @@
     },
 
     listen: function() {
-      var self = this, target = support.storageEventTarget;
-      support.on(target, 'storage', function(evt) { self.onStorage(evt); });
+      var child = this, target = support.storageEventTarget;
+      support.on(target, 'storage', function(evt) { child.onStorage(evt); });
     }
 
   });

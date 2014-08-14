@@ -148,13 +148,13 @@
 
     // Parse and trigger an event for listening clients to act on.
     listen: function() {
-      var self = this, message, name;
+      var transport = this, message, name;
       support.on(window, 'message', this.onMessage = function(evt) {
-        if (self.targetOrigins[evt.origin]) {
+        if (transport.targetOrigins[evt.origin]) {
           try { message = JSON.parse(evt.data); }
           catch (e) { return; }
           name = message.channel + ':' + message.action;
-          self.trigger.apply(self, [name].concat(message.args));
+          transport.trigger.apply(transport, [name].concat(message.args));
         }
       });
     },

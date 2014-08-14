@@ -27,9 +27,9 @@
 
     constructor: function(ift, storage) {
       Child.apply(this, arguments);
-      var self = this;
+      var child = this;
       this.storage = new LSEvents(this.storage, function() {
-        self.onStorage.apply(self, arguments);
+        child.onStorage.apply(child, arguments);
       });
     },
 

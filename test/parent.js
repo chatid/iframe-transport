@@ -65,7 +65,7 @@ module.exports = function() {
   test("Trigger.", function(t) {
     t.plan(1);
 
-    ift.childClient('test', function(__super__) {
+    ift.parentClient('test', function(__super__) {
       return {
         ack: function() {
           t.pass('Acknowledged.');

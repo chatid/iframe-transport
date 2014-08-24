@@ -380,28 +380,30 @@
 
     _childClients: {},
 
+    _extendClient: function(level, name, implementation) {
+      var clients = '_' + level + 'Clients';
+          ctor = this[clients][name] || Client;
+      this[clients][name] = ctor.extend(implementation(ctor));
+    },
+
     client: function(name, implementation) {
-      var parent = this._parentClients[name] || Client;
-      ift._parentClients[name] = parent.extend(implementation(parent));
-      var child = this._childClients[name] || Client;
-      ift._childClients[name] = child.extend(implementation(child));
+      this._extendClient('parent', name, implementation);
+      this._extendClient('child', name, implementation);
     },
 
     parentClient: function(name, implementation) {
       if (implementation) {
-        var parent = this._parentClients[name] || Client;
-        ift._parentClients[name] = parent.extend(implementation(parent));
+        this._extendClient('parent', name, implementation);
       } else {
-        return ift._parentClients[name];
+        return this._parentClients[name];
       }
     },
 
     childClient: function(name, implementation) {
       if (implementation) {
-        var child = this._childClients[name] || Client;
-        ift._childClients[name] = child.extend(implementation(child));
+        this._extendClient('child', name, implementation);
       } else {
-        return ift._childClients[name];
+        return this._childClients[name];
       }
     }
 

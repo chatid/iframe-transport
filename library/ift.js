@@ -392,19 +392,13 @@
     },
 
     parentClient: function(name, implementation) {
-      if (implementation) {
-        this._extendClient('parent', name, implementation);
-      } else {
-        return this._parentClients[name];
-      }
+      if (!implementation) return this._parentClients[name];
+      this._extendClient('parent', name, implementation);
     },
 
     childClient: function(name, implementation) {
-      if (implementation) {
-        this._extendClient('child', name, implementation);
-      } else {
-        return this._childClients[name];
-      }
+      if (!implementation) return this._childClients[name];
+      this._extendClient('child', name, implementation);
     }
 
   });

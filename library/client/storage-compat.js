@@ -8,36 +8,38 @@
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) define('ift-client-storage-compat', ['localstorage-events', 'ift-client-storage'], factory);
   else if (typeof exports === 'object') module.exports = factory(require('localstorage-events'), require('./storage'));
-  else root.IFT = factory(root.LSEvents, root.IFT);
-}(this, function(LSEvents, IFT) {
+  else root.ift = factory(root.LSEvents, root.ift);
+}(this, function(LSEvents, ift) {
 
-  var support = IFT.support,
-      util = IFT.util;
+  var support = ift.support,
+      mixin = ift.util.mixin;
 
-  util.mixin(support, {
+  mixin(support, {
     myWritesTrigger: ('onstoragecommit' in document)
   });
 
   // Only override the Storage child if necessary.
-  if (!support.myWritesTrigger) return IFT;
+  if (!support.myWritesTrigger) return ift;
 
-  var Child = IFT.Client.Storage.Child;
+  ift.childClient('storage', function(__super__) {
 
-  var compatibleChild = IFT.Client.Storage.Child = Child.extend({
+    return {
 
-    constructor: function(ift, storage) {
-      Child.apply(this, arguments);
-      var child = this;
-      this.storage = new LSEvents(this.storage, function() {
-        child.onStorage.apply(child, arguments);
-      });
-    },
+      constructor: function(transport, storage) {
+        __super__.apply(this, arguments);
+        var child = this;
+        this.storage = new LSEvents(this.storage, function() {
+          child.onStorage.apply(child, arguments);
+        });
+      },
 
-    // `LSEvents` will handle "storage" events for us.
-    listen: function() {}
+      // `LSEvents` will handle "storage" events for us.
+      listen: function() {}
+
+    };
 
   });
 
-  return IFT;
+  return ift;
 
 }));

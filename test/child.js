@@ -1,13 +1,21 @@
-var IFT = require('../library/ift');
+var ift = require('../library/ift');
+var config = {
+  IFT_ORIGIN: location.origin
+};
 
 module.exports = function() {
-  var ift = new IFT.Child([location.origin]);
-  var TestClient = IFT.Client.extend({
-    test: function() {
-      return 'ack';
-    }
+  ift.childClient('test', function(__super__) {
+    return {
+      test: function() {
+        console.log('child #test called')
+        return 'ack';
+      }
+    };
   });
-  var client = new TestClient(ift);
+  var transport = ift.child({
+    parentOrigins: [config.IFT_ORIGIN]
+  });
+  var client = transport.client('test');
   client.on('test', function() {
     client.send('invoke', 'ack', []);
   });

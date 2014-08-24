@@ -18,6 +18,7 @@
     "faucet": "0.0.1"
   },
   "scripts": {
+    "browserify": "browserify test/*.js",
     "test": "browserify test/*.js | testling | faucet",
     "bundle": "browserify test/*.js -o test.js",
     "watch": "watchify test/*.js -o test.js"

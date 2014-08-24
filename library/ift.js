@@ -8,17 +8,17 @@
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) define('ift', factory);
   else if (typeof exports === 'object') module.exports = factory();
-  else root.IFT = factory();
+  else root.ift = factory();
 }(this, function() {
 
   var slice = [].slice;
 
-  var IFT = {};
+  var ift = {};
 
   // Support
   // -------
 
-  var support = IFT.support = {};
+  var support = ift.support = {};
 
   // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
   support.has = function(object, property){
@@ -46,11 +46,11 @@
   // Utility
   // -------
 
-  var util = IFT.util = {};
+  ift.util = {};
 
   // (ref `_.extend`)
   // Extend a given object with all the properties of the passed-in object(s).
-  var mixin = IFT.util.mixin = function(obj) {
+  var mixin = ift.util.mixin = function(obj) {
     var args = slice.call(arguments, 1),
         props;
     for (var i = 0; i < args.length; i++) {
@@ -64,7 +64,7 @@
 
   // (ref Backbone `extend`)
   // Helper function to correctly set up the prototype chain, for subclasses.
-  var extend = IFT.util.extend = function(protoProps, staticProps) {
+  var extend = ift.util.extend = function(protoProps, staticProps) {
     var parent = this;
     var child;
 
@@ -90,7 +90,7 @@
 
   // (ref `Backbone.Events`)
   // A module that can be mixed in to any object to provide it with custom events.
-  var Events = IFT.Events = {
+  var Events = ift.Events = {
 
     on: function(name, callback, context) {
       this._events || (this._events = {});
@@ -159,6 +159,11 @@
       });
     },
 
+    client: function(name) {
+      var clients = '_' + this.level + 'Clients';
+      return new (ift[clients][name] || Client)(this);
+    },
+
     destroy: function() {
       support.off(window, 'message', this.onMessage);
       this.off();
@@ -216,13 +221,13 @@
 
   // Base class for defining client APIs that may communicate over the iframe transport.
   // Clients may invoke methods with callbacks and trigger events.
-  var Client = IFT.Client = function(ift) {
-    this.ift = ift;
+  var Client = function(transport) {
+    this.transport = transport;
 
     // Listen for incoming actions to be processed by this client.
-    this.ift.on(this.channel + ':method', this._receiveInvoke, this);
-    this.ift.on(this.channel + ':event', this._receiveTrigger, this);
-    this.ift.on(this.channel + ':callback', this._receiveCallback, this);
+    this.transport.on(this.channel + ':method', this._receiveInvoke, this);
+    this.transport.on(this.channel + ':event', this._receiveTrigger, this);
+    this.transport.on(this.channel + ':callback', this._receiveCallback, this);
   };
 
   // Client instance methods for sending actions or processing incoming actions.
@@ -236,7 +241,7 @@
           camel = function(match, letter) { return letter.toUpperCase() },
           sendMethod = '_send' + action.replace(/^(\w)/, camel);
       args = [this.channel].concat(args);
-      this.ift[sendMethod].apply(this.ift, args);
+      this.transport[sendMethod].apply(this.transport, args);
     },
 
     destroy: function() {
@@ -258,9 +263,9 @@
     // Process an incoming callback.
     _receiveCallback: function(id) {
       var args = slice.call(arguments, 1);
-      if (callback = this.ift._callbacks[id]) {
+      if (callback = this.transport._callbacks[id]) {
         callback.apply(this, args);
-        this.ift._callbacks[id] = null;
+        this.transport._callbacks[id] = null;
       }
     }
 
@@ -269,16 +274,16 @@
   // Set up inheritance for the transport and client.
   Transport.extend = Client.extend = extend;
 
-  // IFT.Parent
+  // Parent
   // ----------
 
   // Implement the transport class from the parent's perspective.
-  IFT.Parent = Transport.extend({
+  var Parent = Transport.extend({
 
-    constructor: function(childOrigin, path, name, callback) {
-      this.childOrigin = childOrigin || 'http://localhost:8000';
-      this.childUri = childOrigin + path || '/child.html';
+    constructor: function(name, childOrigin, childPath, callback) {
       this.name = name || 'default';
+      this.childOrigin = childOrigin || 'http://localhost:8000';
+      this.childUri = childOrigin + childPath || '/child.html';
       this.iframe = this._createIframe(this.childUri, this.name, callback);
 
       Transport.call(this, [childOrigin]);
@@ -315,7 +320,7 @@
 
       this.on('ift:ready', function ready() {
         this.off('ift:ready', ready, this);
-        if (typeof callback === 'function') callback();
+        if (typeof callback === 'function') callback(this);
       }, this);
 
       document.body.appendChild(iframe);
@@ -325,11 +330,11 @@
 
   });
 
-  // IFT.Child
-  // ---------
+  // Child
+  // -----
 
   // Implement the transport class from the child's perspective.
-  IFT.Child = Transport.extend({
+  var Child = Transport.extend({
 
     constructor: function() {
       if (window.parent !== window) this.parent = window.parent;
@@ -356,6 +361,48 @@
 
   });
 
-  return IFT;
+  // API
+  // ---
+
+  ift.parent = function(options) {
+    options = options || {};
+    return new Parent(options.name, options.childOrigin, options.childPath, options.ready);
+  };
+
+  ift.child = function(options) {
+    options = options || {};
+    return new Child(options.parentOrigins);
+  };
+
+  ift._parentClients = {};
+
+  ift._childClients = {};
+
+  ift.client = function(name, implementation) {
+    var parent = this._parentClients[name] || Client;
+    ift._parentClients[name] = parent.extend(implementation(parent));
+    var child = this._childClients[name] || Client;
+    ift._childClients[name] = child.extend(implementation(child));
+  }
+
+  ift.parentClient = function(name, implementation) {
+    if (implementation) {
+      var parent = this._parentClients[name] || Client;
+      ift._parentClients[name] = parent.extend(implementation(parent));
+    } else {
+      return ift._parentClients[name];
+    }
+  };
+
+  ift.childClient = function(name, implementation) {
+    if (implementation) {
+      var child = this._childClients[name] || Client;
+      ift._childClients[name] = child.extend(implementation(child));
+    } else {
+      return ift._childClients[name];
+    }
+  };
+
+  return ift;
 
 }));

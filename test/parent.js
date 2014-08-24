@@ -1,7 +1,7 @@
 var test = require('tape');
-var IFT = require('../library/ift');
+var ift = require('../library/ift');
 var config = {
-  IFT_HOST: location.origin,
+  IFT_ORIGIN: location.origin,
   IFT_PATH: location.pathname + '?child'
 };
 
@@ -10,7 +10,7 @@ module.exports = function() {
   test("Events.", function(t) {
     t.plan(2);
     var obj = {}, cb;
-    IFT.util.mixin(obj, IFT.Events);
+    ift.util.mixin(obj, ift.Events);
     obj.on('test', cb = function() {
       t.pass('"test" event fired.');
     });
@@ -29,11 +29,16 @@ module.exports = function() {
 
     var parent, child;
 
-    parent = new IFT.Parent(config.IFT_HOST, config.IFT_PATH);
+    parent = ift.parent({
+      childOrigin: config.IFT_ORIGIN,
+      childPath: config.IFT_PATH
+    });
     t.equal(parent.level, 'parent');
     parent.destroy();
 
-    child = new IFT.Child;
+    child = ift.child({
+      parentOrigins: [config.IFT_ORIGIN]
+    });
     t.equal(child.level, 'child');
     child.destroy();
 
@@ -43,33 +48,40 @@ module.exports = function() {
   test("Invoke and callback.", function(t) {
     t.plan(1);
 
-    var ift, client;
-
-    ift = new IFT.Parent(config.IFT_HOST, config.IFT_PATH, 'test', function() {
-      client = new IFT.Client(ift);
-      client.send('invoke', 'test', [], function() {
-        t.pass('Acknowledged.');
-        ift.destroy();
-        t.end();
-      });
+    var transport = ift.parent({
+      childOrigin: config.IFT_ORIGIN,
+      childPath: config.IFT_PATH,
+      ready: function(transport) {
+        var client = transport.client('test');
+        client.send('invoke', 'test', [], function() {
+          t.pass('Acknowledged.');
+          transport.destroy();
+          t.end();
+        });
+      }
     });
   });
 
   test("Trigger.", function(t) {
     t.plan(1);
 
-    var ift, client;
-    var TestClient = IFT.Client.extend({
-      ack: function() {
-        t.pass('Acknowledged.');
-        ift.destroy();
-        t.end();
-      }
+    ift.childClient('test', function(__super__) {
+      return {
+        ack: function() {
+          t.pass('Acknowledged.');
+          transport.destroy();
+          t.end();
+        }
+      };
     });
 
-    ift = new IFT.Parent(config.IFT_HOST, config.IFT_PATH, 'test', function() {
-      client = new TestClient(ift);
-      client.send('trigger', 'test', []);
+    var transport = ift.parent({
+      childOrigin: config.IFT_ORIGIN,
+      childPath: config.IFT_PATH,
+      ready: function(transport) {
+        client = transport.client('test');
+        client.send('trigger', 'test', []);
+      }
     });
   });
 

@@ -8,51 +8,55 @@
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) define('ift-client-storage', ['ift'], factory);
   else if (typeof exports === 'object') module.exports = factory(require('../ift'));
-  else root.IFT = factory(root.IFT);
-}(this, function(IFT) {
+  else root.ift = factory(root.ift);
+}(this, function(ift) {
 
-  var support = IFT.support,
-      util = IFT.util;
+  var support = ift.support,
+      mixin = ift.util.mixin;
 
-  util.mixin(support, {
+  mixin(support, {
     storageEventTarget: ('onstorage' in window ? window : document)
   });
-
-  var Storage = IFT.Client.Storage = {};
 
   // StorageClient
   // -------------
 
   // Base class for parent and child clients.
-  var StorageClient = IFT.Client.extend({
-    channel: 'storage',
-    get: function() {},
-    set: function() {},
-    unset: function() {}
+  ift.client('storage', function(__super__) {
+    return {
+      channel: 'storage',
+      get: function() {},
+      set: function() {},
+      unset: function() {}
+    };
   });
 
   // Parent
   // ------
 
   // Implement the LocalStorage client from the parent's perspective.
-  var Parent = Storage.Parent = StorageClient.extend({
+  ift.parentClient('storage', function(__super__) {
 
-    get: function(key, callback) {
-      this.send('invoke', 'get', [key], callback);
-    },
+    return {
 
-    set: function(key, value, options, callback) {
-      if (typeof options === 'function') {
-        callback = options;
-        options = {};
-      } else options = options || {};
+      get: function(key, callback) {
+        this.send('invoke', 'get', [key], callback);
+      },
 
-      this.send('invoke', 'set', [key, value, options], callback);
-    },
+      set: function(key, value, options, callback) {
+        if (typeof options === 'function') {
+          callback = options;
+          options = {};
+        } else options = options || {};
 
-    unset: function(keys, callback) {
-      this.send('invoke', 'unset', [keys], callback);
-    }
+        this.send('invoke', 'set', [key, value, options], callback);
+      },
+
+      unset: function(keys, callback) {
+        this.send('invoke', 'unset', [keys], callback);
+      }
+
+    };
 
   });
 
@@ -71,49 +75,54 @@
   };
 
   // Implement the LocalStorage client from the child's perspective.
-  var Child = Storage.Child = StorageClient.extend({
+  ift.childClient('storage', function(__super__) {
 
-    constructor: function(ift, storage) {
-      this.storage = storage || lsWrapper;
-      this.listen();
-      IFT.Client.apply(this, arguments);
-    },
+    return {
 
-    get: function(key) {
-      return this.storage.get(key);
-    },
+      constructor: function(transport, storage) {
+        this.storage = storage || lsWrapper;
+        this.listen();
+        __super__.apply(this, arguments);
+      },
 
-    set: function(key, value, options) {
-      return this.storage.set(key, value, options);
-    },
+      get: function(key) {
+        return this.storage.get(key);
+      },
 
-    unset: function(keys) {
-      return this.storage.unset(keys);
-    },
+      set: function(key, value, options) {
+        console.log('child set', key, value)
+        return this.storage.set(key, value, options);
+      },
 
-    onStorage: function(evt) {
-      if (evt) {
-        // IE9+: Don't trigger if value didn't change
-        if (evt.oldValue === evt.newValue) return;
-      } else {
-        // IE8: `evt` is undefined
-        evt = {};
+      unset: function(keys) {
+        return this.storage.unset(keys);
+      },
+
+      onStorage: function(evt) {
+        if (evt) {
+          // IE9+: Don't trigger if value didn't change
+          if (evt.oldValue === evt.newValue) return;
+        } else {
+          // IE8: `evt` is undefined
+          evt = {};
+        }
+
+        this.send('trigger', 'change', [{
+          key: evt.key,
+          oldValue: evt.oldValue,
+          newValue: evt.newValue
+        }]);
+      },
+
+      listen: function() {
+        var child = this, target = support.storageEventTarget;
+        support.on(target, 'storage', function(evt) { child.onStorage(evt); });
       }
 
-      this.send('trigger', 'change', [{
-        key: evt.key,
-        oldValue: evt.oldValue,
-        newValue: evt.newValue
-      }]);
-    },
-
-    listen: function() {
-      var child = this, target = support.storageEventTarget;
-      support.on(target, 'storage', function(evt) { child.onStorage(evt); });
-    }
+    };
 
   });
 
-  return IFT;
+  return ift;
 
 }));

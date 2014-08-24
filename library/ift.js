@@ -364,44 +364,48 @@
   // API
   // ---
 
-  ift.parent = function(options) {
-    options = options || {};
-    return new Parent(options.name, options.childOrigin, options.childPath, options.ready);
-  };
+  mixin(ift, {
 
-  ift.child = function(options) {
-    options = options || {};
-    return new Child(options.parentOrigins);
-  };
+    parent: function(options) {
+      options = options || {};
+      return new Parent(options.name, options.childOrigin, options.childPath, options.ready);
+    },
 
-  ift._parentClients = {};
+    child: function(options) {
+      options = options || {};
+      return new Child(options.parentOrigins);
+    },
 
-  ift._childClients = {};
+    _parentClients: {},
 
-  ift.client = function(name, implementation) {
-    var parent = this._parentClients[name] || Client;
-    ift._parentClients[name] = parent.extend(implementation(parent));
-    var child = this._childClients[name] || Client;
-    ift._childClients[name] = child.extend(implementation(child));
-  }
+    _childClients: {},
 
-  ift.parentClient = function(name, implementation) {
-    if (implementation) {
+    client: function(name, implementation) {
       var parent = this._parentClients[name] || Client;
       ift._parentClients[name] = parent.extend(implementation(parent));
-    } else {
-      return ift._parentClients[name];
-    }
-  };
-
-  ift.childClient = function(name, implementation) {
-    if (implementation) {
       var child = this._childClients[name] || Client;
       ift._childClients[name] = child.extend(implementation(child));
-    } else {
-      return ift._childClients[name];
+    },
+
+    parentClient: function(name, implementation) {
+      if (implementation) {
+        var parent = this._parentClients[name] || Client;
+        ift._parentClients[name] = parent.extend(implementation(parent));
+      } else {
+        return ift._parentClients[name];
+      }
+    },
+
+    childClient: function(name, implementation) {
+      if (implementation) {
+        var child = this._childClients[name] || Client;
+        ift._childClients[name] = child.extend(implementation(child));
+      } else {
+        return ift._childClients[name];
+      }
     }
-  };
+
+  });
 
   return ift;
 

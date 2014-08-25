@@ -8,17 +8,17 @@
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) define('ift', factory);
   else if (typeof exports === 'object') module.exports = factory();
-  else root.IFT = factory();
+  else root.ift = factory();
 }(this, function() {
 
   var slice = [].slice;
 
-  var IFT = {};
+  var ift = {};
 
   // Support
   // -------
 
-  var support = IFT.support = {};
+  var support = ift.support = {};
 
   // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
   support.has = function(object, property){
@@ -46,11 +46,11 @@
   // Utility
   // -------
 
-  var util = IFT.util = {};
+  ift.util = {};
 
   // (ref `_.extend`)
   // Extend a given object with all the properties of the passed-in object(s).
-  var mixin = IFT.util.mixin = function(obj) {
+  var mixin = ift.util.mixin = function(obj) {
     var args = slice.call(arguments, 1),
         props;
     for (var i = 0; i < args.length; i++) {
@@ -64,7 +64,7 @@
 
   // (ref Backbone `extend`)
   // Helper function to correctly set up the prototype chain, for subclasses.
-  var extend = IFT.util.extend = function(protoProps, staticProps) {
+  var extend = ift.util.extend = function(protoProps, staticProps) {
     var parent = this;
     var child;
 
@@ -90,7 +90,7 @@
 
   // (ref `Backbone.Events`)
   // A module that can be mixed in to any object to provide it with custom events.
-  var Events = IFT.Events = {
+  var Events = ift.Events = {
 
     on: function(name, callback, context) {
       this._events || (this._events = {});
@@ -148,15 +148,19 @@
 
     // Parse and trigger an event for listening clients to act on.
     listen: function() {
-      var self = this, message, name;
+      var transport = this, message, name;
       support.on(window, 'message', this.onMessage = function(evt) {
-        if (self.targetOrigins[evt.origin]) {
-          try { message = JSON.parse(evt.data); }
-          catch (e) { return; }
-          name = message.channel + ':' + message.action;
-          self.trigger.apply(self, [name].concat(message.args));
-        }
+        if (!transport.targetOrigins[evt.origin]) return;
+        try { message = JSON.parse(evt.data); }
+        catch (e) { return; }
+        name = message.channel + ':' + message.action;
+        transport.trigger.apply(transport, [name].concat(message.args));
       });
+    },
+
+    client: function(name) {
+      var clients = '_' + this.role + 'Clients';
+      return new (ift[clients][name] || Client)(this);
     },
 
     destroy: function() {
@@ -216,13 +220,13 @@
 
   // Base class for defining client APIs that may communicate over the iframe transport.
   // Clients may invoke methods with callbacks and trigger events.
-  var Client = IFT.Client = function(ift) {
-    this.ift = ift;
+  var Client = function(transport) {
+    this.transport = transport;
 
     // Listen for incoming actions to be processed by this client.
-    this.ift.on(this.channel + ':method', this._receiveInvoke, this);
-    this.ift.on(this.channel + ':event', this._receiveTrigger, this);
-    this.ift.on(this.channel + ':callback', this._receiveCallback, this);
+    this.transport.on(this.channel + ':method', this._receiveInvoke, this);
+    this.transport.on(this.channel + ':event', this._receiveTrigger, this);
+    this.transport.on(this.channel + ':callback', this._receiveCallback, this);
   };
 
   // Client instance methods for sending actions or processing incoming actions.
@@ -236,7 +240,7 @@
           camel = function(match, letter) { return letter.toUpperCase() },
           sendMethod = '_send' + action.replace(/^(\w)/, camel);
       args = [this.channel].concat(args);
-      this.ift[sendMethod].apply(this.ift, args);
+      this.transport[sendMethod].apply(this.transport, args);
     },
 
     destroy: function() {
@@ -257,11 +261,11 @@
 
     // Process an incoming callback.
     _receiveCallback: function(id) {
+      var callback = this.transport._callbacks[id];
       var args = slice.call(arguments, 1);
-      if (callback = this.ift._callbacks[id]) {
-        callback.apply(this, args);
-        this.ift._callbacks[id] = null;
-      }
+      if (!callback) return;
+      callback.apply(this, args);
+      this.transport._callbacks[id] = null;
     }
 
   });
@@ -269,26 +273,26 @@
   // Set up inheritance for the transport and client.
   Transport.extend = Client.extend = extend;
 
-  // IFT.Parent
-  // ----------
+  // Local
+  // -----
 
-  // Implement the transport class from the parent's perspective.
-  IFT.Parent = Transport.extend({
+  // Implement the transport class from the local's perspective.
+  var Local = Transport.extend({
 
-    constructor: function(childOrigin, path, name, callback) {
-      this.childOrigin = childOrigin || 'http://localhost:8000';
-      this.childUri = childOrigin + path || '/child.html';
+    constructor: function(name, remoteOrigin, remotePath, callback) {
       this.name = name || 'default';
-      this.iframe = this._createIframe(this.childUri, this.name, callback);
+      this.remoteOrigin = remoteOrigin || 'http://localhost:8000';
+      this.remoteUri = remoteOrigin + remotePath || '/remote.html';
+      this.iframe = this._createIframe(this.remoteUri, this.name, callback);
 
-      Transport.call(this, [childOrigin]);
+      Transport.call(this, [remoteOrigin]);
     },
 
-    level: 'parent',
+    role: 'local',
 
     send: function(params) {
       var message = JSON.stringify(params);
-      this.iframe.contentWindow.postMessage(message, this.childOrigin);
+      this.iframe.contentWindow.postMessage(message, this.remoteOrigin);
     },
 
     destroy: function() {
@@ -315,7 +319,7 @@
 
       this.on('ift:ready', function ready() {
         this.off('ift:ready', ready, this);
-        if (typeof callback === 'function') callback();
+        if (typeof callback === 'function') callback(this);
       }, this);
 
       document.body.appendChild(iframe);
@@ -325,11 +329,11 @@
 
   });
 
-  // IFT.Child
-  // ---------
+  // Remote
+  // ------
 
-  // Implement the transport class from the child's perspective.
-  IFT.Child = Transport.extend({
+  // Implement the transport class from the remote's perspective.
+  var Remote = Transport.extend({
 
     constructor: function() {
       if (window.parent !== window) this.parent = window.parent;
@@ -337,7 +341,7 @@
       Transport.apply(this, arguments);
     },
 
-    level: 'child',
+    role: 'remote',
 
     send: function(params) {
       if (this.parent) {
@@ -356,6 +360,48 @@
 
   });
 
-  return IFT;
+  // API
+  // ---
+
+  mixin(ift, {
+
+    local: function(options) {
+      options = options || {};
+      return new Local(options.name, options.remoteOrigin, options.remotePath, options.ready);
+    },
+
+    remote: function(options) {
+      options = options || {};
+      return new Remote(options.trustedOrigins);
+    },
+
+    _localClients: {},
+
+    _remoteClients: {},
+
+    _extendClient: function(role, name, implementation) {
+      var clients = '_' + role + 'Clients';
+          ctor = this[clients][name] || Client;
+      this[clients][name] = ctor.extend(implementation(ctor));
+    },
+
+    client: function(name, implementation) {
+      this._extendClient('local', name, implementation);
+      this._extendClient('remote', name, implementation);
+    },
+
+    localClient: function(name, implementation) {
+      if (!implementation) return this._localClients[name];
+      this._extendClient('local', name, implementation);
+    },
+
+    remoteClient: function(name, implementation) {
+      if (!implementation) return this._remoteClients[name];
+      this._extendClient('remote', name, implementation);
+    }
+
+  });
+
+  return ift;
 
 }));

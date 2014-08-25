@@ -1,5 +1,5 @@
-if (location.search.match(/child/)) {
-  require('./child')();
+if (location.search.match(/remote/)) {
+  require('./remote')();
 } else {
-  require('./parent')();
+  require('./local')();
 }

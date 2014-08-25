@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <title>Iframe Storage | Local</title>
+
+    <script type='text/javascript' src='../bower_components/domready/ready.js'></script>
+    <script type='text/javascript' src='../library/ift.js'></script>
+    <script type='text/javascript' src='../library/client/storage.js'></script>
+    <script type='text/javascript'>
+    var start = function(transport) {
+      var storage = transport.client('storage');
+      storage.on('change', function() {
+        console.log('change event', arguments);
+      });
+      storage.set('herp', 'sucka', function() {
+        storage.get('herp', function(resp) {
+          console.log('got', resp);
+        });
+      });
+    };
+    domready(function() {
+      var transport = ift.local({
+        name: 'my_ift',
+        remoteOrigin: 'http://127.0.0.1:4000',
+        remotePath: '/example/remote.html',
+        ready: start
+      });
+    });
+    </script>
+
+  </head>
+  <body>
+
+  </body>
+</html>

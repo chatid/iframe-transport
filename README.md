@@ -21,7 +21,7 @@ $ http-server -p 8000
 $ http-server -p 4000
 ```
 
-Open `http://127.0.0.1:8000/example/parent.html`
+Open `http://127.0.0.1:8000/example/local.html`
 
 ### Vendor libs
 

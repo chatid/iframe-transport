@@ -21,7 +21,7 @@
   // StorageClient
   // -------------
 
-  // Base class for parent and child clients.
+  // Base class for local and remote clients.
   ift.client('storage', function(__super__) {
     return {
       channel: 'storage',
@@ -31,11 +31,11 @@
     };
   });
 
-  // Parent
-  // ------
+  // Local
+  // -----
 
-  // Implement the LocalStorage client from the parent's perspective.
-  ift.parentClient('storage', function(__super__) {
+  // Implement the LocalStorage client from the local's perspective.
+  ift.localClient('storage', function(__super__) {
 
     return {
 
@@ -74,8 +74,8 @@
     }
   };
 
-  // Implement the LocalStorage client from the child's perspective.
-  ift.childClient('storage', function(__super__) {
+  // Implement the LocalStorage client from the remote's perspective.
+  ift.remoteClient('storage', function(__super__) {
 
     return {
 
@@ -90,7 +90,6 @@
       },
 
       set: function(key, value, options) {
-        console.log('child set', key, value)
         return this.storage.set(key, value, options);
       },
 
@@ -115,8 +114,8 @@
       },
 
       listen: function() {
-        var child = this, target = support.storageEventTarget;
-        support.on(target, 'storage', function(evt) { child.onStorage(evt); });
+        var remote = this, target = support.storageEventTarget;
+        support.on(target, 'storage', function(evt) { remote.onStorage(evt); });
       }
 
     };

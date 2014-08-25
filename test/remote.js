@@ -4,16 +4,16 @@ var config = {
 };
 
 module.exports = function() {
-  ift.childClient('test', function(__super__) {
+  ift.remoteClient('test', function(__super__) {
     return {
       test: function() {
-        console.log('child #test called')
+        console.log('remote #test called')
         return 'ack';
       }
     };
   });
-  var transport = ift.child({
-    parentOrigins: [config.IFT_ORIGIN]
+  var transport = ift.remote({
+    localOrigins: [config.IFT_ORIGIN]
   });
   var client = transport.client('test');
   client.on('test', function() {

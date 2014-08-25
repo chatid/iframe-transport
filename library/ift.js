@@ -159,7 +159,7 @@
     },
 
     client: function(name) {
-      var clients = '_' + this.level + 'Clients';
+      var clients = '_' + this.role + 'Clients';
       return new (ift[clients][name] || Client)(this);
     },
 
@@ -273,26 +273,26 @@
   // Set up inheritance for the transport and client.
   Transport.extend = Client.extend = extend;
 
-  // Parent
-  // ----------
+  // Local
+  // -----
 
-  // Implement the transport class from the parent's perspective.
-  var Parent = Transport.extend({
+  // Implement the transport class from the local's perspective.
+  var Local = Transport.extend({
 
-    constructor: function(name, childOrigin, childPath, callback) {
+    constructor: function(name, remoteOrigin, remotePath, callback) {
       this.name = name || 'default';
-      this.childOrigin = childOrigin || 'http://localhost:8000';
-      this.childUri = childOrigin + childPath || '/child.html';
-      this.iframe = this._createIframe(this.childUri, this.name, callback);
+      this.remoteOrigin = remoteOrigin || 'http://localhost:8000';
+      this.remoteUri = remoteOrigin + remotePath || '/remote.html';
+      this.iframe = this._createIframe(this.remoteUri, this.name, callback);
 
-      Transport.call(this, [childOrigin]);
+      Transport.call(this, [remoteOrigin]);
     },
 
-    level: 'parent',
+    role: 'local',
 
     send: function(params) {
       var message = JSON.stringify(params);
-      this.iframe.contentWindow.postMessage(message, this.childOrigin);
+      this.iframe.contentWindow.postMessage(message, this.remoteOrigin);
     },
 
     destroy: function() {
@@ -329,11 +329,11 @@
 
   });
 
-  // Child
-  // -----
+  // Remote
+  // ------
 
-  // Implement the transport class from the child's perspective.
-  var Child = Transport.extend({
+  // Implement the transport class from the remote's perspective.
+  var Remote = Transport.extend({
 
     constructor: function() {
       if (window.parent !== window) this.parent = window.parent;
@@ -341,7 +341,7 @@
       Transport.apply(this, arguments);
     },
 
-    level: 'child',
+    role: 'remote',
 
     send: function(params) {
       if (this.parent) {
@@ -365,39 +365,39 @@
 
   mixin(ift, {
 
-    parent: function(options) {
+    local: function(options) {
       options = options || {};
-      return new Parent(options.name, options.childOrigin, options.childPath, options.ready);
+      return new Local(options.name, options.remoteOrigin, options.remotePath, options.ready);
     },
 
-    child: function(options) {
+    remote: function(options) {
       options = options || {};
-      return new Child(options.parentOrigins);
+      return new Remote(options.localOrigins);
     },
 
-    _parentClients: {},
+    _localClients: {},
 
-    _childClients: {},
+    _remoteClients: {},
 
-    _extendClient: function(level, name, implementation) {
-      var clients = '_' + level + 'Clients';
+    _extendClient: function(role, name, implementation) {
+      var clients = '_' + role + 'Clients';
           ctor = this[clients][name] || Client;
       this[clients][name] = ctor.extend(implementation(ctor));
     },
 
     client: function(name, implementation) {
-      this._extendClient('parent', name, implementation);
-      this._extendClient('child', name, implementation);
+      this._extendClient('local', name, implementation);
+      this._extendClient('remote', name, implementation);
     },
 
-    parentClient: function(name, implementation) {
-      if (!implementation) return this._parentClients[name];
-      this._extendClient('parent', name, implementation);
+    localClient: function(name, implementation) {
+      if (!implementation) return this._localClients[name];
+      this._extendClient('local', name, implementation);
     },
 
-    childClient: function(name, implementation) {
-      if (!implementation) return this._childClients[name];
-      this._extendClient('child', name, implementation);
+    remoteClient: function(name, implementation) {
+      if (!implementation) return this._remoteClients[name];
+      this._extendClient('remote', name, implementation);
     }
 
   });

@@ -2,7 +2,7 @@
 <html>
   <head>
 
-    <title>Iframe Storage | Parent</title>
+    <title>Iframe Storage | Local</title>
 
     <script type='text/javascript' src='../bower_components/domready/ready.js'></script>
     <script type='text/javascript' src='../library/ift.js'></script>
@@ -20,10 +20,10 @@
       });
     };
     domready(function() {
-      var transport = ift.parent({
+      var transport = ift.local({
         name: 'my_ift',
-        childOrigin: 'http://127.0.0.1:4000',
-        childPath: '/example/child.html',
+        remoteOrigin: 'http://127.0.0.1:4000',
+        remotePath: '/example/remote.html',
         ready: start
       });
     });

@@ -18,18 +18,18 @@
     myWritesTrigger: ('onstoragecommit' in document)
   });
 
-  // Only override the Storage child if necessary.
+  // Only override the Storage client if necessary.
   if (!support.myWritesTrigger) return ift;
 
-  ift.childClient('storage', function(__super__) {
+  ift.remoteClient('storage', function(__super__) {
 
     return {
 
       constructor: function(transport, storage) {
         __super__.apply(this, arguments);
-        var child = this;
+        var remote = this;
         this.storage = new LSEvents(this.storage, function() {
-          child.onStorage.apply(child, arguments);
+          remote.onStorage.apply(remote, arguments);
         });
       },
 

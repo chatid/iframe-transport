@@ -2,13 +2,13 @@
 <html>
   <head>
 
-    <title>Iframe Storage | Child</title>
+    <title>Iframe Storage | Remote</title>
 
     <script type='text/javascript' src='../library/ift.js'></script>
     <script type='text/javascript' src='../library/client/storage.js'></script>
     <script type='text/javascript'>
-    var transport = ift.child({
-      parentOrigins: ['http://127.0.0.1:8000']
+    var transport = ift.remote({
+      localOrigins: ['http://127.0.0.1:8000']
     });
     var storage = transport.client('storage');
     </script>

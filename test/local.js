@@ -2,7 +2,7 @@ var test = require('tape');
 var ift = require('../library/ift');
 var config = {
   IFT_ORIGIN: location.origin,
-  IFT_PATH: location.pathname + '?child'
+  IFT_PATH: location.pathname + '?remote'
 };
 
 module.exports = function() {
@@ -24,23 +24,23 @@ module.exports = function() {
     t.end();
   });
 
-  test("Transport correctly defines level.", function(t) {
+  test("Transport correctly defines role.", function(t) {
     t.plan(2);
 
-    var parent, child;
+    var local, remote;
 
-    parent = ift.parent({
-      childOrigin: config.IFT_ORIGIN,
-      childPath: config.IFT_PATH
+    local = ift.local({
+      remoteOrigin: config.IFT_ORIGIN,
+      remotePath: config.IFT_PATH
     });
-    t.equal(parent.level, 'parent');
-    parent.destroy();
+    t.equal(local.role, 'local');
+    local.destroy();
 
-    child = ift.child({
-      parentOrigins: [config.IFT_ORIGIN]
+    remote = ift.remote({
+      localOrigins: [config.IFT_ORIGIN]
     });
-    t.equal(child.level, 'child');
-    child.destroy();
+    t.equal(remote.role, 'remote');
+    remote.destroy();
 
     t.end();
   });
@@ -48,9 +48,9 @@ module.exports = function() {
   test("Invoke and callback.", function(t) {
     t.plan(1);
 
-    var transport = ift.parent({
-      childOrigin: config.IFT_ORIGIN,
-      childPath: config.IFT_PATH,
+    var transport = ift.local({
+      remoteOrigin: config.IFT_ORIGIN,
+      remotePath: config.IFT_PATH,
       ready: function(transport) {
         var client = transport.client('test');
         client.send('invoke', 'test', [], function() {
@@ -65,7 +65,7 @@ module.exports = function() {
   test("Trigger.", function(t) {
     t.plan(1);
 
-    ift.parentClient('test', function(__super__) {
+    ift.localClient('test', function(__super__) {
       return {
         ack: function() {
           t.pass('Acknowledged.');
@@ -75,9 +75,9 @@ module.exports = function() {
       };
     });
 
-    var transport = ift.parent({
-      childOrigin: config.IFT_ORIGIN,
-      childPath: config.IFT_PATH,
+    var transport = ift.local({
+      remoteOrigin: config.IFT_ORIGIN,
+      remotePath: config.IFT_PATH,
       ready: function(transport) {
         client = transport.client('test');
         client.send('trigger', 'test', []);

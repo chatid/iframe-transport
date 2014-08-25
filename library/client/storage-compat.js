@@ -21,7 +21,7 @@
   // Only override the Storage client if necessary.
   if (!support.myWritesTrigger) return ift;
 
-  ift.remoteClient('storage', function(__super__) {
+  ift.define(ift.roles.REMOTE, 'storage', function(__super__) {
 
     return {
 

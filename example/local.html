@@ -8,23 +8,21 @@
     <script type='text/javascript' src='../library/ift.js'></script>
     <script type='text/javascript' src='../library/client/storage.js'></script>
     <script type='text/javascript'>
-    var start = function(transport) {
-      var storage = transport.client('storage');
-      storage.on('change', function() {
-        console.log('change event', arguments);
-      });
-      storage.set('herp', 'sucka', function() {
-        storage.get('herp', function(resp) {
-          console.log('got', resp);
-        });
-      });
-    };
     domready(function() {
-      var transport = ift.local({
-        name: 'my_ift',
+      var transport = ift.connect({
+        name: 'my_transport',
         remoteOrigin: 'http://127.0.0.1:4000',
-        remotePath: '/example/remote.html',
-        ready: start
+        remotePath: '/example/remote.html'
+      }).on('ift:connect', function() {
+        var storage = transport.client('storage');
+        storage.on('change', function() {
+          console.log('change event', arguments);
+        });
+        storage.set('herp', 'sucka', function() {
+          storage.get('herp', function(resp) {
+            console.log('got', resp);
+          });
+        });
       });
     });
     </script>

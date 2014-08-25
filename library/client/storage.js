@@ -18,24 +18,11 @@
     storageEventTarget: ('onstorage' in window ? window : document)
   });
 
-  // StorageClient
-  // -------------
-
-  // Base class for local and remote clients.
-  ift.client('storage', function(__super__) {
-    return {
-      channel: 'storage',
-      get: function() {},
-      set: function() {},
-      unset: function() {}
-    };
-  });
-
   // Local
   // -----
 
   // Implement the LocalStorage client from the local's perspective.
-  ift.localClient('storage', function(__super__) {
+  ift.define(ift.roles.LOCAL, 'storage', function(__super__) {
 
     return {
 
@@ -75,7 +62,7 @@
   };
 
   // Implement the LocalStorage client from the remote's perspective.
-  ift.remoteClient('storage', function(__super__) {
+  ift.define(ift.roles.REMOTE, 'storage', function(__super__) {
 
     return {
 

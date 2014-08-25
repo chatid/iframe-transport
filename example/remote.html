@@ -7,10 +7,9 @@
     <script type='text/javascript' src='../library/ift.js'></script>
     <script type='text/javascript' src='../library/client/storage.js'></script>
     <script type='text/javascript'>
-    var transport = ift.remote({
+    ift.connect({
       trustedOrigins: ['http://127.0.0.1:8000']
-    });
-    var storage = transport.client('storage');
+    }).client('storage');
     </script>
 
   </head>

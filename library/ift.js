@@ -15,6 +15,14 @@
 
   var ift = {};
 
+  // Constants
+  // ---------
+
+  ift.roles = {
+    LOCAL: 'local',
+    REMOTE: 'remote'
+  }
+
   // Support
   // -------
 
@@ -60,6 +68,7 @@
         }
       }
     }
+    return obj;
   }
 
   // (ref Backbone `extend`)
@@ -158,9 +167,12 @@
       });
     },
 
-    client: function(name) {
-      var clients = '_' + this.role + 'Clients';
-      return new (ift[clients][name] || Client)(this);
+    client: function(channel) {
+      var clients = '_' + this.role + 'Clients', ctor;
+      if (!(ctor = ift[clients][channel])) {
+        ctor = channel ? Client.extend({ channel: channel }) : Client;
+      }
+      return new ctor(this);
     },
 
     destroy: function() {
@@ -279,11 +291,11 @@
   // Implement the transport class from the local's perspective.
   var Local = Transport.extend({
 
-    constructor: function(name, remoteOrigin, remotePath, callback) {
+    constructor: function(name, remoteOrigin, remotePath) {
       this.name = name || 'default';
       this.remoteOrigin = remoteOrigin || 'http://localhost:8000';
       this.remoteUri = remoteOrigin + remotePath || '/remote.html';
-      this.iframe = this._createIframe(this.remoteUri, this.name, callback);
+      this.iframe = this._createIframe(this.remoteUri, this.name);
 
       Transport.call(this, [remoteOrigin]);
     },
@@ -300,12 +312,9 @@
       this.iframe.parentNode.removeChild(this.iframe);
     },
 
-    _createIframe: function(uri, name, callback) {
+    _createIframe: function(uri, name) {
       var iframe = document.getElementById('ift_' + name);
-      if (iframe) {
-        setTimeout(callback, 0);
-        return iframe;
-      }
+      if (iframe) return iframe;
 
       iframe = document.createElement('iframe');
       iframe.id = 'ift_' + name;
@@ -316,11 +325,6 @@
       iframe.src = uri;
       iframe.border = iframe.frameBorder = 0;
       iframe.allowTransparency = true;
-
-      this.on('ift:ready', function ready() {
-        this.off('ift:ready', ready, this);
-        if (typeof callback === 'function') callback(this);
-      }, this);
 
       document.body.appendChild(iframe);
 
@@ -351,11 +355,14 @@
     },
 
     listen: function() {
+      var transport = this;
       Transport.prototype.listen.apply(this, arguments);
-      this.send({
-        channel: 'ift',
-        action: 'ready'
-      });
+      setTimeout(function() {
+        transport.send({
+          channel: 'ift',
+          action: 'connect'
+        });
+      }, 0);
     }
 
   });
@@ -365,40 +372,25 @@
 
   mixin(ift, {
 
-    local: function(options) {
-      options = options || {};
-      return new Local(options.name, options.remoteOrigin, options.remotePath, options.ready);
+    connect: function(options) {
+      options || (options = {});
+      if (options.remotePath) {
+        return new Local(options.name, options.remoteOrigin, options.remotePath);
+      } else {
+        return new Remote(options.trustedOrigins);
+      }
     },
 
-    remote: function(options) {
-      options = options || {};
-      return new Remote(options.trustedOrigins);
+    define: function(role, channel, implementation) {
+      var clients = '_' + role + 'Clients';
+      var ctor = this[clients][channel] || Client;
+      var extension = mixin(implementation(ctor), { channel: channel });
+      this[clients][channel] = ctor.extend(extension);
     },
 
     _localClients: {},
 
-    _remoteClients: {},
-
-    _extendClient: function(role, name, implementation) {
-      var clients = '_' + role + 'Clients';
-          ctor = this[clients][name] || Client;
-      this[clients][name] = ctor.extend(implementation(ctor));
-    },
-
-    client: function(name, implementation) {
-      this._extendClient('local', name, implementation);
-      this._extendClient('remote', name, implementation);
-    },
-
-    localClient: function(name, implementation) {
-      if (!implementation) return this._localClients[name];
-      this._extendClient('local', name, implementation);
-    },
-
-    remoteClient: function(name, implementation) {
-      if (!implementation) return this._remoteClients[name];
-      this._extendClient('remote', name, implementation);
-    }
+    _remoteClients: {}
 
   });
 

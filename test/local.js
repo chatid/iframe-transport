@@ -29,14 +29,14 @@ module.exports = function() {
 
     var local, remote;
 
-    local = ift.local({
+    local = ift.connect({
       remoteOrigin: config.IFT_ORIGIN,
       remotePath: config.IFT_PATH
     });
     t.equal(local.role, 'local');
     local.destroy();
 
-    remote = ift.remote({
+    remote = ift.connect({
       trustedOrigins: [config.IFT_ORIGIN]
     });
     t.equal(remote.role, 'remote');
@@ -48,24 +48,25 @@ module.exports = function() {
   test("Invoke and callback.", function(t) {
     t.plan(1);
 
-    var transport = ift.local({
+    var transport = ift.connect({
       remoteOrigin: config.IFT_ORIGIN,
       remotePath: config.IFT_PATH,
-      ready: function(transport) {
-        var client = transport.client('test');
-        client.send('invoke', 'test', [], function() {
-          t.pass('Acknowledged.');
-          transport.destroy();
-          t.end();
-        });
-      }
+    }).on('ift:connect', function() {
+      var client = transport.client('test');
+      client.send('invoke', 'test', [], function() {
+        t.pass('Acknowledged.');
+        transport.destroy();
+        t.end();
+      });
     });
   });
 
   test("Trigger.", function(t) {
     t.plan(1);
 
-    ift.localClient('test', function(__super__) {
+    var transport, client;
+
+    ift.define(ift.roles.LOCAL, 'test', function(__super__) {
       return {
         ack: function() {
           t.pass('Acknowledged.');
@@ -75,13 +76,12 @@ module.exports = function() {
       };
     });
 
-    var transport = ift.local({
+    transport = ift.connect({
       remoteOrigin: config.IFT_ORIGIN,
-      remotePath: config.IFT_PATH,
-      ready: function(transport) {
-        client = transport.client('test');
-        client.send('trigger', 'test', []);
-      }
+      remotePath: config.IFT_PATH
+    }).on('ift:connect', function() {
+      client = transport.client('test');
+      client.send('trigger', 'test', []);
     });
   });
 

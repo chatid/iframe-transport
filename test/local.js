@@ -37,7 +37,7 @@ module.exports = function() {
     local.destroy();
 
     remote = ift.remote({
-      localOrigins: [config.IFT_ORIGIN]
+      trustedOrigins: [config.IFT_ORIGIN]
     });
     t.equal(remote.role, 'remote');
     remote.destroy();

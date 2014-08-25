@@ -13,7 +13,7 @@ module.exports = function() {
     };
   });
   var transport = ift.remote({
-    localOrigins: [config.IFT_ORIGIN]
+    trustedOrigins: [config.IFT_ORIGIN]
   });
   var client = transport.client('test');
   client.on('test', function() {

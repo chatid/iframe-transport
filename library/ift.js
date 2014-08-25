@@ -372,7 +372,7 @@
 
     remote: function(options) {
       options = options || {};
-      return new Remote(options.localOrigins);
+      return new Remote(options.trustedOrigins);
     },
 
     _localClients: {},

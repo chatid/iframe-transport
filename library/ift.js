@@ -150,12 +150,11 @@
     listen: function() {
       var transport = this, message, name;
       support.on(window, 'message', this.onMessage = function(evt) {
-        if (transport.targetOrigins[evt.origin]) {
-          try { message = JSON.parse(evt.data); }
-          catch (e) { return; }
-          name = message.channel + ':' + message.action;
-          transport.trigger.apply(transport, [name].concat(message.args));
-        }
+        if (!transport.targetOrigins[evt.origin]) return;
+        try { message = JSON.parse(evt.data); }
+        catch (e) { return; }
+        name = message.channel + ':' + message.action;
+        transport.trigger.apply(transport, [name].concat(message.args));
       });
     },
 
@@ -262,11 +261,11 @@
 
     // Process an incoming callback.
     _receiveCallback: function(id) {
+      var callback = this.transport._callbacks[id];
       var args = slice.call(arguments, 1);
-      if (callback = this.transport._callbacks[id]) {
-        callback.apply(this, args);
-        this.transport._callbacks[id] = null;
-      }
+      if (!callback) return;
+      callback.apply(this, args);
+      this.transport._callbacks[id] = null;
     }
 
   });

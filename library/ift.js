@@ -19,8 +19,8 @@
   // ---------
 
   ift.roles = {
-    LOCAL: 'local',
-    REMOTE: 'remote'
+    PROVIDER: 'provider',
+    CONSUMER: 'consumer'
   }
 
   // Support
@@ -155,7 +155,7 @@
 
   mixin(Transport.prototype, Events, {
 
-    // Parse and trigger an event for listening clients to act on.
+    // Parse and trigger an event for listening services to act on.
     listen: function() {
       var transport = this, message, name;
       support.on(window, 'message', this.onMessage = function(evt) {
@@ -167,12 +167,21 @@
       });
     },
 
-    client: function(channel) {
-      var clients = '_' + this.role + 'Clients', ctor;
-      if (!(ctor = ift[clients][channel])) {
-        ctor = channel ? Client.extend({ channel: channel }) : Client;
+    service: function(channel) {
+      var services = '_' + this.role + 'Services', ctor;
+      if (!(ctor = ift[services][channel])) {
+        ctor = channel ? Service.extend({ channel: channel }) : Service;
       }
       return new ctor(this);
+    },
+
+    ready: function(callback) {
+      var once;
+      this.on('ift:connect', once = function() {
+        callback();
+        this.off('ift:connect', once, this);
+      }, this);
+      return this;
     },
 
     destroy: function() {
@@ -227,22 +236,22 @@
 
   });
 
-  // Client
+  // Service
   // ------
 
-  // Base class for defining client APIs that may communicate over the iframe transport.
-  // Clients may invoke methods with callbacks and trigger events.
-  var Client = function(transport) {
+  // Base class for defining service APIs that may communicate over the iframe transport.
+  // Services may invoke methods with callbacks and trigger events.
+  var Service = function(transport) {
     this.transport = transport;
 
-    // Listen for incoming actions to be processed by this client.
+    // Listen for incoming actions to be processed by this service.
     this.transport.on(this.channel + ':method', this._receiveInvoke, this);
     this.transport.on(this.channel + ':event', this._receiveTrigger, this);
     this.transport.on(this.channel + ':callback', this._receiveCallback, this);
   };
 
-  // Client instance methods for sending actions or processing incoming actions.
-  mixin(Client.prototype, Events, {
+  // Service instance methods for sending actions or processing incoming actions.
+  mixin(Service.prototype, Events, {
 
     channel: 'default',
 
@@ -282,25 +291,25 @@
 
   });
 
-  // Set up inheritance for the transport and client.
-  Transport.extend = Client.extend = extend;
+  // Set up inheritance for the transport and service.
+  Transport.extend = Service.extend = extend;
 
-  // Local
-  // -----
+  // Consumer
+  // --------
 
-  // Implement the transport class from the local's perspective.
-  var Local = Transport.extend({
+  // Implement the transport class from the consumer's perspective.
+  var Consumer = Transport.extend({
 
     constructor: function(name, remoteOrigin, remotePath) {
       this.name = name || 'default';
       this.remoteOrigin = remoteOrigin || 'http://localhost:8000';
-      this.remoteUri = remoteOrigin + remotePath || '/remote.html';
+      this.remoteUri = remoteOrigin + remotePath || '/provider.html';
       this.iframe = this._createIframe(this.remoteUri, this.name);
 
       Transport.call(this, [remoteOrigin]);
     },
 
-    role: 'local',
+    role: ift.roles.CONSUMER,
 
     send: function(params) {
       var message = JSON.stringify(params);
@@ -333,11 +342,11 @@
 
   });
 
-  // Remote
-  // ------
+  // Provider
+  // --------
 
-  // Implement the transport class from the remote's perspective.
-  var Remote = Transport.extend({
+  // Implement the transport class from the provider's perspective.
+  var Provider = Transport.extend({
 
     constructor: function() {
       if (window.parent !== window) this.parent = window.parent;
@@ -345,7 +354,7 @@
       Transport.apply(this, arguments);
     },
 
-    role: 'remote',
+    role: ift.roles.PROVIDER,
 
     send: function(params) {
       if (this.parent) {
@@ -375,22 +384,22 @@
     connect: function(options) {
       options || (options = {});
       if (options.remotePath) {
-        return new Local(options.name, options.remoteOrigin, options.remotePath);
+        return new Consumer(options.name, options.remoteOrigin, options.remotePath);
       } else {
-        return new Remote(options.trustedOrigins);
+        return new Provider(options.trustedOrigins);
       }
     },
 
     define: function(role, channel, implementation) {
-      var clients = '_' + role + 'Clients';
-      var ctor = this[clients][channel] || Client;
+      var services = '_' + role + 'Services';
+      var ctor = this[services][channel] || Service;
       var extension = mixin(implementation(ctor), { channel: channel });
-      this[clients][channel] = ctor.extend(extension);
+      this[services][channel] = ctor.extend(extension);
     },
 
-    _localClients: {},
+    _consumerServices: {},
 
-    _remoteClients: {}
+    _providerServices: {}
 
   });
 

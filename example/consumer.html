@@ -2,19 +2,19 @@
 <html>
   <head>
 
-    <title>Iframe Storage | Local</title>
+    <title>Iframe Storage | Consumer</title>
 
     <script type='text/javascript' src='../bower_components/domready/ready.js'></script>
     <script type='text/javascript' src='../library/ift.js'></script>
-    <script type='text/javascript' src='../library/client/storage.js'></script>
+    <script type='text/javascript' src='../library/services/storage.js'></script>
     <script type='text/javascript'>
     domready(function() {
       var transport = ift.connect({
         name: 'my_transport',
         remoteOrigin: 'http://127.0.0.1:4000',
-        remotePath: '/example/remote.html'
-      }).on('ift:connect', function() {
-        var storage = transport.client('storage');
+        remotePath: '/example/provider.html'
+      }).ready(function() {
+        var storage = transport.service('storage');
         storage.on('change', function() {
           console.log('change event', arguments);
         });

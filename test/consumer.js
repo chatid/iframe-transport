@@ -2,7 +2,7 @@ var test = require('tape');
 var ift = require('../library/ift');
 var config = {
   IFT_ORIGIN: location.origin,
-  IFT_PATH: location.pathname + '?remote'
+  IFT_PATH: location.pathname + '?provider'
 };
 
 module.exports = function() {
@@ -27,20 +27,20 @@ module.exports = function() {
   test("Transport correctly defines role.", function(t) {
     t.plan(2);
 
-    var local, remote;
+    var consumer, provider;
 
-    local = ift.connect({
+    consumer = ift.connect({
       remoteOrigin: config.IFT_ORIGIN,
       remotePath: config.IFT_PATH
     });
-    t.equal(local.role, 'local');
-    local.destroy();
+    t.equal(consumer.role, ift.roles.CONSUMER);
+    consumer.destroy();
 
-    remote = ift.connect({
+    provider = ift.connect({
       trustedOrigins: [config.IFT_ORIGIN]
     });
-    t.equal(remote.role, 'remote');
-    remote.destroy();
+    t.equal(provider.role, ift.roles.PROVIDER);
+    provider.destroy();
 
     t.end();
   });
@@ -51,9 +51,9 @@ module.exports = function() {
     var transport = ift.connect({
       remoteOrigin: config.IFT_ORIGIN,
       remotePath: config.IFT_PATH
-    }).on('ift:connect', function() {
-      var client = transport.client('test');
-      client.send('invoke', 'test', [], function() {
+    }).ready(function() {
+      var service = transport.service('test');
+      service.send('invoke', 'test', [], function() {
         t.pass('Acknowledged.');
         transport.destroy();
         t.end();
@@ -64,9 +64,9 @@ module.exports = function() {
   test("Trigger.", function(t) {
     t.plan(1);
 
-    var transport, client;
+    var transport, service;
 
-    ift.define(ift.roles.LOCAL, 'test', function(__super__) {
+    ift.define(ift.roles.CONSUMER, 'test', function(__super__) {
       return {
         ack: function() {
           t.pass('Acknowledged.');
@@ -80,8 +80,8 @@ module.exports = function() {
       remoteOrigin: config.IFT_ORIGIN,
       remotePath: config.IFT_PATH
     }).on('ift:connect', function() {
-      client = transport.client('test');
-      client.send('trigger', 'test', []);
+      service = transport.service('test');
+      service.send('trigger', 'test', []);
     });
   });
 

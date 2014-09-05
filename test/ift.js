@@ -1,5 +1,5 @@
-if (location.search.match(/remote/)) {
-  require('./remote')();
+if (location.search.match(/provider/)) {
+  require('./provider')();
 } else {
-  require('./local')();
+  require('./consumer')();
 }

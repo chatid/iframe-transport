@@ -1,12 +1,12 @@
 /*
- * IFrameTransport - Storage Client
+ * IFrameTransport - Storage Service
  *
  * Persist data across domains.
  * Targets modern browsers, IE8+
 */
 
 (function (root, factory) {
-  if (typeof define === 'function' && define.amd) define('ift-client-storage', ['ift'], factory);
+  if (typeof define === 'function' && define.amd) define('ift-storage-service', ['ift'], factory);
   else if (typeof exports === 'object') module.exports = factory(require('../ift'));
   else root.ift = factory(root.ift);
 }(this, function(ift) {
@@ -21,8 +21,8 @@
   // Local
   // -----
 
-  // Implement the LocalStorage client from the local's perspective.
-  ift.define(ift.roles.LOCAL, 'storage', function(__super__) {
+  // Implement the LocalStorage service from the local's perspective.
+  ift.define(ift.roles.CONSUMER, 'storage', function(__super__) {
 
     return {
 
@@ -61,8 +61,8 @@
     }
   };
 
-  // Implement the LocalStorage client from the remote's perspective.
-  ift.define(ift.roles.REMOTE, 'storage', function(__super__) {
+  // Implement the LocalStorage service from the provider's perspective.
+  ift.define(ift.roles.PROVIDER, 'storage', function(__super__) {
 
     return {
 
@@ -101,8 +101,8 @@
       },
 
       listen: function() {
-        var remote = this, target = support.storageEventTarget;
-        support.on(target, 'storage', function(evt) { remote.onStorage(evt); });
+        var provider = this, target = support.storageEventTarget;
+        support.on(target, 'storage', function(evt) { provider.onStorage(evt); });
       }
 
     };

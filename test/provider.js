@@ -4,7 +4,7 @@ var config = {
 };
 
 module.exports = function() {
-  ift.define(ift.roles.REMOTE, 'test', function(__super__) {
+  ift.define(ift.roles.PROVIDER, 'test', function(__super__) {
     return {
       test: function() {
         console.log('remote #test called')
@@ -15,8 +15,8 @@ module.exports = function() {
   var transport = ift.connect({
     trustedOrigins: [config.IFT_ORIGIN]
   });
-  var client = transport.client('test');
-  client.on('test', function() {
-    client.send('invoke', 'ack', []);
+  var service = transport.service('test');
+  service.on('test', function() {
+    service.send('invoke', 'ack', []);
   });
 };

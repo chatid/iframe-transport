@@ -168,7 +168,7 @@
     },
 
     service: function(channel) {
-      var services = '_' + this.role + 'Services', ctor;
+      var services = '_' + this.role + 's', ctor;
       if (!(ctor = ift[services][channel])) {
         ctor = channel ? Service.extend({ channel: channel }) : Service;
       }
@@ -391,15 +391,15 @@
     },
 
     define: function(role, channel, implementation) {
-      var services = '_' + role + 'Services';
+      var services = '_' + role + 's';
       var ctor = this[services][channel] || Service;
       var extension = mixin(implementation(ctor), { channel: channel });
       this[services][channel] = ctor.extend(extension);
     },
 
-    _consumerServices: {},
+    _consumers: {},
 
-    _providerServices: {}
+    _providers: {}
 
   });
 

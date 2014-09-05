@@ -4,14 +4,12 @@ var config = {
 };
 
 module.exports = function() {
-  ift.define(ift.roles.PROVIDER, 'test', function(__super__) {
-    return {
-      test: function() {
-        console.log('remote #test called')
-        return 'ack';
-      }
-    };
-  });
+  ift.registerProvider('test', ift.provider('base').extend({
+    test: function() {
+      console.log('remote #test called')
+      return 'ack';
+    }
+  }));
   var transport = ift.connect({
     trustedOrigins: [config.IFT_ORIGIN]
   });

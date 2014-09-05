@@ -66,20 +66,18 @@ module.exports = function() {
 
     var transport, service;
 
-    ift.define(ift.roles.CONSUMER, 'test', function(__super__) {
-      return {
-        ack: function() {
-          t.pass('Acknowledged.');
-          transport.destroy();
-          t.end();
-        }
-      };
-    });
+    ift.registerConsumer('test', ift.consumer('base').extend({
+      ack: function() {
+        t.pass('Acknowledged.');
+        transport.destroy();
+        t.end();
+      }
+    }));
 
     transport = ift.connect({
       remoteOrigin: config.IFT_ORIGIN,
       remotePath: config.IFT_PATH
-    }).on('ift:connect', function() {
+    }).ready(function() {
       service = transport.service('test');
       service.send('trigger', 'test', []);
     });

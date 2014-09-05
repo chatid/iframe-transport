@@ -390,16 +390,35 @@
       }
     },
 
-    define: function(role, channel, implementation) {
-      var services = '_' + role + 's';
-      var ctor = this[services][channel] || Service;
-      var extension = mixin(implementation(ctor), { channel: channel });
-      this[services][channel] = ctor.extend(extension);
+    consumer: function(channel) {
+      return this._consumers[channel];
     },
 
-    _consumers: {},
+    provider: function(channel) {
+      return this._providers[channel];
+    },
 
-    _providers: {}
+    register: function(channel, consumer, provider) {
+      this.registerConsumer(channel, consumer);
+      this.registerProvider(channel, provider);
+      return this;
+    },
+
+    registerConsumer: function(channel, consumer) {
+      return this._consumers[channel] = consumer.extend({ channel: channel });
+    },
+
+    registerProvider: function(channel, provider) {
+      return this._providers[channel] = provider.extend({ channel: channel });
+    },
+
+    _consumers: {
+      base: Service.extend({ role: ift.roles.CONSUMER })
+    },
+
+    _providers: {
+      base: Service.extend({ role: ift.roles.PROVIDER })
+    }
 
   });
 

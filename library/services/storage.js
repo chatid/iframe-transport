@@ -22,28 +22,24 @@
   // -----
 
   // Implement the LocalStorage service from the consumer's perspective.
-  ift.define(ift.roles.CONSUMER, 'storage', function(__super__) {
+  var Consumer = ift.consumer('base').extend({
 
-    return {
+    get: function(key, callback) {
+      this.send('invoke', 'get', [key], callback);
+    },
 
-      get: function(key, callback) {
-        this.send('invoke', 'get', [key], callback);
-      },
+    set: function(key, value, options, callback) {
+      if (typeof options === 'function') {
+        callback = options;
+        options = {};
+      } else options = options || {};
 
-      set: function(key, value, options, callback) {
-        if (typeof options === 'function') {
-          callback = options;
-          options = {};
-        } else options = options || {};
+      this.send('invoke', 'set', [key, value, options], callback);
+    },
 
-        this.send('invoke', 'set', [key, value, options], callback);
-      },
-
-      unset: function(keys, callback) {
-        this.send('invoke', 'unset', [keys], callback);
-      }
-
-    };
+    unset: function(keys, callback) {
+      this.send('invoke', 'unset', [keys], callback);
+    }
 
   });
 
@@ -62,52 +58,50 @@
   };
 
   // Implement the LocalStorage service from the provider's perspective.
-  ift.define(ift.roles.PROVIDER, 'storage', function(__super__) {
+  var Provider = ift.provider('base').extend({
 
-    return {
+    constructor: function(transport, storage) {
+      this.storage = storage || lsWrapper;
+      this.listen();
+      ift.provider('base').apply(this, arguments);
+    },
 
-      constructor: function(transport, storage) {
-        this.storage = storage || lsWrapper;
-        this.listen();
-        __super__.apply(this, arguments);
-      },
+    get: function(key) {
+      return this.storage.get(key);
+    },
 
-      get: function(key) {
-        return this.storage.get(key);
-      },
+    set: function(key, value, options) {
+      return this.storage.set(key, value, options);
+    },
 
-      set: function(key, value, options) {
-        return this.storage.set(key, value, options);
-      },
+    unset: function(keys) {
+      return this.storage.unset(keys);
+    },
 
-      unset: function(keys) {
-        return this.storage.unset(keys);
-      },
-
-      onStorage: function(evt) {
-        if (evt) {
-          // IE9+: Don't trigger if value didn't change
-          if (evt.oldValue === evt.newValue) return;
-        } else {
-          // IE8: `evt` is undefined
-          evt = {};
-        }
-
-        this.send('trigger', 'change', [{
-          key: evt.key,
-          oldValue: evt.oldValue,
-          newValue: evt.newValue
-        }]);
-      },
-
-      listen: function() {
-        var provider = this, target = support.storageEventTarget;
-        support.on(target, 'storage', function(evt) { provider.onStorage(evt); });
+    onStorage: function(evt) {
+      if (evt) {
+        // IE9+: Don't trigger if value didn't change
+        if (evt.oldValue === evt.newValue) return;
+      } else {
+        // IE8: `evt` is undefined
+        evt = {};
       }
 
-    };
+      this.send('trigger', 'change', [{
+        key: evt.key,
+        oldValue: evt.oldValue,
+        newValue: evt.newValue
+      }]);
+    },
+
+    listen: function() {
+      var provider = this, target = support.storageEventTarget;
+      support.on(target, 'storage', function(evt) { provider.onStorage(evt); });
+    }
 
   });
+
+  ift.register('storage', Consumer, Provider);
 
   return ift;
 

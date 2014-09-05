@@ -21,24 +21,22 @@
   // Only override the Storage service if necessary.
   if (!support.myWritesTrigger) return ift;
 
-  ift.define(ift.roles.PROVIDER, 'storage', function(__super__) {
+  var Provider = ift.provider('storage').extend({
 
-    return {
+    constructor: function(transport, storage) {
+      ift.provider('storage').apply(this, arguments);
+      var provider = this;
+      this.storage = new LSEvents(this.storage, function() {
+        provider.onStorage.apply(provider, arguments);
+      });
+    },
 
-      constructor: function(transport, storage) {
-        __super__.apply(this, arguments);
-        var provider = this;
-        this.storage = new LSEvents(this.storage, function() {
-          provider.onStorage.apply(provider, arguments);
-        });
-      },
-
-      // `LSEvents` will handle "storage" events for us.
-      listen: function() {}
-
-    };
+    // `LSEvents` will handle "storage" events for us.
+    listen: function() {}
 
   });
+
+  ift.registerProvider('storage', Provider);
 
   return ift;
 

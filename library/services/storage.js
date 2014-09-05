@@ -21,7 +21,7 @@
   // Local
   // -----
 
-  // Implement the LocalStorage service from the local's perspective.
+  // Implement the LocalStorage service from the consumer's perspective.
   ift.define(ift.roles.CONSUMER, 'storage', function(__super__) {
 
     return {

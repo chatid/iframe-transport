@@ -50,7 +50,7 @@ module.exports = function() {
 
     var transport = ift.connect({
       remoteOrigin: config.IFT_ORIGIN,
-      remotePath: config.IFT_PATH,
+      remotePath: config.IFT_PATH
     }).on('ift:connect', function() {
       var client = transport.client('test');
       client.send('invoke', 'test', [], function() {

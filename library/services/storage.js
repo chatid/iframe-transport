@@ -18,31 +18,6 @@
     storageEventTarget: ('onstorage' in window ? window : document)
   });
 
-  // Local
-  // -----
-
-  // Implement the LocalStorage service from the consumer's perspective.
-  var Consumer = ift.consumer('base').extend({
-
-    get: function(key, callback) {
-      this.send('invoke', 'get', [key], callback);
-    },
-
-    set: function(key, value, options, callback) {
-      if (typeof options === 'function') {
-        callback = options;
-        options = {};
-      } else options = options || {};
-
-      this.send('invoke', 'set', [key, value, options], callback);
-    },
-
-    unset: function(keys, callback) {
-      this.send('invoke', 'unset', [keys], callback);
-    }
-
-  });
-
   // Wrap localStorage so it may be swapped out.
   var lsWrapper = {
     get: function(key) {
@@ -57,13 +32,21 @@
     }
   };
 
-  // Implement the LocalStorage service from the provider's perspective.
-  var Provider = ift.provider('base').extend({
+  // Service
+  // --------
 
-    constructor: function(transport, storage) {
+  // Implement the LocalStorage service from a service's perspective.
+  var Service = ift.Service.extend({
+
+    constructor: function(channel, storage) {
       this.storage = storage || lsWrapper;
       this.listen();
-      ift.provider('base').apply(this, arguments);
+      ift.Service.apply(this, arguments);
+    },
+
+    listen: function() {
+      var service = this, target = support.storageEventTarget;
+      support.on(target, 'storage', function(evt) { service.onStorage(evt); });
     },
 
     get: function(key) {
@@ -87,21 +70,41 @@
         evt = {};
       }
 
-      this.send('trigger', 'change', [{
+      this._channel.request('trigger', ['change', {
         key: evt.key,
         oldValue: evt.oldValue,
         newValue: evt.newValue
       }]);
-    },
-
-    listen: function() {
-      var provider = this, target = support.storageEventTarget;
-      support.on(target, 'storage', function(evt) { provider.onStorage(evt); });
     }
 
   });
 
-  ift.register('storage', Consumer, Provider);
+  // Consumer
+  // --------
+
+  // Implement the LocalStorage service from a consumer's perspective.
+  var Consumer = ift.Service.extend({
+
+    get: function(key, callback) {
+      this._channel.request('get', [key], callback);
+    },
+
+    set: function(key, value, options, callback) {
+      if (typeof options === 'function') {
+        callback = options;
+        options = {};
+      } else options = options || {};
+
+      this._channel.request('set', [key, value, options], callback);
+    },
+
+    unset: function(keys, callback) {
+      this._channel.request('unset', [keys], callback);
+    }
+
+  });
+
+  ift.register('storage', Service, Consumer);
 
   return ift;
 

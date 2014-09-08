@@ -1,5 +1,5 @@
-if (location.search.match(/provider/)) {
-  require('./provider')();
+if (location.search.match(/child/)) {
+  require('./child')();
 } else {
-  require('./consumer')();
+  require('./parent')();
 }

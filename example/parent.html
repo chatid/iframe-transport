@@ -2,25 +2,28 @@
 <html>
   <head>
 
-    <title>Iframe Storage | Consumer</title>
+    <title>Iframe Storage | Parent</title>
 
     <script type='text/javascript' src='../bower_components/domready/ready.js'></script>
     <script type='text/javascript' src='../library/ift.js'></script>
     <script type='text/javascript' src='../library/services/storage.js'></script>
     <script type='text/javascript'>
     domready(function() {
-      var transport = ift.connect({
+      ift.connect({
         name: 'my_transport',
-        remoteOrigin: 'http://127.0.0.1:4000',
-        remotePath: '/example/provider.html'
-      }).ready(function() {
-        var storage = transport.service('storage');
-        storage.on('change', function() {
-          console.log('change event', arguments);
+        childOrigin: 'http://127.0.0.1:4000',
+        childPath: '/example/child.html'
+      }).ready(function(courier) {
+        courier.wiretap(function(direction, message) {
+          console.log(direction, message);
+        });
+        var storage = courier.consumer('storage');
+        storage.on('change', function(evt) {
+          console.log('change event', evt);
         });
         storage.set('herp', 'sucka', function() {
-          storage.get('herp', function(resp) {
-            console.log('got', resp);
+          storage.get('herp', function(value) {
+            console.log('got', value);
           });
         });
       });

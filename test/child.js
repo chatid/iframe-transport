@@ -4,17 +4,17 @@ var config = {
 };
 
 module.exports = function() {
-  ift.registerProvider('test', ift.provider('base').extend({
+  ift.registerService('test', ift.Service.extend({
     test: function() {
-      console.log('remote #test called')
+      console.log('remote #test called');
       return 'ack';
     }
   }));
-  var transport = ift.connect({
+  var courier = ift.connect({
     trustedOrigins: [config.IFT_ORIGIN]
   });
-  var service = transport.service('test');
+  var service = courier.service('test');
   service.on('test', function() {
-    service.send('invoke', 'ack', []);
+    service._channel.request('ack', []);
   });
 };

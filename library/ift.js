@@ -1,7 +1,7 @@
 /*
- * IFrameTransport
+ * ift.js
  *
- * Invoke methods with callbacks and trigger events across domains.
+ * Bi-directional RPC over iframe
  * Targets modern browsers, IE8+
 */
 
@@ -14,14 +14,6 @@
   var slice = [].slice;
 
   var ift = {};
-
-  // Constants
-  // ---------
-
-  ift.roles = {
-    PROVIDER: 'provider',
-    CONSUMER: 'consumer'
-  }
 
   // Support
   // -------
@@ -94,6 +86,23 @@
     return child;
   };
 
+  // (ref `_.uniqueId`)
+  var idCounter = 0;
+  var uniqueId = ift.util.uniqueId = function(prefix) {
+    var id = ++idCounter + '';
+    return prefix ? prefix + id : id;
+  };
+
+  // Errors
+  // ------
+
+  var JSONRPCError = function(code, message) {
+    this.code = code;
+    this.message = message;
+  };
+
+  JSONRPCError.prototype = Error.prototype;
+
   // Events
   // ------
 
@@ -140,11 +149,64 @@
 
   };
 
+  // Courier
+  // -------
+
+  // Manage services and consumers that communicate over a given transport.
+  var Courier = function(transport) {
+    this.transport = transport;
+  };
+
+  mixin(Courier.prototype, Events, {
+
+    // Factory function for services, configured with a channel and transport.
+    service: function(channel) {
+      channel = new Channel(channel, this.transport);
+      var ctor = ift._services[channel.name] || Service;
+      return new ctor(channel);
+    },
+
+    // Factory function for consumers, configured with a channel and transport.
+    consumer: function(channel) {
+      channel = new Channel(channel, this.transport);
+      var ctor = ift._consumers[channel.name] || Service;
+      return new ctor(channel);
+    },
+
+    // Sugar for hooking transport readiness.
+    ready: function(callback) {
+      var once;
+      this.transport.on('message', once = function(message) {
+        if (message !== 'ready') return;
+        callback(this);
+        this.off('message', once, this);
+      }, this);
+      return this;
+    },
+
+    wiretap: function(callback) {
+      this.transport.on('message', function(message) {
+        callback('incoming', message);
+      }, this);
+      var send = this.transport.send;
+      var transport = this.transport;
+      this.transport.send = function(message) {
+        callback('outgoing', message);
+        send.apply(transport, arguments);
+      };
+    },
+
+    destroy: function() {
+      this.transport.destroy();
+      this.off();
+    }
+
+  });
+
   // Transport
   // ---------
 
-  // Base class for wrapping `iframe#postMessage` to facilitate method invocations and
-  // callbacks and trigger events.
+  // Base class for wrapping `iframe#postMessage`.
   var Transport = function(targetOrigins) {
     this.targetOrigins = {};
     for (var i = 0; i < (targetOrigins || []).length; i++) {
@@ -155,165 +217,41 @@
 
   mixin(Transport.prototype, Events, {
 
-    // Parse and trigger an event for listening services to act on.
+    // Proxy `window.onmessage` into internal event and verifying security.
     listen: function() {
-      var transport = this, message, name;
+      var transport = this;
       support.on(window, 'message', this.onMessage = function(evt) {
         if (!transport.targetOrigins[evt.origin]) return;
-        try { message = JSON.parse(evt.data); }
-        catch (e) { return; }
-        name = message.channel + ':' + message.action;
-        transport.trigger.apply(transport, [name].concat(message.args));
+        transport.trigger('message', evt.data);
       });
-    },
-
-    service: function(channel) {
-      var services = '_' + this.role + 's', ctor;
-      if (!(ctor = ift[services][channel])) {
-        ctor = channel ? Service.extend({ channel: channel }) : Service;
-      }
-      return new ctor(this);
-    },
-
-    ready: function(callback) {
-      var once;
-      this.on('ift:connect', once = function() {
-        callback();
-        this.off('ift:connect', once, this);
-      }, this);
-      return this;
     },
 
     destroy: function() {
       support.off(window, 'message', this.onMessage);
       this.off();
-    },
-
-    // Send a `postMessage` that invokes a method. Optionally include a `callbackId` if a
-    // callback is provided.
-    _sendInvoke: function(channel, method, args, callback) {
-      var params = {
-        channel: channel,
-        action: 'method',
-        args: [method].concat(args)
-      };
-      if (typeof callback === 'function') {
-        params.args.push({ callbackId: this._createCallback(callback) });
-      }
-
-      this.send(params);
-    },
-
-    // Send a `postMessage` that triggers an event.
-    _sendTrigger: function(channel, name, args) {
-      var params = {
-        channel: channel,
-        action: 'event',
-        args: [name].concat(args)
-      };
-
-      this.send(params);
-    },
-
-    // Send a `postMessage` that invokes a callback.
-    _sendCallback: function(channel, callbackId, args) {
-      var params = {
-        channel: channel,
-        action: 'callback',
-        args: [callbackId].concat(args)
-      };
-
-      this.send(params);
-    },
-
-    // Associate a unique `callbackId` with the given callback function.
-    _createCallback: function(callback) {
-      this._callbacks = this._callbacks || {};
-      this._counter = this._counter || 0;
-      this._callbacks[++this._counter] = callback;
-      return this._counter;
     }
 
   });
 
-  // Service
+  Transport.extend = extend;
+
+  // Parent
   // ------
 
-  // Base class for defining service APIs that may communicate over the iframe transport.
-  // Services may invoke methods with callbacks and trigger events.
-  var Service = function(transport) {
-    this.transport = transport;
+  // Implement the transport class from the parent's perspective.
+  var Parent = Transport.extend({
 
-    // Listen for incoming actions to be processed by this service.
-    this.transport.on(this.channel + ':method', this._receiveInvoke, this);
-    this.transport.on(this.channel + ':event', this._receiveTrigger, this);
-    this.transport.on(this.channel + ':callback', this._receiveCallback, this);
-  };
-
-  // Service instance methods for sending actions or processing incoming actions.
-  mixin(Service.prototype, Events, {
-
-    channel: 'default',
-
-    // Send a method invocation, callback, or event.
-    send: function(action) {
-      var args = slice.call(arguments, 1),
-          camel = function(match, letter) { return letter.toUpperCase() },
-          sendMethod = '_send' + action.replace(/^(\w)/, camel);
-      args = [this.channel].concat(args);
-      this.transport[sendMethod].apply(this.transport, args);
-    },
-
-    destroy: function() {
-      this.off();
-    },
-
-    // Process an incoming method invocation.
-    _receiveInvoke: function(method) {
-      var args = slice.call(arguments, 1), last = args[args.length - 1];
-      var result = this[method].apply(this, args);
-      if (last && last.callbackId) this.send('callback', last.callbackId, [result]);
-    },
-
-    // Process an incoming event.
-    _receiveTrigger: function() {
-      this.trigger.apply(this, arguments);
-    },
-
-    // Process an incoming callback.
-    _receiveCallback: function(id) {
-      var callback = this.transport._callbacks[id];
-      var args = slice.call(arguments, 1);
-      if (!callback) return;
-      callback.apply(this, args);
-      this.transport._callbacks[id] = null;
-    }
-
-  });
-
-  // Set up inheritance for the transport and service.
-  Transport.extend = Service.extend = extend;
-
-  // Consumer
-  // --------
-
-  // Implement the transport class from the consumer's perspective.
-  var Consumer = Transport.extend({
-
-    constructor: function(name, remoteOrigin, remotePath) {
+    constructor: function(name, childOrigin, childPath) {
       this.name = name || 'default';
-      this.remoteOrigin = remoteOrigin || 'http://localhost:8000';
-      this.remoteUri = remoteOrigin + remotePath || '/provider.html';
-      this.iframe = this._createIframe(this.remoteUri, this.name);
+      this.childOrigin = childOrigin || 'http://localhost:8000';
+      this.childUri = childOrigin + childPath || '/child.html';
+      this.iframe = this._createIframe(this.childUri, this.name);
 
-      Transport.call(this, [remoteOrigin]);
+      Transport.call(this, [childOrigin]);
     },
 
-    role: ift.roles.CONSUMER,
-
-    send: function(params) {
-      var message = JSON.stringify(params);
-      this.iframe.contentWindow.postMessage(message, this.remoteOrigin);
+    send: function(message) {
+      this.iframe.contentWindow.postMessage(message, this.childOrigin);
     },
 
     destroy: function() {
@@ -342,83 +280,191 @@
 
   });
 
-  // Provider
-  // --------
+  // Child
+  // -----
 
-  // Implement the transport class from the provider's perspective.
-  var Provider = Transport.extend({
+  // Implement the transport class from the child's perspective.
+  var Child = Transport.extend({
 
     constructor: function() {
       if (window.parent !== window) this.parent = window.parent;
-
       Transport.apply(this, arguments);
-    },
-
-    role: ift.roles.PROVIDER,
-
-    send: function(params) {
-      if (this.parent) {
-        var message = JSON.stringify(params);
-        this.parent.postMessage(message, '*');
-      }
     },
 
     listen: function() {
       var transport = this;
       Transport.prototype.listen.apply(this, arguments);
-      setTimeout(function() {
-        transport.send({
-          channel: 'ift',
-          action: 'connect'
-        });
-      }, 0);
+      transport.send('ready');
+    },
+
+    send: function(message) {
+      if (this.parent) this.parent.postMessage(message, '*');
     }
 
   });
+
+  // Channel
+  // -------
+
+  // Facilitate JSON-RPC with multiplexing.
+  var Channel = function(name, transport) {
+    this.name = name || 'default';
+    this.transport = transport;
+    this._callbacks = {};
+
+    this.transport.on('message', function(message) {
+      try {
+        try { message = JSON.parse(message); }
+        catch (error) { throw new JSONRPCError(-32700, error.message); }
+        if (message.channel === this.name) this.process(message.data);
+      } catch (error) {
+        this.send({ id: null, error: error });
+      }
+    }, this);
+  };
+
+  mixin(Channel.prototype, Events, {
+
+    // Send a JSON-RPC-structured message over this channel.
+    send: function(data) {
+      data || (data = {});
+      var message = {
+        channel: this.name,
+        data: mixin(data, { jsonrpc: '2.0' })
+      };
+      this.transport.send(JSON.stringify(message));
+    },
+
+    // Issue a unique requestId, associate with callback if provided, and send request.
+    request: function(method, params, callback) {
+      var data = {
+        method: method,
+        params: params
+      };
+      if (typeof callback === 'function') {
+        data.id = uniqueId('request');
+        this._callbacks[data.id] = callback;
+      }
+      this.send(data);
+    },
+
+    // Build and send a respnse referencing requestId and providing result or error.
+    respond: function(id, result, error) {
+      var data = {
+        id: id
+      };
+      if (result) data.result = result;
+      else data.error = error;
+      this.send(data);
+    },
+
+    // Derive message type from data object and trigger corresponding event. Trigger
+    // "response" event using callback resolved from requestId.
+    process: function(data) {
+      if (data.method) {
+        this.trigger('request', data.id, data.method, data.params);
+      } else if (data.id) {
+        var callback = this._callbacks[data.id];
+        this.trigger('response', callback, data.result, data.error);
+        this._callbacks[data.id] = null;
+      }
+    },
+
+    destroy: function() {
+      this.off();
+    }
+
+  });
+
+  // Service
+  // -------
+
+  // Base class for implementing a service or consumer. Provides methods for sending a
+  // request or response to be routed over a given channel.
+  var Service = function(channel) {
+    this._channel = channel;
+
+    this._channel.on('request', this._request, this);
+    this._channel.on('response', this._response, this);
+  };
+
+  mixin(Service.prototype, Events, {
+
+    // Perform request, applying params as arguments if it's an array. Fill result or
+    // catch an error and submit a response.
+    _request: function(id, method, params) {
+      var isArray, result, error;
+      try {
+        isArray = Object.prototype.toString.call(params) === '[object Array]';
+        result = isArray ? this[method].apply(this, params) : this[method](params);
+      } catch (e) {
+        error = {
+          code: e.code,
+          message: e.message
+        };
+      }
+      if (id) this._channel.respond(id, result, error);
+    },
+
+    _response: function(callback, result, error) {
+      callback(result, error);
+    }
+
+  });
+
+  Service.extend = extend;
 
   // API
   // ---
 
   mixin(ift, {
 
+    Service: Service,
+
+    // Factory function for creating appropriate transport for a courier.
     connect: function(options) {
+      var transport;
       options || (options = {});
-      if (options.remotePath) {
-        return new Consumer(options.name, options.remoteOrigin, options.remotePath);
+      if (options.childPath) {
+        transport = new Parent(options.name, options.childOrigin, options.childPath);
       } else {
-        return new Provider(options.trustedOrigins);
+        transport = new Child(options.trustedOrigins);
       }
+      return new Courier(transport);
     },
 
+    // Lookup service constructor named `channel` in `#_services` registry.
+    service: function(channel) {
+      return this._services[channel];
+    },
+
+    // Lookup consumer constructor named `channel` in `#_consumers` registry.
     consumer: function(channel) {
       return this._consumers[channel];
     },
 
-    provider: function(channel) {
-      return this._providers[channel];
-    },
-
-    register: function(channel, consumer, provider) {
+    // Register service and consumer constructors in global registry.
+    register: function(channel, service, consumer) {
+      this.registerService(channel, service);
       this.registerConsumer(channel, consumer);
-      this.registerProvider(channel, provider);
       return this;
     },
 
+    // Register service constructor in global registry.
+    registerService: function(channel, service) {
+      return this._services[channel] = service;
+    },
+
+    // Register consumer constructor in global registry.
     registerConsumer: function(channel, consumer) {
-      return this._consumers[channel] = consumer.extend({ channel: channel });
+      return this._consumers[channel] = consumer;
     },
 
-    registerProvider: function(channel, provider) {
-      return this._providers[channel] = provider.extend({ channel: channel });
-    },
+    // Global services registry.
+    _services: {},
 
-    _consumers: {
-      base: Service.extend({ role: ift.roles.CONSUMER })
-    },
-
-    _providers: {
-      base: Service.extend({ role: ift.roles.PROVIDER })
-    }
+    // Global consumers registry.
+    _consumers: {}
 
   });
 

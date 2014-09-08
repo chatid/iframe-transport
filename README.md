@@ -4,11 +4,11 @@ iframe-transport
 [![Testling Badge](https://ci.testling.com/chatid/iframe-transport.png)
 ](https://ci.testling.com/chatid/iframe-transport)
 
-Wrapper around `postMessage` providing method invocation, callbacks, and event triggering.
+Bi-directional RPC over iframe. Targets modern browsers, IE8+.
 
-### Clients
+### Services
 
-**LocalStorage Client**
+**LocalStorage Service**
 
 Persist data across domains.
 
@@ -21,18 +21,13 @@ $ http-server -p 8000
 $ http-server -p 4000
 ```
 
-Open `http://127.0.0.1:8000/example/local.html`
+Open `http://127.0.0.1:8000/example/parent.html`
 
 ### Vendor libs
 
-IFT and LSClient have no required dependencies. For compatibility and implementation
+IFT and StorageService have no required dependencies. For compatibility and implementation
 support, the following libraries are included with the project:
 
 * https://github.com/carhartl/jquery-cookie (fork)
 * https://github.com/ded/domready
 * https://github.com/chatid/localstorage-events
-
-### TODO
-
-* Add tests
-* IFT#destroy

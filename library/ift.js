@@ -397,12 +397,7 @@
       try {
         isArray = Object.prototype.toString.call(params) === '[object Array]';
         result = isArray ? this[method].apply(this, params) : this[method](params);
-      } catch (e) {
-        error = {
-          code: e.code,
-          message: e.message
-        };
-      }
+      } catch (e) { error = e; }
       if (id) this._channel.respond(id, result, error);
     },
 

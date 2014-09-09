@@ -308,7 +308,7 @@
   // Channel
   // -------
 
-  // Facilitate JSON-RPC with multiplexing.
+  // Facilitate multiplexed JSON-RPC.
   var Channel = function(name, transport) {
     this.name = name || 'default';
     this.transport = transport;
@@ -326,14 +326,6 @@
   };
 
   mixin(Channel.prototype, Events, {
-
-    serialize: function(object) {
-      return support.structuredClones ? object : JSON.stringify(object);
-    },
-
-    deserialize: function(message) {
-      return support.structuredClones ? message : JSON.parse(message);
-    },
 
     // Send a JSON-RPC-structured message over this channel.
     send: function(data) {
@@ -378,6 +370,14 @@
         this.trigger('response', callback, data.result, data.error);
         this._callbacks[data.id] = null;
       }
+    },
+
+    serialize: function(object) {
+      return support.structuredClones ? object : JSON.stringify(object);
+    },
+
+    deserialize: function(message) {
+      return support.structuredClones ? message : JSON.parse(message);
     },
 
     destroy: function() {

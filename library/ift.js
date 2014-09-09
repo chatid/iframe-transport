@@ -161,16 +161,20 @@
 
   mixin(Courier.prototype, Events, {
 
+    channel: function(name) {
+      return new Channel(name, this.transport);
+    },
+
     // Factory function for services, configured with a channel and transport.
     service: function(channel) {
-      channel = new Channel(channel, this.transport);
+      channel = this.channel(channel);
       var ctor = ift._services[channel.name] || Service;
       return new ctor(channel);
     },
 
     // Factory function for consumers, configured with a channel and transport.
     consumer: function(channel) {
-      channel = new Channel(channel, this.transport);
+      channel = this.channel(channel);
       var ctor = ift._consumers[channel.name] || Service;
       return new ctor(channel);
     },
@@ -367,7 +371,7 @@
         this.trigger('request', data.id, data.method, data.params);
       } else if (data.id) {
         var callback = this._callbacks[data.id];
-        this.trigger('response', callback, data.result, data.error);
+        callback(data.result, data.error);
         this._callbacks[data.id] = null;
       }
     },
@@ -392,10 +396,9 @@
   // Base class for implementing a service or consumer. Provides methods for sending a
   // request or response to be routed over a given channel.
   var Service = function(channel) {
-    this._channel = channel;
+    this.channel = channel;
 
-    this._channel.on('request', this._request, this);
-    this._channel.on('response', this._response, this);
+    this.channel.on('request', this._request, this);
   };
 
   mixin(Service.prototype, Events, {
@@ -407,12 +410,8 @@
       try {
         isArray = Object.prototype.toString.call(params) === '[object Array]';
         result = isArray ? this[method].apply(this, params) : this[method](params);
-      } catch (e) { error = e; }
-      if (id) this._channel.respond(id, result, error);
-    },
-
-    _response: function(callback, result, error) {
-      callback(result, error);
+      } catch (e) { error = { code: e.code, message: e.message }; }
+      if (id) this.channel.respond(id, result, error);
     }
 
   });

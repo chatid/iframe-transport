@@ -15,6 +15,6 @@ module.exports = function() {
   });
   var service = courier.service('test');
   service.on('test', function() {
-    service._channel.request('ack', []);
+    service.channel.request('ack', []);
   });
 };

@@ -51,7 +51,7 @@ module.exports = function() {
       childPath: config.IFT_PATH
     }).ready(function(courier) {
       var consumer = courier.consumer('test');
-      consumer._channel.request('test', [], function() {
+      consumer.channel.request('test', [], function() {
         t.pass('Acknowledged.');
         courier.destroy();
         t.end();
@@ -77,7 +77,7 @@ module.exports = function() {
       childPath: config.IFT_PATH
     }).ready(function() {
       consumer = courier.consumer('test');
-      consumer._channel.request('trigger', ['test']);
+      consumer.channel.request('trigger', ['test']);
     });
   });
 

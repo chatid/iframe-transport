@@ -70,7 +70,7 @@
         evt = {};
       }
 
-      this._channel.request('trigger', ['change', {
+      this.channel.request('trigger', ['change', {
         key: evt.key,
         oldValue: evt.oldValue,
         newValue: evt.newValue
@@ -86,7 +86,7 @@
   var Consumer = ift.Service.extend({
 
     get: function(key, callback) {
-      this._channel.request('get', [key], callback);
+      this.channel.request('get', [key], callback);
     },
 
     set: function(key, value, options, callback) {
@@ -95,11 +95,11 @@
         options = {};
       } else options = options || {};
 
-      this._channel.request('set', [key, value, options], callback);
+      this.channel.request('set', [key, value, options], callback);
     },
 
     unset: function(keys, callback) {
-      this._channel.request('unset', [keys], callback);
+      this.channel.request('unset', [keys], callback);
     }
 
   });

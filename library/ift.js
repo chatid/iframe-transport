@@ -324,8 +324,8 @@
         try { message = this.deserialize(message); }
         catch (error) { throw new JSONRPCError(-32700, error.message); }
         if (message.channel === this.name) this.process(message.data);
-      } catch (error) {
-        this.send({ id: null, error: error });
+      } catch (e) {
+        this.send({ id: null, error: { code: e.code, message: e.message } });
       }
     }, this);
   };

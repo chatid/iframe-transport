@@ -39,7 +39,7 @@
   var Service = ift.Service.extend({
 
     constructor: function(channel, storage) {
-      this.storage = storage || lsWrapper;
+      this.storage = this.storage || storage || lsWrapper;
       this.listen();
       ift.Service.apply(this, arguments);
     },

@@ -21,10 +21,12 @@
   // Only override the Storage service if necessary.
   if (!support.myWritesTrigger) return ift;
 
-  var Service = ift.service('storage').extend({
+  var StorageService = ift.service('storage');
+
+  var StorageCompatService = StorageService.extend({
 
     constructor: function(transport, storage) {
-      ift.service('storage').apply(this, arguments);
+      StorageService.apply(this, arguments);
       var service = this;
       this.storage = new LSEvents(this.storage, function() {
         service.onStorage.apply(service, arguments);
@@ -36,7 +38,7 @@
 
   });
 
-  ift.registerService('storage', Service);
+  ift.registerService('storage', StorageCompatService);
 
   return ift;
 

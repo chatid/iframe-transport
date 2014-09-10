@@ -23,7 +23,7 @@
 
   var StorageService = ift.service('storage');
 
-  var StorageCompatService = StorageService.extend({
+  var StorageServiceCompat = StorageService.extend({
 
     constructor: function(transport, storage) {
       StorageService.apply(this, arguments);
@@ -38,7 +38,7 @@
 
   });
 
-  ift.registerService('storage', StorageCompatService);
+  ift.registerService('storage', StorageServiceCompat);
 
   return ift;
 

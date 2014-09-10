@@ -200,6 +200,7 @@
         callback('outgoing', message);
         send.apply(transport, arguments);
       };
+      return this;
     },
 
     destroy: function() {

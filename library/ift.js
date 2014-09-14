@@ -342,7 +342,7 @@
       this.transport.send(this.serialize(message));
     },
 
-    // Issue a unique requestId, associate with callback if provided, and send request.
+    // Issue a unique request `id`, associate with callback if provided, and send request.
     request: function(method, params, callback) {
       var data = {
         method: method,
@@ -355,7 +355,7 @@
       this.send(data);
     },
 
-    // Build and send a respnse referencing requestId and providing result or error.
+    // Build and send a respnse referencing request `id` and providing result or error.
     respond: function(id, result, error) {
       var data = {
         id: id
@@ -365,8 +365,8 @@
       this.send(data);
     },
 
-    // Derive message type from data object and trigger corresponding event. Trigger
-    // "response" event using callback resolved from requestId.
+    // Signal a request or resolve a callback with response.
+    // TODO: handle notifications and errors.
     process: function(data) {
       if (data.method) {
         this.trigger('request', data.id, data.method, data.params);
@@ -399,23 +399,19 @@
   var Service = function(channel) {
     this.channel = channel;
 
-    this.channel.on('request', this._request, this);
-  };
-
-  mixin(Service.prototype, Events, {
-
-    // Perform request, applying params as arguments if it's an array. Fill result or
-    // catch an error and submit a response.
-    _request: function(id, method, params) {
+    // Process request from anonymous function to avoid collisions in extensions.
+    // Optionally apply params as arguments and respond with result or error.
+    this.channel.on('request', function(id, method, params) {
       var isArray, result, error;
       try {
         isArray = Object.prototype.toString.call(params) === '[object Array]';
         result = isArray ? this[method].apply(this, params) : this[method](params);
       } catch (e) { error = { code: e.code, message: e.message }; }
       if (id) this.channel.respond(id, result, error);
-    }
+    }, this);
+  };
 
-  });
+  mixin(Service.prototype, Events);
 
   Service.extend = extend;
 

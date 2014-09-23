@@ -1,7 +1,10 @@
 var test = require('tape');
 var ift = require('../library/ift');
+var origin = location.origin ? location.origin :
+  location.protocol + '//' + location.hostname +
+  (location.port ? ':' + location.port : '');
 var config = {
-  IFT_ORIGIN: location.origin,
+  IFT_ORIGIN: origin,
   IFT_PATH: location.pathname + '?child'
 };
 
@@ -40,7 +43,6 @@ module.exports = function() {
       trustedOrigins: [config.IFT_ORIGIN]
     });
     t.notOk(courier.transport.iframe);
-    courier.destroy();
   });
 
   test("Request and callback.", function(t) {

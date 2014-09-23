@@ -1,6 +1,9 @@
 var ift = require('../library/ift');
+var origin = location.origin ? location.origin :
+  location.protocol + '//' + location.hostname +
+  (location.port ? ':' + location.port : '');
 var config = {
-  IFT_ORIGIN: location.origin
+  IFT_ORIGIN: origin
 };
 
 module.exports = function() {

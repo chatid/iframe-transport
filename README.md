@@ -1,9 +1,6 @@
 iframe-transport
 ----------------
 
-[![Testling Badge](https://ci.testling.com/chatid/iframe-transport.png)
-](https://ci.testling.com/chatid/iframe-transport)
-
 Bi-directional RPC over iframe. Targets modern browsers, IE8+.
 
 ```javascript

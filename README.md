@@ -54,4 +54,5 @@ support, the following libraries are included with the project:
 
 # TODO
 
+* Critical bug: consumers/services don't coordinate readiness
 * Break into modules and setup build pipeline

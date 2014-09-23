@@ -182,10 +182,13 @@
     // Sugar for hooking transport readiness.
     ready: function(callback) {
       var once;
-      this.transport.on('message', once = function(message) {
-        if (message !== 'ready') return;
+      if (this.transport.isReady()) {
         callback(this);
-        this.off('message', once, this);
+        return this;
+      }
+      this.transport.on('ready', once = function(message) {
+        callback(this);
+        this.transport.off('ready', once, this);
       }, this);
       return this;
     },
@@ -215,6 +218,7 @@
 
   // Base class for wrapping `iframe#postMessage`.
   var Transport = function(targetOrigins) {
+    this.readyState = 0;
     this.targetOrigins = {};
     for (var i = 0; i < (targetOrigins || []).length; i++) {
       this.targetOrigins[targetOrigins[i]] = 1;
@@ -231,6 +235,10 @@
         if (!transport.targetOrigins[evt.origin]) return;
         transport.trigger('message', evt.data);
       });
+    },
+
+    isReady: function() {
+      return this.readyState === 1;
     },
 
     destroy: function() {
@@ -255,6 +263,17 @@
       this.iframe = this._createIframe(this.childUri, this.name);
 
       Transport.call(this, [childOrigin]);
+    },
+
+    listen: function() {
+      var once;
+      this.on('message', once = function(message) {
+        if (message !== 'ready') return;
+        this.readyState = 1;
+        this.trigger('ready');
+        this.off('message', once, this);
+      }, this);
+      return Transport.prototype.listen.apply(this, arguments);
     },
 
     send: function(message) {
@@ -301,7 +320,9 @@
     listen: function() {
       var transport = this;
       Transport.prototype.listen.apply(this, arguments);
+      transport.readyState = 1;
       transport.send('ready');
+      transport.trigger('ready');
     },
 
     send: function(message) {

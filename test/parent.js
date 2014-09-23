@@ -5,7 +5,7 @@ var origin = location.origin ? location.origin :
   (location.port ? ':' + location.port : '');
 var config = {
   IFT_ORIGIN: origin,
-  IFT_PATH: location.pathname + '?child'
+  IFT_PATH: location.pathname + '?child' + +new Date
 };
 
 module.exports = function() {
@@ -36,13 +36,13 @@ module.exports = function() {
     }).ready(function(courier) {
       t.ok(courier.transport.iframe);
       courier.destroy();
-      t.end();
     });
 
     var courier = ift.connect({
       trustedOrigins: [config.IFT_ORIGIN]
     });
     t.notOk(courier.transport.iframe);
+    courier.destroy();
   });
 
   test("Request and callback.", function(t) {

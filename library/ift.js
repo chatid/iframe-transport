@@ -320,9 +320,15 @@
     listen: function() {
       var transport = this;
       Transport.prototype.listen.apply(this, arguments);
-      transport.readyState = 1;
-      transport.send('ready');
-      transport.trigger('ready');
+
+      // [HACK] Assume that all services/consumers are defined synchronously and will be
+      // ready for use at the next tick (page load complete). A proper solution involves
+      // readiness communication between individual services and consumers.
+      setTimeout(function() {
+        transport.readyState = 1;
+        transport.send('ready');
+        transport.trigger('ready');
+      }, 0);
     },
 
     send: function(message) {

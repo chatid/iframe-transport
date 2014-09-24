@@ -25,7 +25,7 @@
 
   var StorageServiceCompat = StorageService.extend({
 
-    constructor: function(transport, storage) {
+    constructor: function(channel, storage) {
       StorageService.apply(this, arguments);
       var service = this;
       this.storage = new LSEvents(this.storage, function() {

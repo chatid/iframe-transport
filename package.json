@@ -15,7 +15,8 @@
     "colors": "^0.6.2",
     "connect": "^2.15.0",
     "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa",
-    "faucet": "0.0.1"
+    "faucet": "0.0.1",
+    "debowerify": "^0.8.1"
   },
   "scripts": {
     "browserify": "browserify test/*.js",
@@ -38,6 +39,9 @@
     "url": "https://github.com/chatid/iframe-transport/issues"
   },
   "homepage": "https://github.com/chatid/iframe-transport",
+  "browserify": {
+    "transform": ["debowerify"]
+  },
   "testling": {
     "files": "test/*.js",
     "browsers": [

@@ -1,4 +1,4 @@
-var test = require('tape');
+var expect = require('expect.js');
 var ift = require('../../library/ift');
 var config = require('../config');
 
@@ -14,66 +14,63 @@ var connect = function(name, callback) {
   }).ready(callback);
 };
 
-test("Events.", function(t) {
-  t.plan(2);
-  var obj = {}, cb;
-  ift.util.mixin(obj, ift.Events);
-  obj.on('test', cb = function() {
-    t.pass('"test" event fired.');
+describe("Transport", function() {
+
+  it("should provide an Events module.", function() {
+    var obj = {}, cb;
+    ift.util.mixin(obj, ift.Events);
+    obj.on('test', cb = function() {
+      expect(1).to.be.ok();
+    });
+    obj.trigger('test');
+    obj.trigger('test');
+    obj.off('test');
+    obj.trigger('test');
+    obj.on('test', cb);
+    obj.off();
+    obj.trigger('test');
   });
-  obj.trigger('test');
-  obj.trigger('test');
-  obj.off('test');
-  obj.trigger('test');
-  obj.on('test', cb);
-  obj.off();
-  obj.trigger('test');
-  t.end();
-});
 
-test("Transport derives whether parent or child is needed.", function(t) {
-  t.plan(2);
+  it("should derive whether parent or child is needed.", function(done) {
+    connect(function(courier) {
+      expect(courier.transport.iframe).to.be.ok();
+      courier.destroy();
+      done();
+    });
 
-  connect(function(courier) {
-    t.ok(courier.transport.iframe);
+    var courier = ift.connect({
+      trustedOrigins: [config.IFT_ORIGIN]
+    });
+    expect(courier.transport.iframe).to.be(undefined);
     courier.destroy();
   });
 
-  var courier = ift.connect({
-    trustedOrigins: [config.IFT_ORIGIN]
-  });
-  t.notOk(courier.transport.iframe);
-  courier.destroy();
-});
-
-test("Request and callback.", function(t) {
-  t.plan(1);
-
-  connect(function(courier) {
-    var consumer = courier.consumer('transport');
-    consumer.channel.request('test', [], function() {
-      t.pass('Acknowledged.');
-      courier.destroy();
-      t.end();
+  it("can perform a request and invoke a callback.", function(done) {
+    connect(function(courier) {
+      var consumer = courier.consumer('transport');
+      consumer.channel.request('test', [], function() {
+        expect(1).to.be.ok();
+        courier.destroy();
+        done();
+      });
     });
   });
-});
 
-test("Trigger.", function(t) {
-  t.plan(1);
+  it("can trigger events remotely.", function(done) {
+    var courier;
 
-  var courier;
+    ift.registerConsumer('transport', ift.Service.extend({
+      ack: function() {
+        expect(1).to.be.ok();
+        courier.destroy();
+        done();
+      }
+    }));
 
-  ift.registerConsumer('transport', ift.Service.extend({
-    ack: function() {
-      t.pass('Acknowledged.');
-      courier.destroy();
-      t.end();
-    }
-  }));
-
-  courier = connect(function() {
-    consumer = courier.consumer('transport');
-    consumer.channel.request('trigger', ['test']);
+    courier = connect(function() {
+      consumer = courier.consumer('transport');
+      consumer.channel.request('trigger', ['test']);
+    });
   });
+
 });

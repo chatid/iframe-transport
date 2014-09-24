@@ -16,11 +16,14 @@
     "connect": "^2.15.0",
     "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa",
     "faucet": "0.0.1",
-    "debowerify": "^0.8.1"
+    "debowerify": "^0.8.1",
+    "mocha": "^1.21.4",
+    "mocha-phantomjs": "^3.5.0",
+    "expect.js": "^0.3.1"
   },
   "scripts": {
     "browserify": "browserify test/*.js",
-    "test": "browserify test/*.js | testling | faucet",
+    "test": "npm run bundle; mocha-phantomjs test/index.html",
     "bundle": "browserify test/*.js -o test.js",
     "watch": "watchify test/*.js -o test.js"
   },
@@ -40,9 +43,12 @@
   },
   "homepage": "https://github.com/chatid/iframe-transport",
   "browserify": {
-    "transform": ["debowerify"]
+    "transform": [
+      "debowerify"
+    ]
   },
   "testling": {
+    "harness": "mocha",
     "files": "test/*.js",
     "browsers": [
       "ie/8..latest",

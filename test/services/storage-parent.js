@@ -1,4 +1,4 @@
-var test = require('tape');
+var expect = require('expect.js');
 var ift = require('../../library/ift');
 var config = require('../config');
 
@@ -17,42 +17,61 @@ var connect = function(name, callback) {
   }).ready(callback)
 };
 
-test("[storage] Get, set, and unset.", function(t) {
-  t.plan(2);
+describe("Storage", function() {
 
-  connect(function(courier) {
-    var storage = courier.consumer('storage');
-    storage.set('test', 'value', function() {
-      storage.get('test', function(value) {
-        t.equal(value, 'value');
-        storage.unset('test', function() {
-          storage.get('test', function(value) {
-            t.equal(value, undefined);
-            courier.destroy();
-            t.end();
+  afterEach(function() {
+    localStorage.clear();
+  });
+
+  it("can get, set, and unset.", function(done) {
+    connect(function(courier) {
+      var storage = courier.consumer('storage');
+      storage.set('test', 'value', function() {
+        storage.get('test', function(value) {
+          expect(value).to.be('value');
+          storage.unset('test', function() {
+            storage.get('test', function(value) {
+              expect(value).to.be(undefined);
+              courier.destroy();
+              done();
+            })
           })
-        })
+        });
       });
     });
   });
-});
 
-test("[storage] Events.", function(t) {
-  t.plan(2);
+  it("fires storage events.", function(done) {
+    connect('storage1', function(courier1) {
+      var storage1 = courier1.consumer('storage');
+      storage1.on('change', function(evt) {
+        expect(evt.oldValue).to.not.be.ok();
+        expect(evt.newValue).to.be('value');
+        done();
+      });
 
-  connect('storage1', function(courier1) {
-    var storage1 = courier1.consumer('storage');
-    storage1.on('change', function(evt) {
-      t.equal(evt.oldValue, null);
-      t.equal(evt.newValue, 'value');
-      t.end();
-    });
-
-    connect('storage2', function(courier2) {
-      var storage2 = courier2.consumer('storage');
-      storage2.unset('test', function() {
+      connect('storage2', function(courier2) {
+        var storage2 = courier2.consumer('storage');
         storage2.set('test', 'value');
       });
     });
   });
+
+  it("can handle lots of traffic.", function(done) {
+    connect(function(courier) {
+      var storage = courier.consumer('storage');
+      var count = 0;
+      var next = function() {
+        if (++count > 1000) {
+          storage.get('herp', function(herp) {
+            done();
+          });
+          return;
+        }
+        storage.set('herp', 'derp' + count, next);
+      };
+      next();
+    });
+  });
+
 });

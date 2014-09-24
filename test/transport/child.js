@@ -3,7 +3,6 @@ var config = require('../config');
 
 ift.registerService('transport', ift.Service.extend({
   test: function() {
-    console.log('remote #test called');
     return 'ack';
   }
 }));

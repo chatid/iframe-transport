@@ -4,6 +4,10 @@ var config = require('../config');
 require('../../library/services/storage');
 require('../../library/services/storage-compat');
 
-ift.connect({
-  trustedOrigins: [config.IFT_ORIGIN]
-}).service('storage');
+exports.generic = function() {
+  ift.connect({
+    trustedOrigins: [config.IFT_ORIGIN]
+  }).service('storage');
+};
+
+exports.storage1 = exports.storage2 = exports.generic;

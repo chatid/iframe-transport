@@ -1,5 +1,13 @@
-if (location.search.match(/child/)) {
-  require('./child')();
+var query = require('./utility').parseQuery(location.search);
+
+var suites = {
+  'transport': require('./transport/child'),
+  'storage': require('./services/storage-child')
+};
+
+if (query.route == 'child') {
+  suites[query.suite][query.target]();
 } else {
-  require('./parent')();
+  require('./transport/parent');
+  require('./services/storage-parent');
 }

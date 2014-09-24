@@ -1,16 +1,21 @@
+var _ = require('underscore');
 var expect = require('expect.js');
 var ift = require('../../library/ift');
 var config = require('../config');
+var buildQuery = require('../utility').buildQuery;
 
-var connect = function(name, callback) {
-  if (typeof name == 'function') {
-    callback = name;
-    name = 'transport';
+var connect = function(target, callback) {
+  if (typeof target == 'function') {
+    callback = target;
+    target = 'generic';
   }
   return ift.connect({
-    name: name,
+    name: target,
     childOrigin: config.IFT_ORIGIN,
-    childPath: config.IFT_PATH + name
+    childPath: buildQuery(config.IFT_CHILD_PATH, {
+      suite: 'transport',
+      target: target
+    })
   }).ready(callback);
 };
 
@@ -48,8 +53,8 @@ describe("Transport", function() {
   it("can perform a request and invoke a callback.", function(done) {
     connect(function(courier) {
       var consumer = courier.consumer('transport');
-      consumer.channel.request('test', [], function() {
-        expect(1).to.be.ok();
+      consumer.channel.request('test', [], function(response) {
+        expect(response).to.be('ack');
         courier.destroy();
         done();
       });
@@ -70,6 +75,28 @@ describe("Transport", function() {
     courier = connect(function() {
       consumer = courier.consumer('transport');
       consumer.channel.request('trigger', ['test']);
+    });
+  });
+
+  it("can handle lots of traffic.", function(done) {
+    connect(function(courier) {
+      var consumer = courier.consumer('transport');
+      var count = 0;
+      var next = function() {
+        if (++count > 500) {
+          consumer.channel.request('test', [], function() {
+            courier.destroy();
+            done();
+          });
+          return;
+        }
+        // IE8 throws "Stack overflow at line 0" when global property is recursed more
+        // than 13 times (`window.postMessage`) http://stackoverflow.com/a/2365491/712895
+        _.defer(function() {
+          consumer.channel.request('test', [], next);
+        });
+      };
+      next();
     });
   });
 

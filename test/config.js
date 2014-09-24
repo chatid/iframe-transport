@@ -7,5 +7,5 @@ var origin = location.origin ? location.origin :
 
 module.exports = {
   IFT_ORIGIN: origin,
-  IFT_PATH: location.pathname + '?child' + +new Date
+  IFT_CHILD_PATH: location.pathname + '?route=child&stamp=' + +new Date
 };

@@ -83,7 +83,7 @@ describe("Transport", function() {
       var consumer = courier.consumer('transport');
       var count = 0;
       var next = function() {
-        if (++count > 500) {
+        if (++count > 200) {
           consumer.channel.request('test', [], function() {
             courier.destroy();
             done();

@@ -74,7 +74,7 @@ describe("Storage", function() {
     });
   });
 
-  it.skip("handles structured data.", function(done) {
+  it("handles structured data.", function(done) {
     connect(function(courier) {
       var storage = courier.consumer('storage');
       storage.set('test', {

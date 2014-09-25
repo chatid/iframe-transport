@@ -18,27 +18,10 @@
     myWritesTrigger: ('onstoragecommit' in document)
   });
 
-  // Only override the Storage service if necessary.
-  if (!support.myWritesTrigger) return ift;
-
-  var StorageService = ift.service('storage');
-
-  var StorageServiceCompat = StorageService.extend({
-
-    constructor: function(channel, storage) {
-      StorageService.apply(this, arguments);
-      var service = this;
-      this.storage = new LSEvents(this.storage, function() {
-        service.onStorage.apply(service, arguments);
-      });
-    },
-
-    // `LSEvents` will handle "storage" events for us.
-    listen: function() {}
-
-  });
-
-  ift.registerService('storage', StorageServiceCompat);
+  // Decorate the Storage service if necessary.
+  if (support.myWritesTrigger) {
+    ift.registerService('storage', LSEvents(ift.service('storage')));
+  }
 
   return ift;
 

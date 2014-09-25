@@ -38,7 +38,12 @@
     structuredClones: (function() {
       var structuredClones = true;
       try {
-        window.postMessage({ toString: function () { structuredClones = false; } }, '*');
+        window.postMessage({
+          toString: function () {
+            structuredClones = false;
+            return 'ping';
+          }
+        }, '*');
       } catch (e) {}
       return structuredClones;
     })()
@@ -347,9 +352,8 @@
     this._callbacks = {};
 
     this.transport.on('message', function(message) {
-      try { message = this.deserialize(message); }
-      catch (error) { this.error(-32700, error.message); }
-      if (message.channel !== this.name) return;
+      message = this.deserialize(message);
+      if (!message || message.channel !== this.name) return;
       if (message.data.error) {
         throw new JSONRPCError(message.data.error.code, message.data.error.message);
       } else {
@@ -422,7 +426,9 @@
     },
 
     deserialize: function(message) {
-      return support.structuredClones ? message : JSON.parse(message);
+      try {
+        return support.structuredClones ? message : JSON.parse(message);
+      } catch (e) { return; }
     },
 
     destroy: function() {

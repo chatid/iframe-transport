@@ -18,20 +18,6 @@
     storageEventTarget: ('onstorage' in window ? window : document)
   });
 
-  // Wrap localStorage so it may be swapped out.
-  var lsWrapper = {
-    get: function(key) {
-      return localStorage.getItem(key);
-    },
-    set: function(key, value) {
-      return localStorage.setItem(key, value);
-    },
-    unset: function(keys) {
-      if (!(keys instanceof Array)) keys = [keys];
-      for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
-    }
-  };
-
   // Service
   // --------
 
@@ -39,7 +25,6 @@
   var Service = ift.Service.extend({
 
     constructor: function(channel, storage) {
-      this.storage = this.storage || storage || lsWrapper;
       this.listen();
       ift.Service.apply(this, arguments);
     },
@@ -50,15 +35,25 @@
     },
 
     get: function(key) {
-      return this.storage.get(key);
+      return this.deserialize(localStorage.getItem(key));
     },
 
     set: function(key, value, options) {
-      return this.storage.set(key, value, options);
+      return localStorage.setItem(key, this.serialize(value));
     },
 
     unset: function(keys) {
-      return this.storage.unset(keys);
+      if (!(keys instanceof Array)) keys = [keys];
+      for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
+    },
+
+    serialize: function(data) {
+      return JSON.stringify(data);
+    },
+
+    deserialize: function(data) {
+      try { return JSON.parse(data); }
+      catch (e) { return data; }
     },
 
     onStorage: function(evt) {
@@ -72,8 +67,8 @@
 
       this.channel.request('trigger', ['change', {
         key: evt.key,
-        oldValue: evt.oldValue,
-        newValue: evt.newValue
+        oldValue: this.deserialize(evt.oldValue),
+        newValue: this.deserialize(evt.newValue)
       }]);
     }
 

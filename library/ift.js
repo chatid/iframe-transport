@@ -347,12 +347,13 @@
     this._callbacks = {};
 
     this.transport.on('message', function(message) {
-      try {
-        try { message = this.deserialize(message); }
-        catch (error) { throw new JSONRPCError(-32700, error.message); }
-        if (message.channel === this.name) this.process(message.data);
-      } catch (e) {
-        this.send({ id: null, error: { code: e.code, message: e.message } });
+      try { message = this.deserialize(message); }
+      catch (error) { this.error(-32700, error.message); }
+      if (message.channel !== this.name) return;
+      if (message.data.error) {
+        throw new JSONRPCError(message.data.error.code, message.data.error.message);
+      } else {
+        this.process(message.data);
       }
     }, this);
   };
@@ -392,11 +393,23 @@
       this.send(data);
     },
 
+    // Send an error message.
+    error: function(code, message) {
+      this.send({
+        id: null,
+        error: {
+          code: code,
+          message: message
+        }
+      });
+    },
+
     // Signal a request or resolve a callback with response.
-    // TODO: handle notifications and errors.
+    // TODO: handle notifications.
     process: function(data) {
       if (data.method) {
-        this.trigger('request', data.id, data.method, data.params);
+        try { this.trigger('request', data.id, data.method, data.params); }
+        catch (e) { this.error(e.code, e.message); }
       } else if (data.id) {
         var callback = this._callbacks[data.id];
         callback(data.result, data.error);

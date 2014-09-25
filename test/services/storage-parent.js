@@ -74,4 +74,28 @@ describe("Storage", function() {
     });
   });
 
+  it.skip("handles structured data.", function(done) {
+    connect(function(courier) {
+      var storage = courier.consumer('storage');
+      storage.set('test', {
+        string: 'value',
+        number: 435,
+        array: ['foo', 'bar', 89]
+      }, function() {
+        storage.get('test', function(test) {
+          expect(test).to.be.an('object');
+          expect(test.string).to.be.a('string');
+          expect(test.number).to.be.a('number');
+          expect(test.array).to.be.an(Array);
+          expect(test.array).to.have.length(3);
+          expect(test.array[0]).to.be('foo');
+          expect(test.array[1]).to.be('bar');
+          expect(test.array[2]).to.be(89);
+          courier.destroy();
+          done();
+        });
+      });
+    });
+  });
+
 });

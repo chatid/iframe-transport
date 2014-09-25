@@ -19,7 +19,7 @@
   });
 
   // Service
-  // --------
+  // -------
 
   // Implement the LocalStorage service from a service's perspective.
   var Service = ift.Service.extend({

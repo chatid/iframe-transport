@@ -8,7 +8,7 @@
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) define('ift-storage-service', ['ift'], factory);
   else if (typeof exports === 'object') module.exports = factory(require('../ift'));
-  else root.ift = factory(root.ift);
+  else root.IFTStorageService = factory(root.ift);
 }(this, function(ift) {
 
   var support = ift.support,
@@ -18,15 +18,19 @@
     storageEventTarget: ('onstorage' in window ? window : document)
   });
 
-  // Service
-  // -------
+  var StorageService = ift.Service.extend({
+    type: 'storage'
+  });
 
-  // Implement the LocalStorage service from a service's perspective.
-  var Service = ift.Service.extend({
+  // Provider
+  // --------
 
-    constructor: function(channel, storage) {
+  // Implement the LocalStorage service from a provider's perspective.
+  var Provider = StorageService.extend({
+
+    constructor: function(transport, storage) {
       this.listen();
-      ift.Service.apply(this, arguments);
+      StorageService.apply(this, arguments);
     },
 
     listen: function() {
@@ -78,7 +82,7 @@
   // --------
 
   // Implement the LocalStorage service from a consumer's perspective.
-  var Consumer = ift.Service.extend({
+  var Consumer = StorageService.extend({
 
     get: function(key, callback) {
       this.channel.request('get', [key], callback);
@@ -99,8 +103,9 @@
 
   });
 
-  ift.register('storage', Service, Consumer);
-
-  return ift;
+  return {
+    Provider: Provider,
+    Consumer: Consumer
+  };
 
 }));

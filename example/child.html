@@ -2,14 +2,17 @@
 <html>
   <head>
 
-    <title>Iframe Storage | Child</title>
+    <title>Child</title>
 
     <script type='text/javascript' src='../library/ift.js'></script>
     <script type='text/javascript' src='../library/services/storage.js'></script>
     <script type='text/javascript'>
-    ift.connect({
-      trustedOrigins: ['http://127.0.0.1:8000']
-    }).service('storage');
+    ift.child({
+      trustedOrigins: ['http://127.0.0.1:8000'],
+      services: [IFTStorageService.Provider]
+    }).wiretap(function(direction, message) {
+      ift.util.debug(direction, message);
+    });
     </script>
 
   </head>

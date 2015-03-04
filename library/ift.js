@@ -408,6 +408,8 @@
     }, this);
   };
 
+  Service.prototype.destroy = function(){};
+
   mixin(Service.prototype, Events);
 
   Service.extend = extend;
@@ -440,6 +442,13 @@
         callback('outgoing', message);
       });
       return this;
+    },
+
+    destroy: function() {
+      for (var i = 0; i < this.services.length; i++) {
+        this.services[i].destroy();
+      }
+      this.transport.destroy();
     },
 
     _createServices: function(services) {

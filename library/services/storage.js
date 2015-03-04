@@ -34,8 +34,10 @@
     },
 
     listen: function() {
-      var service = this, target = support.storageEventTarget;
-      support.on(target, 'storage', function(evt) { service.onStorage(evt); });
+      var service = this;
+      support.on(support.storageEventTarget, 'storage', this._onStorage = function(evt) {
+        service.onStorage(evt);
+      });
     },
 
     get: function(key) {
@@ -74,6 +76,10 @@
         oldValue: this.deserialize(evt.oldValue),
         newValue: this.deserialize(evt.newValue)
       }]);
+    },
+
+    destroy: function() {
+      support.off(support.storageEventTarget, 'storage', this._onStorage);
     }
 
   });

@@ -15,11 +15,11 @@
     <script type='text/javascript'>
     ift.parent({
       childOrigin: 'http://127.0.0.1:4000',
-      childPath: '/example/child.html',
-      services: [IFTStorageService.Consumer]
+      childPath: '/example/child.html'
     }).wiretap(function(direction, message) {
       ift.util.debug(direction, message);
-    }).ready(function(transport, storage) {
+    }).ready(function(manager) {
+      var storage = manager.service('example', IFTStorageService.Consumer);
       storage.on('change', function(evt) {
         ift.util.debug('change event', evt);
       });

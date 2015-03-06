@@ -18,19 +18,15 @@
     storageEventTarget: ('onstorage' in window ? window : document)
   });
 
-  var StorageService = ift.Service.extend({
-    type: 'storage'
-  });
-
   // Provider
   // --------
 
   // Implement the LocalStorage service from a provider's perspective.
-  var Provider = StorageService.extend({
+  var Provider = ift.Service.extend({
 
-    constructor: function(transport, storage) {
+    constructor: function() {
       this.listen();
-      StorageService.apply(this, arguments);
+      ift.Service.apply(this, arguments);
     },
 
     listen: function() {
@@ -88,7 +84,7 @@
   // --------
 
   // Implement the LocalStorage service from a consumer's perspective.
-  var Consumer = StorageService.extend({
+  var Consumer = ift.Service.extend({
 
     get: function(key, callback) {
       this.channel.request('get', [key], callback);

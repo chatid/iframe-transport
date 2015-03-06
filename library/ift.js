@@ -109,7 +109,7 @@
 
   var JSONRPCError = function(code, message) {
     this.code = code;
-    this.message = message;
+    this.message = "[JSONRPCError] " + message;
   };
 
   JSONRPCError.prototype = Error.prototype;
@@ -200,6 +200,15 @@
       return this.readyState === 1;
     },
 
+    wiretap: function(callback) {
+      this.on('incoming', function(message) {
+        callback('incoming', message);
+      });
+      this.on('outgoing', function(message) {
+        callback('outgoing', message);
+      });
+    },
+
     destroy: function() {
       support.off(window, 'message', this.onMessage);
       this.off();
@@ -236,6 +245,9 @@
     },
 
     send: function(message) {
+      if (!this.iframe.contentWindow) {
+        throw new Error("Parent iframe not ready, use Manager#ready or Transport#ready");
+      }
       this.iframe.contentWindow.postMessage(message, this.childOrigin);
       this.trigger('outgoing', message);
     },
@@ -278,10 +290,13 @@
     },
 
     listen: function() {
+      var transport = this;
+      domready(function() {
+        transport.readyState = 1;
+        transport.trigger('ready');
+        transport.send('ready');
+      });
       Transport.prototype.listen.apply(this, arguments);
-      this.readyState = 1;
-      this.trigger('ready');
-      this.send('ready');
     },
 
     send: function(message) {
@@ -297,8 +312,8 @@
   // -------
 
   // Facilitate multiplexed JSON-RPC.
-  var Channel = function(transport, type) {
-    this.id = (type || 'ift');
+  var Channel = function(namespace, transport) {
+    this.id = namespace;
     this.transport = transport;
     this._callbacks = {};
 
@@ -393,22 +408,9 @@
 
   // Base class for implementing a service provider or consumer. Provides methods
   // for sending a request or response to be routed over a given channel.
-  var Service = function(transport) {
-    this.channel = new Channel(transport, this.type);
-
-    // Process request from anonymous function to avoid collisions in extensions.
-    // Optionally apply params as arguments and respond with result or error.
-    this.channel.on('request', function(id, method, params) {
-      var isArray, result, error;
-      try {
-        isArray = Object.prototype.toString.call(params) === '[object Array]';
-        result = isArray ? this[method].apply(this, params) : this[method](params);
-      } catch (e) { error = { code: e.code, message: e.message }; }
-      if (id) this.channel.respond(id, result, error);
-    }, this);
+  var Service = function(channel) {
+    this.channel = channel;
   };
-
-  Service.prototype.destroy = function(){};
 
   mixin(Service.prototype, Events);
 
@@ -419,45 +421,57 @@
 
   var Manager = function(transport, services) {
     this.transport = transport;
+
     this.transport.ready(function() {
-      this._createServices(services);
+      var service;
+      this.services = [];
+      for (var i = 0; i < services.length; i++) {
+        service = services[i];
+        this.services.push(this.service(service.namespace, service.ctor));
+      }
     }, this);
   };
 
   mixin(Manager.prototype, {
 
     ready: function(callback) {
-      var manager = this;
       this.transport.ready(function() {
-        callback.apply(manager, [this.transport].concat(this.services));
+        callback.apply(this, [this].concat(this.services));
       }, this);
       return this;
     },
 
+    service: function(namespace, serviceCtor) {
+      if (!namespace) throw new Error("Cannot create a service without a namespace");
+      serviceCtor || (serviceCtor = ift.Service);
+
+      var channel = new Channel(namespace, this.transport);
+      var service = new serviceCtor(channel);
+
+      channel.on('request', function(id, method, params) {
+        var isArray, result, error;
+        try {
+          isArray = Object.prototype.toString.call(params) === '[object Array]';
+          result = isArray ? service[method].apply(service, params) : service[method](params);
+        } catch (e) {
+          error = {
+            code: e.code,
+            message: e.stack
+          };
+        }
+        if (id) channel.respond(id, result, error);
+      });
+
+      return service;
+    },
+
     wiretap: function(callback) {
-      this.transport.on('incoming', function(message) {
-        callback('incoming', message);
-      });
-      this.transport.on('outgoing', function(message) {
-        callback('outgoing', message);
-      });
+      this.transport.wiretap(callback);
       return this;
     },
 
     destroy: function() {
-      for (var i = 0; i < this.services.length; i++) {
-        this.services[i].destroy();
-      }
       this.transport.destroy();
-    },
-
-    _createServices: function(services) {
-      var ctor;
-      this.services = [];
-      for (var i = 0; i < services.length; i++) {
-        ctor = services[i];
-        this.services.push(new ctor(this.transport));
-      }
     }
 
   });
@@ -467,6 +481,10 @@
 
   mixin(ift, {
 
+    Transport: Transport,
+
+    Channel: Channel,
+
     Service: Service,
 
     // Factory function for creating appropriate transport.
@@ -474,7 +492,7 @@
       options || (options = {});
       return new Manager(
         new ParentTransport(options.childOrigin, options.childPath),
-        options.services
+        options.services || []
       );
     },
 
@@ -482,8 +500,16 @@
       options || (options = {});
       return new Manager(
         new ChildTransport(options.trustedOrigins),
-        options.services
+        options.services || []
       );
+    },
+
+    // Helper for declaring a service under a namespace.
+    service: function(namespace, ctor) {
+      return {
+        namespace: namespace,
+        ctor: ctor
+      };
     }
 
   });

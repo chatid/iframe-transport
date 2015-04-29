@@ -2,6 +2,7 @@ var webpack = require('webpack'),
     path = require('path');
 
 module.exports = {
+  devtool: 'source-map',
   entry: {
     'ift': ['./library/ift.js'],
     'storage': ['./library/services/storage.js'],

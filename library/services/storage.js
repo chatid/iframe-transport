@@ -86,7 +86,9 @@ var Consumer = Service.extend({
     if (typeof options === 'function') {
       callback = options;
       options = {};
-    } else options = options || {};
+    } else {
+      options = options || {};
+    }
 
     this.channel.request('set', [key, value, options], callback);
   },

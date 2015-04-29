@@ -5,11 +5,11 @@
  * Targets modern browsers, IE8+
 */
 
-var ift = require('../ift'),
+var ift     = require('../ift'),
     Service = require('../base/service'),
     support = require('../util/support'),
     isArray = require('../util/isArray'),
-    mixin = require('../util/mixin');
+    mixin   = require('../util/mixin');
 
 mixin(support, {
   storageEventTarget: ('onstorage' in window ? window : document)
@@ -98,3 +98,5 @@ var Consumer = Service.extend({
 });
 
 ift.register('storage', Storage, Consumer);
+
+module.exports = ift;

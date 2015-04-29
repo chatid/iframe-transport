@@ -5,10 +5,11 @@
  * Targets modern browsers, IE8+
 */
 
-var Courier = require('./base/courier'),
-    Service = require('./base/service'),
-    Parent = require('./base/parent'),
-    Child = require('./base/child');
+
+// We use these below, but there is a circular dependency on ift. we must set
+// up ift first, then require in the dependencies.
+var Courier, Parent, Child;
+
 
 var slice = [].slice;
 
@@ -17,7 +18,7 @@ var slice = [].slice;
 
 var ift = module.exports = {
 
-  Service: Service,
+  Service: require('./base/service'),
 
   // Factory function for creating appropriate transport for a courier.
   connect: function(options) {
@@ -65,3 +66,7 @@ var ift = module.exports = {
   _consumers: {}
 
 };
+
+Courier = require('./base/courier');
+Parent = require('./base/parent');
+Child = require('./base/child');

@@ -19,3 +19,5 @@ mixin(support, {
 if (support.myWritesTrigger) {
   ift.registerService('storage', LSEvents(ift.service('storage')));
 }
+
+module.exports = ift;

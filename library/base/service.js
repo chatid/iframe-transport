@@ -1,10 +1,10 @@
 // Service
 // -------
 
-var mixin = require('../util/mixin'),
-    extend = require('../util/extend'),
+var mixin   = require('../util/mixin'),
+    extend  = require('../util/extend'),
     isArray = require('../util/isArray'),
-    Events = require('../base/events');
+    Events  = require('../base/events');
 
 // Base class for implementing a service or consumer. Provides methods for sending a
 // request or response to be routed over a given channel.

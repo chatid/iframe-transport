@@ -6,10 +6,10 @@
 */
 
 var LSEvents = require('localstorage-events'),
-    storage = require('./storage'),
-    ift = require('../ift'),
-    support = require('../util/support'),
-    mixin = require('../util/mixin');
+    storage  = require('./storage'),
+    ift      = require('../ift'),
+    support  = require('../util/support'),
+    mixin    = require('../util/mixin');
 
 mixin(support, {
   myWritesTrigger: ('onstoragecommit' in document)

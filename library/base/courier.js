@@ -1,8 +1,8 @@
-var ift = require('../ift'),
+var ift     = require('../ift'),
     Service = require('./service'),
     Channel = require('./channel'),
-    Events = require('./events'),
-    mixin = require('../util/mixin');
+    Events  = require('./events'),
+    mixin   = require('../util/mixin');
 
 // Manage services and consumers that communicate over a given transport.
 var Courier = module.exports = function(transport) {

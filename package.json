@@ -8,23 +8,15 @@
     "test": "test"
   },
   "devDependencies": {
-    "browserify": "~3.44.2",
-    "phantomjs": "^1.9.7-5",
-    "watchify": "^0.8.3",
     "colors": "^0.6.2",
     "connect": "^2.15.0",
-    "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa",
+    "expect.js": "^0.3.1",
     "faucet": "0.0.1",
-    "debowerify": "^0.8.1",
     "mocha": "^1.21.4",
     "mocha-phantomjs": "^3.5.0",
-    "expect.js": "^0.3.1"
-  },
-  "scripts": {
-    "browserify": "browserify test/*.js",
-    "test": "npm run bundle; mocha-phantomjs test/index.html",
-    "bundle": "browserify test/*.js -o test.js",
-    "watch": "watchify test/*.js -o test.js"
+    "phantomjs": "^1.9.7-5",
+    "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa",
+    "webpack": "^1.8.10"
   },
   "repository": {
     "type": "git",
@@ -41,11 +33,6 @@
     "url": "https://github.com/chatid/iframe-transport/issues"
   },
   "homepage": "https://github.com/chatid/iframe-transport",
-  "browserify": {
-    "transform": [
-      "debowerify"
-    ]
-  },
   "testling": {
     "harness": "mocha",
     "files": "test/*.js",

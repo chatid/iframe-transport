@@ -5,24 +5,19 @@
  * Use a cookie to ignore "storage" events that I triggered
 */
 
-(function (root, factory) {
-  if (typeof define === 'function' && define.amd) define('ift-storage-service-compat', ['localstorage-events', 'ift-storage-service'], factory);
-  else if (typeof exports === 'object') module.exports = factory(require('localstorage-events'), require('./storage'));
-  else root.ift = factory(root.LSEvents, root.ift);
-}(this, function(LSEvents, ift) {
+var LSEvents = require('localstorage-events'),
+    storage  = require('./storage'),
+    ift      = require('../ift'),
+    support  = require('../util/support'),
+    mixin    = require('../util/mixin');
 
-  var support = ift.support,
-      mixin = ift.util.mixin;
+mixin(support, {
+  myWritesTrigger: ('onstoragecommit' in document)
+});
 
-  mixin(support, {
-    myWritesTrigger: ('onstoragecommit' in document)
-  });
+// Decorate the Storage service if necessary.
+if (support.myWritesTrigger) {
+  ift.registerService('storage', LSEvents(ift.service('storage')));
+}
 
-  // Decorate the Storage service if necessary.
-  if (support.myWritesTrigger) {
-    ift.registerService('storage', LSEvents(ift.service('storage')));
-  }
-
-  return ift;
-
-}));
+module.exports = ift;

@@ -20,6 +20,8 @@ var ift = module.exports = {
 
   Service: require('./base/service'),
 
+  Events: require('./base/events'),
+
   // Factory function for creating appropriate transport for a courier.
   connect: function(options) {
     var transport;

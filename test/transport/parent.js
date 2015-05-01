@@ -1,6 +1,6 @@
-var _ = require('underscore');
 var expect = require('expect.js');
 var ift = require('../../library/ift');
+var mixin = require('../../library/util/mixin');
 var config = require('../config');
 var buildQuery = require('../utility').buildQuery;
 
@@ -23,7 +23,7 @@ describe("Transport", function() {
 
   it("should provide an Events module.", function() {
     var obj = {}, cb;
-    ift.util.mixin(obj, ift.Events);
+    mixin(obj, ift.Events);
     obj.on('test', cb = function() {
       expect(1).to.be.ok();
     });
@@ -92,7 +92,7 @@ describe("Transport", function() {
         }
         // IE8 throws "Stack overflow at line 0" when global property is recursed more
         // than 13 times (`window.postMessage`) http://stackoverflow.com/a/2365491/712895
-        _.defer(function() {
+        setTimeout(function() {
           consumer.channel.request('test', [], next);
         });
       };

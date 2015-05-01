@@ -1,7 +1,5 @@
-var _ = require('underscore');
-
 var parseQuery = exports.parseQuery = function(qs){
-  return _.reduce(qs.replace('?', '').split('&'), function(obj, pair) {
+  return qs.replace('?', '').split('&').reduce(function(obj, pair) {
     var i = pair.indexOf('=')
       , key = pair.slice(0, i)
       , val = pair.slice(++i);

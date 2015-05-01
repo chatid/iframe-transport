@@ -7,14 +7,27 @@
     "example": "example",
     "test": "test"
   },
+  "scripts": {
+    "test": "karma start"
+  },
   "devDependencies": {
     "colors": "^0.6.2",
     "connect": "^2.15.0",
     "expect.js": "^0.3.1",
     "faucet": "0.0.1",
+    "karma": "^0.12.31",
+    "karma-chrome-launcher": "^0.1.8",
+    "karma-cli": "0.0.4",
+    "karma-firefox-launcher": "^0.1.4",
+    "karma-junit-reporter": "^0.2.2",
+    "karma-mocha": "^0.1.10",
+    "karma-sourcemap-loader": "^0.3.4",
+    "karma-webpack": "^1.5.0",
     "mocha": "^1.21.4",
     "mocha-phantomjs": "^3.5.0",
     "phantomjs": "^1.9.7-5",
+    "rewire": "^2.3.3",
+    "rewire-webpack": "^1.0.0",
     "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa",
     "webpack": "^1.8.10"
   },

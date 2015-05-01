@@ -1,27 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-
-    <title>Child</title>
-
-    <!-- <script type='text/javascript' src='../node_modules/domready/ready.js'></script> -->
-    <script type='text/javascript'>
-    var domready = function(callback) {
-      document.addEventListener('DOMContentLoaded', callback, false);
-    };
-    </script>
-    <script type='text/javascript' src='../library/ift.js'></script>
-    <script type='text/javascript' src='../library/services/storage.js'></script>
-    <script type='text/javascript'>
-    ift.child({
-      trustedOrigins: ['http://127.0.0.1:8000']
-    }).wiretap(function(direction, message) {
-      ift.util.debug(direction, message);
-    }).service('example', IFTStorageService.Provider);
-    </script>
-
+    <title>Iframe Storage | Child</title>
   </head>
   <body>
-
+    <script type='text/javascript' src='../build/example-child.js'></script>
   </body>
 </html>

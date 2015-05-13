@@ -1,4 +1,4 @@
-var slice = [];
+var slice = [].slice;
 
 module.exports = function() {
   var args = slice.call(arguments);

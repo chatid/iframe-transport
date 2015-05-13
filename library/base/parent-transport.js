@@ -1,5 +1,5 @@
 var Transport = require('./transport'),
-    uniqueId  = require('../utils/uniqId');
+    uniqueId  = require('../util/uniqueId');
 
 // Implement the transport class from the parent's perspective.
 var ParentTransport = module.exports = Transport.extend({

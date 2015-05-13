@@ -1,30 +1,35 @@
-var Transport = require('./transport');
+var Transport = require('./transport'),
+    uniqueId  = require('../util/uniqueId');
 
 // Implement the transport class from the parent's perspective.
-var Parent = module.exports = Transport.extend({
+var ParentTransport = module.exports = Transport.extend({
 
-  constructor: function(name, childOrigin, childPath) {
-    this.name = name || 'default';
+  constructor: function(childOrigin, childPath) {
+    this.id = uniqueId('ift');
     this.childOrigin = childOrigin || 'http://localhost:8000';
     this.childUri = childOrigin + childPath || '/child.html';
-    this.iframe = this._createIframe(this.childUri, this.name);
+    this._createIframe(this.childUri, this.id);
 
     Transport.call(this, [childOrigin]);
   },
 
   listen: function() {
     var once;
-    this.on('message', once = function(message) {
+    this.on('incoming', once = function(message) {
       if (message !== 'ready') return;
       this.readyState = 1;
       this.trigger('ready');
-      this.off('message', once, this);
+      this.off('incoming', once, this);
     }, this);
     return Transport.prototype.listen.apply(this, arguments);
   },
 
   send: function(message) {
+    if (!this.iframe.contentWindow) {
+      throw new Error("Parent iframe not ready, use Manager#ready or Transport#ready");
+    }
     this.iframe.contentWindow.postMessage(message, this.childOrigin);
+    this.trigger('outgoing', message);
   },
 
   destroy: function() {
@@ -32,13 +37,13 @@ var Parent = module.exports = Transport.extend({
     this.iframe.parentNode.removeChild(this.iframe);
   },
 
-  _createIframe: function(uri, name) {
-    var iframe = document.getElementById('ift_' + name);
-    if (iframe) return iframe;
+  _createIframe: function(uri, id) {
+    var iframe = this.iframe = document.getElementById(id);
+    if (iframe) return;
 
-    iframe = document.createElement('iframe');
-    iframe.id = 'ift_' + name;
-    iframe.name = 'ift_' + name;
+    iframe = this.iframe = document.createElement('iframe');
+    iframe.id = id;
+    iframe.name = id;
     iframe.style.position = 'absolute';
     iframe.style.top = '-2000px';
     iframe.style.left = '0px';
@@ -47,8 +52,6 @@ var Parent = module.exports = Transport.extend({
     iframe.allowTransparency = true;
 
     document.body.appendChild(iframe);
-
-    return iframe;
   }
 
 });

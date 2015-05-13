@@ -8,7 +8,7 @@ var slice = [].slice;
 var Events = module.exports = {
   on: function(name, callback, context) {
     this._events || (this._events = {});
-    (this._events[name] = this._events[name] || []).push({
+    (this._events[name] = this._events[name] || []).unshift({
       callback: callback,
       context: context || this
     });

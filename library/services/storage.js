@@ -1,12 +1,4 @@
-/*
- * IFrameTransport - Storage Service
- *
- * Persist data across domains.
- * Targets modern browsers, IE8+
-*/
-
-var ift     = require('../ift'),
-    Service = require('../base/service'),
+var Service = require('../base/service'),
     support = require('../util/support'),
     isArray = require('../util/isArray'),
     mixin   = require('../util/mixin');
@@ -15,11 +7,8 @@ mixin(support, {
   storageEventTarget: ('onstorage' in window ? window : document)
 });
 
-// Service
-// -------
-
-// Implement the LocalStorage service from a service's perspective.
-var Storage = Service.extend({
+// Implement the LocalStorage service from a provider's perspective.
+var Provider = Service.extend({
 
   constructor: function(channel, storage) {
     this.listen();
@@ -68,12 +57,13 @@ var Storage = Service.extend({
       oldValue: this.deserialize(evt.oldValue),
       newValue: this.deserialize(evt.newValue)
     }]);
+  },
+
+  destroy: function() {
+    support.off(support.storageEventTarget, 'storage', this.onStorage);
   }
 
 });
-
-// Consumer
-// --------
 
 // Implement the LocalStorage service from a consumer's perspective.
 var Consumer = Service.extend({
@@ -99,6 +89,7 @@ var Consumer = Service.extend({
 
 });
 
-ift.register('storage', Storage, Consumer);
-
-module.exports = ift;
+module.exports = {
+  Provider: Provider,
+  Consumer: Consumer
+};

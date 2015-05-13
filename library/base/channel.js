@@ -1,24 +1,24 @@
 var mixin    = require('../util/mixin'),
     support  = require('../util/support'),
-    uniqueId = require('../util/uniqId'),
+    uniqueId = require('../util/uniqueId'),
     Events   = require('./events');
 
 var JSONRPCError = function(code, message) {
   this.code = code;
-  this.message = message;
+  this.message = '[JSONRPCError] ' + message;
 };
 
 JSONRPCError.prototype = Error.prototype;
 
 // Facilitate multiplexed JSON-RPC.
-var Channel = module.exports = function(name, transport) {
-  this.name = name || 'default';
+var Channel = module.exports = function(namespace, transport) {
+  this.id = namespace;
   this.transport = transport;
   this._callbacks = {};
 
-  this.transport.on('message', function(message) {
+  this.transport.on('incoming', function(message) {
     message = this.deserialize(message);
-    if (!message || message.channel !== this.name) return;
+    if (!message || message.channel !== this.id) return;
     if (message.data.error) {
       throw new JSONRPCError(message.data.error.code, message.data.error.message);
     } else {
@@ -33,7 +33,7 @@ mixin(Channel.prototype, Events, {
   send: function(data) {
     data || (data = {});
     var message = {
-      channel: this.name,
+      channel: this.id,
       data: mixin(data, { jsonrpc: '2.0' })
     };
     this.transport.send(this.serialize(message));
@@ -52,7 +52,7 @@ mixin(Channel.prototype, Events, {
     this.send(data);
   },
 
-  // Build and send a respnse referencing request `id` and providing result or error.
+  // Build and send a response referencing request `id` and providing result or error.
   respond: function(id, result, error) {
     var data = {
       id: id

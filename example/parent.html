@@ -4,6 +4,25 @@
     <title>Iframe Storage | Parent</title>
   </head>
   <body>
-    <script type='text/javascript' src='../build/example-parent.js'></script>
+    <script type='text/javascript' src='../build/ift.js'></script>
+    <script type='text/javascript' src='../build/IFTStorageService.js'></script>
+    <script type='text/javascript'>
+      ift.parent({
+        childOrigin: 'http://127.0.0.1:4000',
+        childPath: '/example/child.html'
+      }).wiretap(function(direction, message) {
+        ift.util.debug(direction, message);
+      }).ready(function(manager) {
+        var storage = manager.service('example', IFTStorageService.Consumer);
+        storage.on('change', function(evt) {
+          ift.util.debug('change event', evt);
+        });
+        storage.set('key', 'value', function() {
+          storage.get('key', function(value) {
+            ift.util.debug('got', value);
+          });
+        });
+      });
+    </script>
   </body>
 </html>

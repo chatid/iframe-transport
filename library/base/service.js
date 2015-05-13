@@ -1,9 +1,5 @@
-// Service
-// -------
-
 var mixin   = require('../util/mixin'),
     extend  = require('../util/extend'),
-    isArray = require('../util/isArray'),
     Events  = require('../base/events');
 
 // Base class for implementing a service provider or consumer. Provides methods

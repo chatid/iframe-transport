@@ -4,7 +4,7 @@ var Service = require('./service'),
     mixin   = require('../util/mixin');
 
 
-var Manager = function(transport, services) {
+var Manager = module.exports = function(transport, services) {
   this.transport = transport;
 
   this.transport.ready(function() {

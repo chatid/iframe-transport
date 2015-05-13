@@ -5,17 +5,11 @@
  * Targets modern browsers, IE8+
 */
 
-
-// We use these below, but there is a circular dependency on ift. we must set
-// up ift first, then require in the dependencies.
-
-var ParentTransport = require('./base/parent-transport');
+var Manager = require('./base/manager'),
+    ParentTransport = require('./base/parent-transport'),
     ChildTransport = require('./base/child-transport');
 
-// API
-// ---
-
-var ift = module.exports = {
+module.exports = {
 
   Channel: require('./base/channel'),
 
@@ -40,7 +34,6 @@ var ift = module.exports = {
     );
   },
 
-  // Lookup service constructor named `channel` in `#_services` registry.
   service: function(namespace, ctor) {
     return {
       namespace: namespace,

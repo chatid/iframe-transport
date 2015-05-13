@@ -1,106 +1,95 @@
-/*
- * IFrameTransport - Storage Service
- *
- * Persist data across domains.
- * Targets modern browsers, IE8+
-*/
+var Service = require('../base/service'),
+    support = require('../util/support'),
+    isArray = require('../util/isArray'),
+    mixin   = require('../util/mixin');
 
-(function (root, factory) {
-  if (typeof define === 'function' && define.amd) define('ift-storage-service', ['ift'], factory);
-  else if (typeof exports === 'object') module.exports = factory(require('../ift'));
-  else root.ift = factory(root.ift);
-}(this, function(ift) {
+mixin(support, {
+  storageEventTarget: ('onstorage' in window ? window : document)
+});
 
-  var support = ift.support,
-      mixin = ift.util.mixin;
+// Implement the LocalStorage service from a provider's perspective.
+var Provider = Service.extend({
 
-  mixin(support, {
-    storageEventTarget: ('onstorage' in window ? window : document)
-  });
+  constructor: function(channel, storage) {
+    this.listen();
+    Service.apply(this, arguments);
+  },
 
-  // Service
-  // -------
+  listen: function() {
+    support.on(support.storageEventTarget, 'storage', function(evt) {
+      this.onStorage(evt);
+    }, this);
+  },
 
-  // Implement the LocalStorage service from a service's perspective.
-  var Service = ift.Service.extend({
+  get: function(key) {
+    return this.deserialize(localStorage.getItem(key));
+  },
 
-    constructor: function(channel, storage) {
-      this.listen();
-      ift.Service.apply(this, arguments);
-    },
+  set: function(key, value, options) {
+    return localStorage.setItem(key, this.serialize(value));
+  },
 
-    listen: function() {
-      var service = this, target = support.storageEventTarget;
-      support.on(target, 'storage', function(evt) { service.onStorage(evt); });
-    },
+  unset: function(keys) {
+    if (!(isArray(keys))) keys = [keys];
+    for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
+  },
 
-    get: function(key) {
-      return this.deserialize(localStorage.getItem(key));
-    },
+  serialize: function(data) {
+    return JSON.stringify(data);
+  },
 
-    set: function(key, value, options) {
-      return localStorage.setItem(key, this.serialize(value));
-    },
+  deserialize: function(data) {
+    try { return JSON.parse(data); }
+    catch (e) { return data; }
+  },
 
-    unset: function(keys) {
-      if (!(keys instanceof Array)) keys = [keys];
-      for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
-    },
-
-    serialize: function(data) {
-      return JSON.stringify(data);
-    },
-
-    deserialize: function(data) {
-      try { return JSON.parse(data); }
-      catch (e) { return data; }
-    },
-
-    onStorage: function(evt) {
-      if (evt) {
-        // IE9+: Don't trigger if value didn't change
-        if (evt.oldValue === evt.newValue) return;
-      } else {
-        // IE8: `evt` is undefined
-        evt = {};
-      }
-
-      this.channel.request('trigger', ['change', {
-        key: evt.key,
-        oldValue: this.deserialize(evt.oldValue),
-        newValue: this.deserialize(evt.newValue)
-      }]);
+  onStorage: function(evt) {
+    if (evt) {
+      // IE9+: Don't trigger if value didn't change
+      if (evt.oldValue === evt.newValue) return;
+    } else {
+      // IE8: `evt` is undefined
+      evt = {};
     }
 
-  });
+    this.channel.request('trigger', ['change', {
+      key: evt.key,
+      oldValue: this.deserialize(evt.oldValue),
+      newValue: this.deserialize(evt.newValue)
+    }]);
+  },
 
-  // Consumer
-  // --------
+  destroy: function() {
+    support.off(support.storageEventTarget, 'storage', this.onStorage);
+  }
 
-  // Implement the LocalStorage service from a consumer's perspective.
-  var Consumer = ift.Service.extend({
+});
 
-    get: function(key, callback) {
-      this.channel.request('get', [key], callback);
-    },
+// Implement the LocalStorage service from a consumer's perspective.
+var Consumer = Service.extend({
 
-    set: function(key, value, options, callback) {
-      if (typeof options === 'function') {
-        callback = options;
-        options = {};
-      } else options = options || {};
+  get: function(key, callback) {
+    this.channel.request('get', [key], callback);
+  },
 
-      this.channel.request('set', [key, value, options], callback);
-    },
-
-    unset: function(keys, callback) {
-      this.channel.request('unset', [keys], callback);
+  set: function(key, value, options, callback) {
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    } else {
+      options = options || {};
     }
 
-  });
+    this.channel.request('set', [key, value, options], callback);
+  },
 
-  ift.register('storage', Service, Consumer);
+  unset: function(keys, callback) {
+    this.channel.request('unset', [keys], callback);
+  }
 
-  return ift;
+});
 
-}));
+module.exports = {
+  Provider: Provider,
+  Consumer: Consumer
+};

@@ -1,37 +1,28 @@
 <!DOCTYPE html>
 <html>
   <head>
-
     <title>Iframe Storage | Parent</title>
-
-    <script type='text/javascript' src='../bower_components/domready/ready.js'></script>
-    <script type='text/javascript' src='../library/ift.js'></script>
-    <script type='text/javascript' src='../library/services/storage.js'></script>
+  </head>
+  <body>
+    <script type='text/javascript' src='../build/ift.js'></script>
+    <script type='text/javascript' src='../build/IFTStorageService.js'></script>
     <script type='text/javascript'>
-    domready(function() {
-      ift.connect({
-        name: 'my_transport',
+      ift.parent({
         childOrigin: 'http://127.0.0.1:4000',
         childPath: '/example/child.html'
-      }).ready(function(courier) {
-        courier.wiretap(function(direction, message) {
-          console.log(direction, message);
-        });
-        var storage = courier.consumer('storage');
+      }).wiretap(function(direction, message) {
+        ift.util.debug(direction, message);
+      }).ready(function(manager) {
+        var storage = manager.service('example', IFTStorageService.Consumer);
         storage.on('change', function(evt) {
-          console.log('change event', evt);
+          ift.util.debug('change event', evt);
         });
-        storage.set('herp', 'sucka', function() {
-          storage.get('herp', function(value) {
-            console.log('got', value);
+        storage.set('key', 'value', function() {
+          storage.get('key', function(value) {
+            ift.util.debug('got', value);
           });
         });
       });
-    });
     </script>
-
-  </head>
-  <body>
-
   </body>
 </html>

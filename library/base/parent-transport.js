@@ -8,7 +8,7 @@ var ParentTransport = module.exports = Transport.extend({
     this.id = uniqueId('ift');
     this.childOrigin = childOrigin || 'http://localhost:8000';
     this.childUri = childOrigin + childPath || '/child.html';
-    this.iframe = this._createIframe(this.childUri, this.id);
+    this._createIframe(this.childUri, this.id);
 
     Transport.call(this, [childOrigin]);
   },

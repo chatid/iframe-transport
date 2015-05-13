@@ -18,7 +18,7 @@ module.exports = function (config) {
 
   config.set({
     basePath: '',
-    frameworks: ['mocha'],
+    frameworks: ['mocha', 'sinon'],
 
 
     // Either target the testindex.js file to get one
@@ -60,10 +60,11 @@ module.exports = function (config) {
     plugins: [
       require('karma-webpack'),
       require('karma-mocha'),
+      require('karma-phantomjs-launcher'),
       require('karma-chrome-launcher'),
       require('karma-firefox-launcher'),
-      require('karma-junit-reporter'),
-      require('karma-sourcemap-loader')
+      require('karma-sourcemap-loader'),
+      require('karma-sinon')
     ],
 
     webpackServer: {
@@ -74,12 +75,7 @@ module.exports = function (config) {
 
     // test results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-    reporters: ['progress', 'junit'],
-
-    junitReporter: {
-      outputFile: 'reports/karma-test-results.xml',
-      suite: ''
-    },
+    reporters: ['progress'],
 
     // web server port
     port: 9876,
@@ -102,7 +98,7 @@ module.exports = function (config) {
     // - Safari (only Mac; has to be installed with `npm install karma-safari-launcher`)
     // - PhantomJS
     // - IE (only Windows; has to be installed with `npm install karma-ie-launcher`)
-    browsers: ['Firefox', 'Chrome'],
+    browsers: ['PhantomJS'],
 
     // If browser does not capture in given timeout [ms], kill it
     captureTimeout: 60000,

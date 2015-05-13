@@ -7,15 +7,21 @@
     "example": "example",
     "test": "test"
   },
+  "scripts": {
+    "test": "karma start"
+  },
   "devDependencies": {
-    "colors": "^0.6.2",
-    "connect": "^2.15.0",
-    "expect.js": "^0.3.1",
-    "faucet": "0.0.1",
-    "mocha": "^1.21.4",
-    "mocha-phantomjs": "^3.5.0",
-    "phantomjs": "^1.9.7-5",
-    "testling": "git://github.com/mponizil/testling#ba9466d1fa30662df3f49f72410e0ff6f975c9aa",
+    "karma": "^0.12.31",
+    "karma-chrome-launcher": "^0.1.8",
+    "karma-cli": "0.0.4",
+    "karma-firefox-launcher": "^0.1.4",
+    "karma-mocha": "^0.1.10",
+    "karma-phantomjs-launcher": "^0.1.4",
+    "karma-sinon": "^1.0.4",
+    "karma-sourcemap-loader": "^0.3.4",
+    "karma-webpack": "^1.5.0",
+    "rewire": "^2.3.3",
+    "rewire-webpack": "^1.0.0",
     "webpack": "^1.8.10"
   },
   "repository": {
@@ -32,19 +38,5 @@
   "bugs": {
     "url": "https://github.com/chatid/iframe-transport/issues"
   },
-  "homepage": "https://github.com/chatid/iframe-transport",
-  "testling": {
-    "harness": "mocha",
-    "files": "test/*.js",
-    "browsers": [
-      "ie/8..latest",
-      "chrome/latest",
-      "firefox/latest",
-      "safari/latest",
-      "opera/latest",
-      "iphone/6",
-      "ipad/6",
-      "android-browser/latest"
-    ]
-  }
+  "homepage": "https://github.com/chatid/iframe-transport"
 }

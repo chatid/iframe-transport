@@ -5,7 +5,7 @@ module.exports = {
     'IFTStorageService': './library/services/storage'
   },
   output: {
-    path: __dirname + '/build',
+    path: __dirname + '/dist',
     filename: '[name].js',
     library: '[name]',
     libraryTarget: 'umd'

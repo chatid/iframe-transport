@@ -26,6 +26,10 @@ mixin(Manager.prototype, {
     return this;
   },
 
+  channel: function(namespace) {
+    return new Channel(namespace, this.transport);
+  },
+
   service: function(namespace, serviceCtor) {
     if (!namespace) throw new Error("Cannot create a service without a namespace");
     serviceCtor || (serviceCtor = Service);

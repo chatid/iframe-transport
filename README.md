@@ -4,25 +4,26 @@ iframe-transport
 Bi-directional RPC over iframe. Targets modern browsers, IE8+.
 
 ```javascript
-ift.connect({
-  name: 'my_ift',
+ift.parent({
   childOrigin: 'http://childapp.com',
   childPath: '/child.html'
-}).ready(function(courier) {
-  var channel = courier.channel('test');
-  channel.request('test', ['hello', 'child!'], function(response) {
+}).ready(function(manager) {
+  var channel = manager.channel('test');
+  channel.request('hello', ['child!'], function(response) {
     console.log(response); // hello parent!
   });
 });
 ```
 
 ```javascript
-var channel = ift.connect({
+ift.child({
   trustedOrigins: ['http://parentapp.com']
-}).channel('test');
-channel.on('request', function(id, method, params) {
-  console.log(params[0], params[1]); // hello child!
-  channel.respond(id, 'hello parent!');
+}).ready(function(manager) {
+  var channel = manager.channel('test');
+  channel.on('request', function(id, method, params) {
+    console.log(method, params[0]); // hello child!
+    channel.respond(id, 'hello parent!');
+  });
 });
 ```
 

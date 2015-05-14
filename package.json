@@ -38,5 +38,6 @@
   "bugs": {
     "url": "https://github.com/chatid/iframe-transport/issues"
   },
-  "homepage": "https://github.com/chatid/iframe-transport"
+  "homepage": "https://github.com/chatid/iframe-transport",
+  "dependencies": {}
 }

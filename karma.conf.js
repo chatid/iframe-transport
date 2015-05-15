@@ -1,5 +1,7 @@
 var rewirePlugin = require('rewire-webpack'),
-    webpackConfig = require('./webpack.config');
+    webpackConfig = require('./webpack.config'),
+    connect = require('connect'),
+    serveStatic = require('serve-static');
 
 var DEBUG = process.env.DEBUG;
 
@@ -11,14 +13,23 @@ if (DEBUG) {
   webpackConfig.devtool = "source-map"
 }
 
-webpackConfig.plugins.push(new rewirePlugin());
+webpackConfig.plugins = [new rewirePlugin()];
+
+
+// Kind of a hack? Use framework plugin to fire up a
+// server on a different port for x-origin child page.
+var ChildServer = function(logger) {
+  connect().use(serveStatic('./')).listen(6789);
+  logger.create('child-server').info("Child server started at http://localhost:6789/");
+};
 
 
 module.exports = function (config) {
 
   config.set({
     basePath: '',
-    frameworks: ['mocha', 'sinon'],
+
+    frameworks: ['mocha', 'sinon', 'childServer'],
 
 
     // Either target the testindex.js file to get one
@@ -64,7 +75,8 @@ module.exports = function (config) {
       require('karma-chrome-launcher'),
       require('karma-firefox-launcher'),
       require('karma-sourcemap-loader'),
-      require('karma-sinon')
+      require('karma-sinon'),
+      {'framework:childServer': ['type', ChildServer]}
     ],
 
     webpackServer: {

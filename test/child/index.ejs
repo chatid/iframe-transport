@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <title>iframe-transport Test Suite | Child</title>
+
+  </head>
+  <body>
+
+    <script type='text/javascript' src='../dist/ift.js'></script>
+    <script type='text/javascript' src='../dist/IFTStorageService.js'></script>
+    <script type='text/javascript'>
+    ift.child({
+      trustedOrigins: <%- parentOrigins %>
+    }).ready(function(manager) {
+      var channel = manager.channel('test');
+      channel.on('request', function(id, method, params) {
+        channel.respond(id, 'hello parent!');
+      });
+    });
+    </script>
+
+  </body>
+</html>

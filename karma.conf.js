@@ -1,7 +1,6 @@
 var rewirePlugin = require('rewire-webpack'),
     webpackConfig = require('./webpack.config'),
-    connect = require('connect'),
-    serveStatic = require('serve-static');
+    express = require('express');
 
 var DEBUG = process.env.DEBUG;
 
@@ -10,7 +9,7 @@ webpackConfig = Object.create(webpackConfig)
 
 // Source maps take a long time to compile. Only use if debugging
 if (DEBUG) {
-  webpackConfig.devtool = "source-map"
+  webpackConfig.devtool = 'source-map'
 }
 
 webpackConfig.plugins = [new rewirePlugin()];
@@ -18,9 +17,30 @@ webpackConfig.plugins = [new rewirePlugin()];
 
 // Kind of a hack? Use framework plugin to fire up a
 // server on a different port for x-origin child page.
-var ChildServer = function(logger) {
-  connect().use(serveStatic('./')).listen(6789);
-  logger.create('child-server').info("Child server started at http://localhost:6789/");
+var ChildServer = function(config, logger) {
+  var server = express();
+  server.set('views', './test/child');
+  server.set('view engine', 'ejs');
+  server.use('/dist', express.static('dist'));
+  server.get(config.childServer.path || '/test/child', function(req, res) {
+    var parentOrigins = ['http://' + config.hostname + ':' + config.port];
+    if (config.hostname == 'localhost') {
+      parentOrigins.push('http://127.0.0.1:' + config.port);
+    }
+    res.render('index', { parentOrigins: JSON.stringify(parentOrigins) });
+  });
+  server.listen(config.childServer.port);
+  logger.create('child-server').info("Child server started at http://" + config.childServer.host + ":" + config.childServer.port);
+};
+
+var ejs = require('ejs');
+var createEJSPreprocessor = function(/* config.childServer */ config, done) {
+  return function(content, file, done) {
+    done(null, ejs.render(content, {
+      childOrigin: 'http://' + (config.host || '127.0.0.1') + ':' + (config.port || 6789),
+      childPath: config.path || '/test/child'
+    }));
+  };
 };
 
 
@@ -53,7 +73,7 @@ module.exports = function (config) {
 
     // individual test bundles
     preprocessors: {
-      'test/ift.js': ['webpack', 'sourcemap']
+      'test/ift.js': ['webpack', 'ejs', 'sourcemap']
     },
 
     client: {
@@ -76,8 +96,15 @@ module.exports = function (config) {
       require('karma-firefox-launcher'),
       require('karma-sourcemap-loader'),
       require('karma-sinon'),
-      {'framework:childServer': ['type', ChildServer]}
+      {'framework:childServer': ['type', ChildServer]},
+      {'preprocessor:ejs': ['factory', createEJSPreprocessor]}
     ],
+
+    childServer: {
+      host: '127.0.0.1',
+      port: 6789,
+      path: '/test/child'
+    },
 
     webpackServer: {
       stats: {

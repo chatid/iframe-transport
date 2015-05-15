@@ -11,7 +11,8 @@
     "test": "karma start --single-run"
   },
   "devDependencies": {
-    "connect": "^3.3.5",
+    "ejs": "^2.3.1",
+    "express": "^4.12.3",
     "karma": "^0.12.31",
     "karma-chrome-launcher": "^0.1.8",
     "karma-cli": "0.0.4",
@@ -23,7 +24,6 @@
     "karma-webpack": "^1.5.0",
     "rewire": "^2.3.3",
     "rewire-webpack": "^1.0.0",
-    "serve-static": "^1.9.2",
     "webpack": "^1.8.10"
   },
   "repository": {

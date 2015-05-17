@@ -29,7 +29,7 @@ describe('ift', function() {
         var readyMessage = sinon.stub();
         support.on(window, 'message', readyMessage);
 
-        child(function() {
+        child(function(ift) {
           var transport = new ift.ChildTransport(PARENT_ORIGINS);
         });
 

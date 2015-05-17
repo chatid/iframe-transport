@@ -3,4 +3,6 @@ var util = require('../util');
 
 var query = util.parseQuery(location.search);
 
-if (query.code) eval('(' + query.code + ')()');
+// `eval` arbitrary code passed in by the parent,
+// providing `ift` as only dependency.
+if (query.code) eval('(' + query.code + ')(ift)');

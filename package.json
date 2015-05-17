@@ -11,7 +11,6 @@
     "test": "karma start --single-run"
   },
   "devDependencies": {
-    "ejs": "^2.3.1",
     "express": "^4.12.3",
     "karma": "^0.12.31",
     "karma-chrome-launcher": "^0.1.8",

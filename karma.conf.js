@@ -34,7 +34,6 @@ webpackConfig.plugins.push(
 var ChildServer = function(config, logger) {
   var server = express();
   server.set('views', './test/child');
-  server.set('view engine', 'ejs');
   var compiler = webpack({
     entry: './test/child/index',
     output: {
@@ -47,9 +46,7 @@ var ChildServer = function(config, logger) {
     publicPath: CHILD_PATH
   }));
   server.use('/dist', express.static('dist'));
-  server.get(config.childServer.path || '/test/child', function(req, res) {
-    res.render('index', { parentOrigins: JSON.stringify(PARENT_ORIGINS) });
-  });
+  server.use(CHILD_PATH, express.static('test/child'));
   server.listen(config.childServer.port);
   logger.create('child-server').info("Child server started at http://" + config.childServer.host + ":" + config.childServer.port);
 };

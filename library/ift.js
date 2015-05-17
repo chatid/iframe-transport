@@ -11,9 +11,11 @@ var Manager = require('./base/manager'),
 
 module.exports = {
 
-  Channel: require('./base/channel'),
+  ParentTransport: ParentTransport,
 
-  Transport: require('./base/transport'),
+  ChildTransport: ChildTransport,
+
+  Channel: require('./base/channel'),
 
   Service: require('./base/service'),
 

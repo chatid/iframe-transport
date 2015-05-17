@@ -1,14 +1,12 @@
-var Transport = require('./transport'),
-    uniqueId  = require('../util/uniqueId');
+var Transport = require('./transport');
 
 // Implement the transport class from the parent's perspective.
 var ParentTransport = module.exports = Transport.extend({
 
   constructor: function(childOrigin, childPath) {
-    this.id = uniqueId('ift');
     this.childOrigin = childOrigin || 'http://localhost:8000';
     this.childUri = childOrigin + childPath || '/child.html';
-    this._createIframe(this.childUri, this.id);
+    this._createIframe(this.childUri);
 
     Transport.call(this, [childOrigin]);
   },
@@ -37,13 +35,8 @@ var ParentTransport = module.exports = Transport.extend({
     this.iframe.parentNode.removeChild(this.iframe);
   },
 
-  _createIframe: function(uri, id) {
-    var iframe = this.iframe = document.getElementById(id);
-    if (iframe) return;
-
-    iframe = this.iframe = document.createElement('iframe');
-    iframe.id = id;
-    iframe.name = id;
+  _createIframe: function(uri) {
+    var iframe = this.iframe = document.createElement('iframe');
     iframe.style.position = 'absolute';
     iframe.style.top = '-2000px';
     iframe.style.left = '0px';

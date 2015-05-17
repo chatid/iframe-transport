@@ -3,23 +3,23 @@ var ift = require('../library/ift');
 var util = require('./util');
 
 describe('ift', function() {
-  var createIframe = sinon.stub(), _createIframe, stubChild;
+  var createIframe = sinon.stub(), _createIframe;
 
-  before(function() {
-    // Hook into ParentTransport#_createIframe to attach a `code` query param
-    // containing a raw function to execute on the child page for a given test.
-    _createIframe = ift.ParentTransport.prototype._createIframe;
-    stubChild = function(code) {
-      createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe', function(uri) {
-        return _createIframe.call(this, uri + '?code=' + encodeURIComponent(code));
-      });
-    };
-  });
+  // Hook into ParentTransport#_createIframe to attach a `code` query param
+  // containing a raw function to execute on the child page for a given test.
+  _createIframe = ift.ParentTransport.prototype._createIframe;
+  function stubChild(code) {
+    createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe', function(uri) {
+      return _createIframe.call(this, uri + '?code=' + encodeURIComponent(code));
+    });
+  }
 
-  afterEach(function() {
-    // Restore iframe creation if it had been stubbed for mocking child's code.
-    if (createIframe.restore) createIframe.restore();
-  });
+  function dispatchMessageEvent(data, origin) {
+    util.dispatchEvent(window, 'message', {
+      data: data,
+      origin: origin
+    }, 'MessageEvent', ['data', 'origin']);
+  }
 
   describe('ParentTransport', function() {
     describe("#constructor", function() {
@@ -30,50 +30,50 @@ describe('ift', function() {
     });
 
     describe("#ready", function() {
-      it("invokes callback once child sends 'ready' postMessage", function() {
+      var transport, callback;
+
+      beforeEach(function() {
         createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe');
+        transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
+        callback = sinon.stub();
+      });
 
-        var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
-        var callback = sinon.stub();
+      afterEach(function() {
+        createIframe.restore();
+      });
+
+      it("invokes callback once child sends 'ready' postMessage", function() {
         transport.ready(callback);
-
         sinon.assert.notCalled(callback);
-
-        util.dispatchEvent(window, 'message', {
-          data: 'ready',
-          origin: CHILD_ORIGIN
-        }, 'MessageEvent', ['data', 'origin']);
-
+        dispatchMessageEvent('ready', CHILD_ORIGIN);
         sinon.assert.calledOnce(callback);
         sinon.assert.calledWith(callback, transport);
       });
 
       it("only invokes callback once", function() {
-        createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe');
-
-        var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
-        var callback = sinon.stub();
         transport.ready(callback);
-
         sinon.assert.notCalled(callback);
-
-        util.dispatchEvent(window, 'message', {
-          data: 'ready',
-          origin: CHILD_ORIGIN
-        }, 'MessageEvent', ['data', 'origin']);
-
+        dispatchMessageEvent('ready', CHILD_ORIGIN);
         sinon.assert.calledOnce(callback);
-
-        util.dispatchEvent(window, 'message', {
-          data: 'ready',
-          origin: CHILD_ORIGIN
-        }, 'MessageEvent', ['data', 'origin']);
-
+        dispatchMessageEvent('ready', CHILD_ORIGIN);
         sinon.assert.calledOnce(callback);
-
         transport.trigger('ready');
-
         sinon.assert.calledOnce(callback);
+      });
+
+      it("fires immediately if transport is already ready", function() {
+        dispatchMessageEvent('ready', CHILD_ORIGIN);
+        transport.ready(callback);
+        sinon.assert.calledOnce(callback);
+      });
+
+      it("ignores 'message' events from non-targeted origins", function() {
+        var incoming = sinon.stub();
+        transport.on('incoming', incoming);
+        dispatchMessageEvent('data', CHILD_ORIGIN);
+        sinon.assert.calledOnce(incoming);
+        dispatchMessageEvent('data', CHILD_ORIGIN + '1');
+        sinon.assert.calledOnce(incoming);
       });
     });
 

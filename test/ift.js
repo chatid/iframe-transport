@@ -2,18 +2,23 @@ var assert = require('assert');
 var ift = require('../library/ift');
 var util = require('./util');
 
-// Hook into ParentTransport#_createIframe to attach a `code` query param
-// containing a raw function to execute on the child page for a given test.
-var _createIframe = ift.ParentTransport.prototype._createIframe;
-var child = function(code) {
-  ift.ParentTransport.prototype._createIframe = function(uri) {
-    return _createIframe.call(this, uri + '?code=' + encodeURIComponent(code));
-  };
-};
-
 describe('ift', function() {
+  var createIframe = sinon.stub(), _createIframe, stubChild;
+
+  before(function() {
+    // Hook into ParentTransport#_createIframe to attach a `code` query param
+    // containing a raw function to execute on the child page for a given test.
+    _createIframe = ift.ParentTransport.prototype._createIframe;
+    stubChild = function(code) {
+      createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe', function(uri) {
+        return _createIframe.call(this, uri + '?code=' + encodeURIComponent(code));
+      });
+    };
+  });
+
   afterEach(function() {
-    ift.ParentTransport.prototype._createIframe = _createIframe;
+    // Restore iframe creation if it had been stubbed for mocking child's code.
+    if (createIframe.restore) createIframe.restore();
   });
 
   describe('ParentTransport', function() {
@@ -26,7 +31,7 @@ describe('ift', function() {
 
     describe("#ready", function() {
       it("invokes callback once child sends 'ready' postMessage", function() {
-        var createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe');
+        createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe');
 
         var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
         var callback = sinon.stub();

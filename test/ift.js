@@ -22,14 +22,14 @@ describe('ift', function() {
   }
 
   describe('ParentTransport', function() {
-    describe("#constructor", function() {
+    describe('#constructor', function() {
       it("creates an iframe from CHILD_ORIGIN and CHILD_PATH", function() {
         var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
         assert.strictEqual(transport.iframe.src, CHILD_ORIGIN + CHILD_PATH);
       });
     });
 
-    describe("#ready", function() {
+    describe('#ready', function() {
       var transport, callback;
 
       beforeEach(function() {
@@ -77,7 +77,7 @@ describe('ift', function() {
       });
     });
 
-    describe("#send", function() {
+    describe('#send', function() {
       it("calls postMessage on the iframe with message and CHILD_ORIGIN", function() {
         var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
         var postMessage = sinon.stub(transport.iframe.contentWindow, 'postMessage');

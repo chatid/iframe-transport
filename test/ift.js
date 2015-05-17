@@ -1,6 +1,6 @@
 var assert = require('assert');
 var ift = require('../library/ift');
-var support = require('../library/util/support');
+var util = require('./util');
 
 // Hook into ParentTransport#_createIframe to attach a `code` query param
 // containing a raw function to execute on the child page for a given test.
@@ -25,20 +25,22 @@ describe('ift', function() {
     });
 
     describe("#ready", function() {
-      it("invokes callback once child sends 'ready' postMessage", function(done) {
-        var readyMessage = sinon.stub();
-        support.on(window, 'message', readyMessage);
-
-        child(function(ift) {
-          var transport = new ift.ChildTransport(PARENT_ORIGINS);
-        });
+      it("invokes callback once child sends 'ready' postMessage", function() {
+        var createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe');
 
         var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
-        transport.ready(function() {
-          sinon.assert.calledOnce(readyMessage);
-          sinon.assert.calledWithMatch(readyMessage, { data: 'ready' });
-          done();
-        });
+        var callback = sinon.stub();
+        transport.ready(callback);
+
+        sinon.assert.notCalled(callback);
+
+        util.dispatchEvent(window, 'message', {
+          data: 'ready',
+          origin: CHILD_ORIGIN
+        }, 'MessageEvent', ['data', 'origin']);
+
+        sinon.assert.calledOnce(callback);
+        sinon.assert.calledWith(callback, transport);
       });
     });
 

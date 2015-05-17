@@ -47,6 +47,34 @@ describe('ift', function() {
         sinon.assert.calledOnce(callback);
         sinon.assert.calledWith(callback, transport);
       });
+
+      it("only invokes callback once", function() {
+        createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe');
+
+        var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
+        var callback = sinon.stub();
+        transport.ready(callback);
+
+        sinon.assert.notCalled(callback);
+
+        util.dispatchEvent(window, 'message', {
+          data: 'ready',
+          origin: CHILD_ORIGIN
+        }, 'MessageEvent', ['data', 'origin']);
+
+        sinon.assert.calledOnce(callback);
+
+        util.dispatchEvent(window, 'message', {
+          data: 'ready',
+          origin: CHILD_ORIGIN
+        }, 'MessageEvent', ['data', 'origin']);
+
+        sinon.assert.calledOnce(callback);
+
+        transport.trigger('ready');
+
+        sinon.assert.calledOnce(callback);
+      });
     });
 
     describe("#send", function() {

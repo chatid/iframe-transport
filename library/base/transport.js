@@ -15,13 +15,14 @@ var Transport = module.exports = function(targetOrigins) {
 mixin(Transport.prototype, Events, {
 
   ready: function(callback, context) {
-    var transport = this;
+    var transport = this, ready;
     context || (context = this);
     if (this.isReady()) {
       callback.call(context, this);
     } else {
-      this.on('ready', function() {
-        callback.call(context, transport)
+      this.on('ready', ready = function() {
+        callback.call(context, transport);
+        transport.off('ready', ready);
       });
     }
   },

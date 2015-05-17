@@ -85,6 +85,8 @@ module.exports = function (config) {
     },
 
     client: {
+      // https://github.com/karma-runner/karma/issues/961
+      captureConsole: true,
       mocha: {
         ui: 'bdd'
       }

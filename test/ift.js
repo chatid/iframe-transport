@@ -32,6 +32,30 @@ describe('ift', function() {
       dispatchMessageEvent('data', 'http://origin2');
       sinon.assert.calledOnce(incoming);
     });
+
+    describe('#destroy', function() {
+      it("stops listening for 'message'", function() {
+        var transport = new Transport(['http://origin']);
+        var incoming = sinon.stub();
+        transport.on('incoming', incoming);
+        dispatchMessageEvent('data', 'http://origin');
+        sinon.assert.calledOnce(incoming);
+        transport.destroy();
+        dispatchMessageEvent('data', 'http://origin');
+        sinon.assert.calledOnce(incoming);
+      });
+
+      it("clears out event listeners", function() {
+        var transport = new Transport(['http://origin']);
+        var incoming = sinon.stub();
+        transport.on('incoming', incoming);
+        transport.trigger('incoming');
+        sinon.assert.calledOnce(incoming);
+        transport.destroy();
+        transport.trigger('incoming');
+        sinon.assert.calledOnce(incoming);
+      });
+    });
   });
 
   describe('ParentTransport', function() {
@@ -90,6 +114,15 @@ describe('ift', function() {
         transport.send('test');
         sinon.assert.calledOnce(postMessage);
         sinon.assert.calledWith(postMessage, 'test', CHILD_ORIGIN);
+      });
+    });
+
+    describe('#destroy', function() {
+      it("removes iframe from the dom", function() {
+        var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
+        assert(transport.iframe.parentNode);
+        transport.destroy();
+        assert.strictEqual(transport.iframe.parentNode, null);
       });
     });
   });

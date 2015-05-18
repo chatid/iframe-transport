@@ -119,6 +119,7 @@ describe('ift', function() {
         transport.send('test');
         sinon.assert.calledOnce(postMessage);
         sinon.assert.calledWith(postMessage, 'test', CHILD_ORIGIN);
+        postMessage.restore();
       });
     });
 
@@ -129,6 +130,19 @@ describe('ift', function() {
         transport.destroy();
         assert.strictEqual(transport.iframe.parentNode, null);
       });
+    });
+  });
+
+  describe('ChildTransport', function() {
+    it("sends 'ready' message on instantiation", function() {
+      var parent = window.parent;
+      window.parent = {
+        postMessage: sinon.stub()
+      };
+      var transport = new ift.ChildTransport(['http://origin']);
+      sinon.assert.calledOnce(window.parent.postMessage);
+      sinon.assert.calledWith(window.parent.postMessage, 'ready', '*');
+      window.parent = parent;
     });
   });
 });

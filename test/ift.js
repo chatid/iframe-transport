@@ -1,6 +1,9 @@
 var assert = require('assert');
 var ift = require('../library/ift');
 var Transport = require('../library/base/transport');
+var ParentTransport = ift.ParentTransport;
+var ChildTransport = ift.ChildTransport;
+var Channel = ift.Channel;
 var util = require('./util');
 
 describe('ift', function() {
@@ -8,9 +11,9 @@ describe('ift', function() {
 
   // Hook into ParentTransport#_createIframe to attach a `code` query param
   // containing a raw function to execute on the child page for a given test.
-  _createIframe = ift.ParentTransport.prototype._createIframe;
+  _createIframe = ParentTransport.prototype._createIframe;
   function stubChild(code) {
-    createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe', function(uri) {
+    createIframe = sinon.stub(ParentTransport.prototype, '_createIframe', function(uri) {
       return _createIframe.call(this, uri + '?code=' + encodeURIComponent(code));
     });
   }
@@ -61,13 +64,13 @@ describe('ift', function() {
   describe('ParentTransport', function() {
     it("creates an iframe from childOrigin and childPath", function() {
       var appendChild = sinon.stub(document.body, 'appendChild');
-      var transport = new ift.ParentTransport('http://origin', '/path');
+      var transport = new ParentTransport('http://origin', '/path');
       assert.strictEqual(transport.iframe.src, 'http://origin/path');
       appendChild.restore();
     });
 
     it("creates an iframe not visible on the page", function() {
-      var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
+      var transport = new ParentTransport(CHILD_ORIGIN, CHILD_PATH);
       assert(transport.iframe.offsetTop < 100);
       assert.strictEqual(transport.iframe.border, 0);
       assert.strictEqual(transport.iframe.frameBorder, '0');
@@ -78,7 +81,7 @@ describe('ift', function() {
 
       beforeEach(function() {
         appendChild = sinon.stub(document.body, 'appendChild');
-        transport = new ift.ParentTransport('http://origin', '/path');
+        transport = new ParentTransport('http://origin', '/path');
         onReady = sinon.stub();
       });
 
@@ -114,7 +117,7 @@ describe('ift', function() {
 
     describe('#send', function() {
       it("calls postMessage on the iframe with message and childOrigin", function() {
-        var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
+        var transport = new ParentTransport(CHILD_ORIGIN, CHILD_PATH);
         var postMessage = sinon.stub(transport.iframe.contentWindow, 'postMessage');
         transport.send('test');
         sinon.assert.calledOnce(postMessage);
@@ -125,7 +128,7 @@ describe('ift', function() {
 
     describe('#destroy', function() {
       it("removes iframe from the dom", function() {
-        var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
+        var transport = new ParentTransport(CHILD_ORIGIN, CHILD_PATH);
         assert(transport.iframe.parentNode);
         transport.destroy();
         assert.strictEqual(transport.iframe.parentNode, null);
@@ -139,7 +142,7 @@ describe('ift', function() {
       window.parent = {
         postMessage: sinon.stub()
       };
-      var transport = new ift.ChildTransport(['http://origin']);
+      var transport = new ChildTransport(['http://origin']);
       sinon.assert.calledOnce(window.parent.postMessage);
       sinon.assert.calledWith(window.parent.postMessage, 'ready', '*');
       window.parent = parent;
@@ -147,20 +150,24 @@ describe('ift', function() {
   });
 
   describe('Channel', function() {
-    var serialize, deserialize;
+    var serialize, deserialize, transport;
+
     before(function() {
       // Perhaps move de/serialize into Transport
-      serialize = sinon.stub(ift.Channel.prototype, 'serialize', sinon.stub().returnsArg(0));
-      deserialize = sinon.stub(ift.Channel.prototype, 'deserialize', sinon.stub().returnsArg(0));
+      serialize = sinon.stub(Channel.prototype, 'serialize', sinon.stub().returnsArg(0));
+      deserialize = sinon.stub(Channel.prototype, 'deserialize', sinon.stub().returnsArg(0));
     });
     after(function() {
       serialize.restore();
       deserialize.restore();
     });
 
-    it("ignores messages from other channels", function() {
-      var transport = new Transport(['http://origin']);
-      var channel = new ift.Channel('test', transport);
+    beforeEach(function() {
+      transport = new Transport(['http://origin']);
+    });
+
+    it("processes messages from its channel and ignores messages from other channels", function() {
+      var channel = new Channel('test', transport);
       var process = sinon.stub(channel, 'process');
       transport.trigger('incoming', {
         channel: 'test',
@@ -172,6 +179,46 @@ describe('ift', function() {
         data: {}
       });
       sinon.assert.calledOnce(process);
+    });
+
+    it("facilitates requests with callbacks", function() {
+      var channel = new Channel('test', transport);
+      var send = sinon.stub(transport, 'send', function(message) {
+        assert.strictEqual(message.data.method, 'method');
+        assert.strictEqual(message.data.params.foo, 'bar');
+        transport.trigger('incoming', {
+          channel: 'test',
+          data: {
+            id: message.data.id,
+            result: 'response'
+          }
+        });
+      });
+      var callback = sinon.stub();
+      channel.request('method', { foo: 'bar' }, callback);
+      sinon.assert.calledOnce(callback);
+      sinon.assert.calledWith(callback, 'response');
+    });
+
+    it("keeps track of callbacks", function() {
+      var channel = new Channel('test', transport);
+      var send = sinon.stub(transport, 'send', function(message) {
+        transport.trigger('incoming', {
+          channel: 'test',
+          data: {
+            id: message.data.id,
+            result: message.data.params
+          }
+        });
+      });
+      var callback1 = sinon.stub();
+      var callback2 = sinon.stub();
+      channel.request('method', 'request1', callback1);
+      channel.request('method', 'request2', callback2);
+      sinon.assert.calledOnce(callback1);
+      sinon.assert.calledWith(callback1, 'request1');
+      sinon.assert.calledOnce(callback2);
+      sinon.assert.calledWith(callback2, 'request2');
     });
   });
 });

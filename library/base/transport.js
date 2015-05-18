@@ -37,6 +37,9 @@ mixin(Transport.prototype, Events, {
     support.on(window, 'message', this.onMessage);
   },
 
+  // Implemented by subclasses.
+  send: function() {},
+
   isReady: function() {
     return this.readyState === 1;
   },

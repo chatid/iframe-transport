@@ -1,5 +1,6 @@
 var assert = require('assert');
 var ift = require('../library/ift');
+var Transport = require('../library/base/transport');
 var util = require('./util');
 
 describe('ift', function() {
@@ -21,64 +22,69 @@ describe('ift', function() {
     }, 'MessageEvent', ['data', 'origin']);
   }
 
+  describe('Transport', function() {
+    it("ignores 'message' events from non-targeted origins", function() {
+      var incoming = sinon.stub();
+      var transport = new Transport(['http://origin1']);
+      transport.on('incoming', incoming);
+      dispatchMessageEvent('data', 'http://origin1');
+      sinon.assert.calledOnce(incoming);
+      dispatchMessageEvent('data', 'http://origin2');
+      sinon.assert.calledOnce(incoming);
+    });
+  });
+
   describe('ParentTransport', function() {
     describe('#constructor', function() {
-      it("creates an iframe from CHILD_ORIGIN and CHILD_PATH", function() {
-        var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
-        assert.strictEqual(transport.iframe.src, CHILD_ORIGIN + CHILD_PATH);
+      it("creates an iframe from childOrigin and childPath", function() {
+        var appendChild = sinon.stub(document.body, 'appendChild');
+        var transport = new ift.ParentTransport('http://origin', '/path');
+        assert.strictEqual(transport.iframe.src, 'http://origin/path');
+        appendChild.restore();
       });
     });
 
     describe('#ready', function() {
-      var transport, callback;
+      var appendChild, transport, onReady;
 
       beforeEach(function() {
-        createIframe = sinon.stub(ift.ParentTransport.prototype, '_createIframe');
-        transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
-        callback = sinon.stub();
+        appendChild = sinon.stub(document.body, 'appendChild');
+        transport = new ift.ParentTransport('http://origin', '/path');
+        onReady = sinon.stub();
       });
 
       afterEach(function() {
-        createIframe.restore();
+        appendChild.restore();
       });
 
-      it("invokes callback once child sends 'ready' postMessage", function() {
-        transport.ready(callback);
-        sinon.assert.notCalled(callback);
-        dispatchMessageEvent('ready', CHILD_ORIGIN);
-        sinon.assert.calledOnce(callback);
-        sinon.assert.calledWith(callback, transport);
+      it("invokes onReady once child sends 'ready' postMessage", function() {
+        transport.ready(onReady);
+        sinon.assert.notCalled(onReady);
+        dispatchMessageEvent('ready', 'http://origin');
+        sinon.assert.calledOnce(onReady);
+        sinon.assert.calledWith(onReady, transport);
       });
 
-      it("only invokes callback once", function() {
-        transport.ready(callback);
-        sinon.assert.notCalled(callback);
-        dispatchMessageEvent('ready', CHILD_ORIGIN);
-        sinon.assert.calledOnce(callback);
-        dispatchMessageEvent('ready', CHILD_ORIGIN);
-        sinon.assert.calledOnce(callback);
+      it("only invokes onReady once", function() {
+        transport.ready(onReady);
+        sinon.assert.notCalled(onReady);
+        dispatchMessageEvent('ready', 'http://origin');
+        sinon.assert.calledOnce(onReady);
+        dispatchMessageEvent('ready', 'http://origin');
+        sinon.assert.calledOnce(onReady);
         transport.trigger('ready');
-        sinon.assert.calledOnce(callback);
+        sinon.assert.calledOnce(onReady);
       });
 
       it("fires immediately if transport is already ready", function() {
-        dispatchMessageEvent('ready', CHILD_ORIGIN);
-        transport.ready(callback);
-        sinon.assert.calledOnce(callback);
-      });
-
-      it("ignores 'message' events from non-targeted origins", function() {
-        var incoming = sinon.stub();
-        transport.on('incoming', incoming);
-        dispatchMessageEvent('data', CHILD_ORIGIN);
-        sinon.assert.calledOnce(incoming);
-        dispatchMessageEvent('data', CHILD_ORIGIN + '1');
-        sinon.assert.calledOnce(incoming);
+        dispatchMessageEvent('ready', 'http://origin');
+        transport.ready(onReady);
+        sinon.assert.calledOnce(onReady);
       });
     });
 
     describe('#send', function() {
-      it("calls postMessage on the iframe with message and CHILD_ORIGIN", function() {
+      it("calls postMessage on the iframe with message and childOrigin", function() {
         var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
         var postMessage = sinon.stub(transport.iframe.contentWindow, 'postMessage');
         transport.send('test');

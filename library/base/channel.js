@@ -21,18 +21,12 @@ var Channel = module.exports = function(namespace, transport) {
   this.transport = transport;
   this._callbacks = {};
 
-  this.transport.on('incoming', function(message) {
-    message = this.deserialize(message);
-    if (!message || message.channel !== this.namespace) return;
-    if (message.data.error) {
-      throw new JSONRPCError(message.data.error.code, message.data.error.message);
-    } else {
-      this.process(message.data);
-    }
-  }, this);
+  this.transport.on('incoming', this._onIncoming, this);
 };
 
 mixin(Channel, {
+
+  JSONRPCError: JSONRPCError,
 
   reset: function() {
     this._namespaces = [];
@@ -77,30 +71,6 @@ mixin(Channel.prototype, Events, {
     this.send(data);
   },
 
-  // Send an error message.
-  error: function(code, message) {
-    this.send({
-      id: null,
-      error: {
-        code: code,
-        message: message
-      }
-    });
-  },
-
-  // Signal a request or resolve a callback with response.
-  // TODO: handle notifications.
-  process: function(data) {
-    if (data.method) {
-      try { this.trigger('request', data.id, data.method, data.params); }
-      catch (e) { this.error(e.code, e.message); }
-    } else if (data.id) {
-      var callback = this._callbacks[data.id];
-      callback(data.result, data.error);
-      this._callbacks[data.id] = null;
-    }
-  },
-
   serialize: function(object) {
     return support.structuredClones ? object : JSON.stringify(object);
   },
@@ -113,6 +83,36 @@ mixin(Channel.prototype, Events, {
 
   destroy: function() {
     this.off();
-  }
+  },
+
+  _onIncoming: function(message) {
+    message = this.deserialize(message);
+    if (!message || message.channel !== this.namespace) return;
+    if (message.data.error) {
+      throw new JSONRPCError(message.data.error.code, message.data.error.message);
+    } else {
+      this._processRPC(message.data);
+    }
+  },
+
+  // Signal a request or resolve a callback with response.
+  // TODO: handle notifications.
+  _processRPC: function(data) {
+    if (data.method) {
+      try {
+        this.trigger('request', data.id, data.method, data.params);
+      } catch (e) {
+        this.respond(data.id, null, {
+          code: e.code,
+          message: e.message,
+          data: e.stack
+        });
+      }
+    } else if (data.id) {
+      var callback = this._callbacks[data.id];
+      callback(data.result, data.error);
+      this._callbacks[data.id] = null;
+    }
+  },
 
 });

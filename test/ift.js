@@ -59,13 +59,18 @@ describe('ift', function() {
   });
 
   describe('ParentTransport', function() {
-    describe('#constructor', function() {
-      it("creates an iframe from childOrigin and childPath", function() {
-        var appendChild = sinon.stub(document.body, 'appendChild');
-        var transport = new ift.ParentTransport('http://origin', '/path');
-        assert.strictEqual(transport.iframe.src, 'http://origin/path');
-        appendChild.restore();
-      });
+    it("creates an iframe from childOrigin and childPath", function() {
+      var appendChild = sinon.stub(document.body, 'appendChild');
+      var transport = new ift.ParentTransport('http://origin', '/path');
+      assert.strictEqual(transport.iframe.src, 'http://origin/path');
+      appendChild.restore();
+    });
+
+    it("creates an iframe not visible on the page", function() {
+      var transport = new ift.ParentTransport(CHILD_ORIGIN, CHILD_PATH);
+      assert(transport.iframe.offsetTop < 100);
+      assert.strictEqual(transport.iframe.border, 0);
+      assert.strictEqual(transport.iframe.frameBorder, '0');
     });
 
     describe('#ready', function() {

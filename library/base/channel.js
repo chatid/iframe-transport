@@ -12,13 +12,13 @@ JSONRPCError.prototype = Error.prototype;
 
 // Facilitate multiplexed JSON-RPC.
 var Channel = module.exports = function(namespace, transport) {
-  this.id = namespace;
+  this.namespace = namespace;
   this.transport = transport;
   this._callbacks = {};
 
   this.transport.on('incoming', function(message) {
     message = this.deserialize(message);
-    if (!message || message.channel !== this.id) return;
+    if (!message || message.channel !== this.namespace) return;
     if (message.data.error) {
       throw new JSONRPCError(message.data.error.code, message.data.error.message);
     } else {
@@ -33,7 +33,7 @@ mixin(Channel.prototype, Events, {
   send: function(data) {
     data || (data = {});
     var message = {
-      channel: this.id,
+      channel: this.namespace,
       data: mixin(data, { jsonrpc: '2.0' })
     };
     this.transport.send(this.serialize(message));

@@ -145,4 +145,33 @@ describe('ift', function() {
       window.parent = parent;
     });
   });
+
+  describe('Channel', function() {
+    var serialize, deserialize;
+    before(function() {
+      // Perhaps move de/serialize into Transport
+      serialize = sinon.stub(ift.Channel.prototype, 'serialize', sinon.stub().returnsArg(0));
+      deserialize = sinon.stub(ift.Channel.prototype, 'deserialize', sinon.stub().returnsArg(0));
+    });
+    after(function() {
+      serialize.restore();
+      deserialize.restore();
+    });
+
+    it("ignores messages from other channels", function() {
+      var transport = new Transport(['http://origin']);
+      var channel = new ift.Channel('test', transport);
+      var process = sinon.stub(channel, 'process');
+      transport.trigger('incoming', {
+        channel: 'test',
+        data: {}
+      });
+      sinon.assert.calledOnce(process);
+      transport.trigger('incoming', {
+        channel: 'other',
+        data: {}
+      });
+      sinon.assert.calledOnce(process);
+    });
+  });
 });

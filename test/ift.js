@@ -4,6 +4,7 @@ var Transport = require('../library/base/transport');
 var ParentTransport = ift.ParentTransport;
 var ChildTransport = ift.ChildTransport;
 var Channel = ift.Channel;
+var Manager = require('../library/base/manager');
 var util = require('./util');
 
 describe('ift', function() {
@@ -308,6 +309,57 @@ describe('ift', function() {
       channel.destroy();
       channel.trigger('request');
       sinon.assert.calledTwice(callback);
+    });
+  });
+
+  describe('Manager', function() {
+    var transport;
+
+    beforeEach(function() {
+      transport = new Transport(['http://origin']);
+    });
+    afterEach(function() {
+      Channel.reset();
+    });
+
+    it("constructs services from passed in array of [namespace, ctor] pairs when transport is ready", function() {
+      var Service1 = sinon.stub();
+      var Service2 = sinon.stub();
+      var manager = new Manager(transport, [
+        ift.service('service1', Service1),
+        ift.service('service2', Service2)
+      ]);
+      sinon.assert.notCalled(Service1);
+      sinon.assert.notCalled(Service2);
+      var callback = function() {
+        sinon.assert.calledOnce(Service1);
+        sinon.assert.calledWith(Service1, sinon.match.instanceOf(Channel));
+        sinon.assert.calledOnce(Service2);
+        sinon.assert.calledWith(Service2, sinon.match.instanceOf(Channel));
+      };
+      transport.ready(callback);
+      transport.trigger('ready');
+    });
+
+    describe('#ready', function() {
+      it("passes instantiated services to callback", function() {
+        var Service1 = sinon.stub();
+        var Service2 = sinon.stub();
+        var manager = new Manager(transport, [
+          ift.service('service1', Service1),
+          ift.service('service2', Service2)
+        ]);
+        var callback = sinon.spy(function(transport, service1, service2) {
+          assert(service1 instanceof Service1);
+          assert(!(service1 instanceof Service2));
+          assert(service2 instanceof Service2);
+          assert(!(service2 instanceof Service1));
+        });
+        manager.ready(callback);
+        sinon.assert.notCalled(callback);
+        transport.trigger('ready');
+        sinon.assert.calledOnce(callback);
+      });
     });
   });
 });

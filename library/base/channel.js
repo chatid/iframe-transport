@@ -105,7 +105,9 @@ mixin(Channel.prototype, Events, {
         this.respond(data.id, null, {
           code: e.code,
           message: e.message,
-          data: e.stack
+          data: {
+            stack: e.stack
+          }
         });
       }
     } else if (data.id) {

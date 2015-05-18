@@ -12,6 +12,11 @@ JSONRPCError.prototype = Error.prototype;
 
 // Facilitate multiplexed JSON-RPC.
 var Channel = module.exports = function(namespace, transport) {
+  if (Channel._namespaces.indexOf(namespace) >= 0) {
+    throw new Error("Channel with namespace '" + namespace + "' already exists");
+  }
+  Channel._namespaces.push(namespace);
+
   this.namespace = namespace;
   this.transport = transport;
   this._callbacks = {};
@@ -26,6 +31,16 @@ var Channel = module.exports = function(namespace, transport) {
     }
   }, this);
 };
+
+mixin(Channel, {
+
+  reset: function() {
+    this._namespaces = [];
+  },
+
+  _namespaces: []
+
+});
 
 mixin(Channel.prototype, Events, {
 

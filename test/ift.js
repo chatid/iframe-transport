@@ -165,6 +165,9 @@ describe('ift', function() {
     beforeEach(function() {
       transport = new Transport(['http://origin']);
     });
+    afterEach(function() {
+      Channel.reset();
+    });
 
     it("processes messages from its channel and ignores messages from other channels", function() {
       var channel = new Channel('test', transport);
@@ -202,7 +205,7 @@ describe('ift', function() {
 
     it("keeps track of callbacks", function() {
       var channel = new Channel('test', transport);
-      var send = sinon.stub(transport, 'send', function(message) {
+      var respond = function(message) {
         transport.trigger('incoming', {
           channel: 'test',
           data: {
@@ -210,15 +213,39 @@ describe('ift', function() {
             result: message.data.params
           }
         });
-      });
+      };
+      var send = sinon.stub(transport, 'send', respond);
+
       var callback1 = sinon.stub();
       var callback2 = sinon.stub();
+
       channel.request('method', 'request1', callback1);
       channel.request('method', 'request2', callback2);
       sinon.assert.calledOnce(callback1);
-      sinon.assert.calledWith(callback1, 'request1');
       sinon.assert.calledOnce(callback2);
-      sinon.assert.calledWith(callback2, 'request2');
+
+      channel.request('method', 'request1', callback1);
+      sinon.assert.calledTwice(callback1);
+      channel.request('method', 'request1', callback1);
+      sinon.assert.calledThrice(callback1);
+      sinon.assert.calledOnce(callback2);
+
+      channel.request('method', 'request2', callback2);
+      sinon.assert.calledThrice(callback1);
+      sinon.assert.calledTwice(callback2);
+
+      sinon.assert.alwaysCalledWith(callback1, 'request1');
+      sinon.assert.alwaysCalledWith(callback2, 'request2');
+    });
+
+    it("throws when trying to create a channel with a namespace already in use", function() {
+      new Channel('test', transport);
+      assert.doesNotThrow(function() {
+        new Channel('test1', transport);
+      });
+      assert.throws(function() {
+        new Channel('test', transport);
+      });
     });
   });
 });

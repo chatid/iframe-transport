@@ -55,6 +55,7 @@ var ChildServer = function(config, logger) {
 module.exports = function (config) {
 
   config.set({
+
     basePath: '',
 
     frameworks: ['mocha', 'sinon', 'childServer'],
@@ -72,11 +73,6 @@ module.exports = function (config) {
       'test/ift.js'
     ],
 
-    // // single test bundle
-    // files: [
-    //   'test/suite.coffee'
-    // ],
-
     exclude: [],
 
     // individual test bundles
@@ -91,10 +87,6 @@ module.exports = function (config) {
         ui: 'bdd'
       }
     },
-
-    // // single test bundle
-    // preprocessors:
-    //   'test/suite.coffee': ['webpack', 'sourcemap']
 
     webpack: webpackConfig,
 
@@ -154,5 +146,7 @@ module.exports = function (config) {
     // Continuous Integration mode
     // if true, it capture browsers, run tests and exit
     singleRun: false
+
   });
+
 };

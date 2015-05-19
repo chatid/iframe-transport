@@ -6,6 +6,7 @@ var Service = require('./service'),
 
 var Manager = module.exports = function(transport, services) {
   this.transport = transport;
+  services || (services = []);
 
   this.transport.ready(function() {
     var service;
@@ -43,8 +44,11 @@ mixin(Manager.prototype, {
         result = isArray(params) ? service[method].apply(service, params) : service[method](params);
       } catch (e) {
         error = {
-          code: e.code,
-          message: e.stack
+          code: -32000,
+          message: e.message,
+          data: {
+            stack: e.stack
+          }
         };
       }
       if (id) channel.respond(id, result, error);

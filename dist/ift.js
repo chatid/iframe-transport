@@ -61,17 +61,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Targets modern browsers, IE8+
 	*/
 	
-	var Manager = __webpack_require__(3),
-	    ParentTransport = __webpack_require__(4),
-	    ChildTransport = __webpack_require__(5);
+	var Manager = __webpack_require__(2),
+	    ParentTransport = __webpack_require__(3),
+	    ChildTransport = __webpack_require__(4);
 	
 	module.exports = {
 	
-	  Channel: __webpack_require__(6),
+	  ParentTransport: ParentTransport,
 	
-	  Transport: __webpack_require__(2),
+	  ChildTransport: ChildTransport,
 	
-	  Service: __webpack_require__(7),
+	  Channel: __webpack_require__(5),
+	
+	  Service: __webpack_require__(6),
 	
 	  // Factory function for creating appropriate transport.
 	  parent: function(options) {
@@ -98,8 +100,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 	
 	  util: {
-	    mixin: __webpack_require__(1),
-	    debug: __webpack_require__(8)
+	    mixin: __webpack_require__(7),
+	    debug: __webpack_require__(1)
 	  }
 	
 	};
@@ -111,19 +113,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var slice = [].slice;
 	
-	// (ref `_.extend`)
-	// Extend a given object with all the properties of the passed-in object(s).
-	var mixin = module.exports = function(obj) {
-	  var args = slice.call(arguments, 1),
-	      props;
-	  for (var i = 0; i < args.length; i++) {
-	    if (props = args[i]) {
-	      for (var prop in props) {
-	        obj[prop] = props[prop];
-	      }
-	    }
-	  }
-	  return obj;
+	module.exports = function() {
+	  var args = slice.call(arguments);
+	  args.unshift(document.title);
+	  console.log.apply(console, args);
 	};
 
 
@@ -131,79 +124,15 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Events  = __webpack_require__(11),
-	    support = __webpack_require__(9),
-	    mixin   = __webpack_require__(1),
-	    bind    = __webpack_require__(12),
-	    extend  = __webpack_require__(13);
-	
-	// Base class for wrapping `iframe#postMessage`.
-	var Transport = module.exports = function(targetOrigins) {
-	  this.readyState = 0;
-	  this.targetOrigins = targetOrigins || [];
-	  this.onMessage = bind(this.onMessage, this);
-	  this.listen();
-	};
-	
-	mixin(Transport.prototype, Events, {
-	
-	  ready: function(callback, context) {
-	    var transport = this;
-	    context || (context = this);
-	    if (this.isReady()) {
-	      callback.call(context, this);
-	    } else {
-	      this.on('ready', function() {
-	        callback.call(context, transport)
-	      });
-	    }
-	  },
-	
-	  onMessage: function(evt) {
-	    if (this.targetOrigins.indexOf(evt.origin) < 0) return;
-	    this.trigger('incoming', evt.data);
-	  },
-	
-	  // Proxy `window.onmessage` into internal event and verifying security.
-	  listen: function() {
-	    support.on(window, 'message', this.onMessage);
-	  },
-	
-	  isReady: function() {
-	    return this.readyState === 1;
-	  },
-	
-	  wiretap: function(callback) {
-	    this.on('incoming', function(message) {
-	      callback('incoming', message);
-	    });
-	    this.on('outgoing', function(message) {
-	      callback('outgoing', message);
-	    });
-	  },
-	
-	  destroy: function() {
-	    support.off(window, 'message', this.onMessage);
-	    this.off();
-	  }
-	
-	});
-	
-	Transport.extend = extend;
-
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Service = __webpack_require__(7),
-	    Channel = __webpack_require__(6),
-	    isArray = __webpack_require__(10),
-	    mixin   = __webpack_require__(1);
+	var Service = __webpack_require__(6),
+	    Channel = __webpack_require__(5),
+	    isArray = __webpack_require__(9),
+	    mixin   = __webpack_require__(7);
 	
 	
 	var Manager = module.exports = function(transport, services) {
 	  this.transport = transport;
+	  services || (services = []);
 	
 	  this.transport.ready(function() {
 	    var service;
@@ -241,8 +170,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        result = isArray(params) ? service[method].apply(service, params) : service[method](params);
 	      } catch (e) {
 	        error = {
-	          code: e.code,
-	          message: e.stack
+	          code: -32000,
+	          message: e.message,
+	          data: {
+	            stack: e.stack
+	          }
 	        };
 	      }
 	      if (id) channel.respond(id, result, error);
@@ -264,20 +196,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 4 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Transport = __webpack_require__(2),
-	    uniqueId  = __webpack_require__(14);
+	var Transport = __webpack_require__(10);
 	
 	// Implement the transport class from the parent's perspective.
 	var ParentTransport = module.exports = Transport.extend({
 	
 	  constructor: function(childOrigin, childPath) {
-	    this.id = uniqueId('ift');
 	    this.childOrigin = childOrigin || 'http://localhost:8000';
 	    this.childUri = childOrigin + childPath || '/child.html';
-	    this._createIframe(this.childUri, this.id);
+	    this._createIframe(this.childUri);
 	
 	    Transport.call(this, [childOrigin]);
 	  },
@@ -306,13 +236,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.iframe.parentNode.removeChild(this.iframe);
 	  },
 	
-	  _createIframe: function(uri, id) {
-	    var iframe = this.iframe = document.getElementById(id);
-	    if (iframe) return;
-	
-	    iframe = this.iframe = document.createElement('iframe');
-	    iframe.id = id;
-	    iframe.name = id;
+	  _createIframe: function(uri) {
+	    var iframe = this.iframe = document.createElement('iframe');
 	    iframe.style.position = 'absolute';
 	    iframe.style.top = '-2000px';
 	    iframe.style.left = '0px';
@@ -327,10 +252,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Transport = __webpack_require__(2);
+	var Transport = __webpack_require__(10);
 	
 	// Implement the transport class from the child's perspective.
 	var ChildTransport = module.exports = Transport.extend({
@@ -358,13 +283,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mixin    = __webpack_require__(1),
-	    support  = __webpack_require__(9),
-	    uniqueId = __webpack_require__(14),
-	    Events   = __webpack_require__(11);
+	var mixin    = __webpack_require__(7),
+	    support  = __webpack_require__(8),
+	    uniqueId = __webpack_require__(11),
+	    Events   = __webpack_require__(12);
 	
 	var JSONRPCError = function(code, message) {
 	  this.code = code;
@@ -375,20 +300,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	// Facilitate multiplexed JSON-RPC.
 	var Channel = module.exports = function(namespace, transport) {
-	  this.id = namespace;
+	  if (Channel._namespaces.indexOf(namespace) >= 0) {
+	    throw new Error("Channel with namespace '" + namespace + "' already exists");
+	  }
+	  Channel._namespaces.push(namespace);
+	
+	  this.namespace = namespace;
 	  this.transport = transport;
 	  this._callbacks = {};
 	
-	  this.transport.on('incoming', function(message) {
-	    message = this.deserialize(message);
-	    if (!message || message.channel !== this.id) return;
-	    if (message.data.error) {
-	      throw new JSONRPCError(message.data.error.code, message.data.error.message);
-	    } else {
-	      this.process(message.data);
-	    }
-	  }, this);
+	  this.transport.on('incoming', this._onIncoming, this);
 	};
+	
+	mixin(Channel, {
+	
+	  JSONRPCError: JSONRPCError,
+	
+	  reset: function() {
+	    this._namespaces = [];
+	  },
+	
+	  _namespaces: []
+	
+	});
 	
 	mixin(Channel.prototype, Events, {
 	
@@ -396,7 +330,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  send: function(data) {
 	    data || (data = {});
 	    var message = {
-	      channel: this.id,
+	      channel: this.namespace,
 	      data: mixin(data, { jsonrpc: '2.0' })
 	    };
 	    this.transport.send(this.serialize(message));
@@ -425,30 +359,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.send(data);
 	  },
 	
-	  // Send an error message.
-	  error: function(code, message) {
-	    this.send({
-	      id: null,
-	      error: {
-	        code: code,
-	        message: message
-	      }
-	    });
-	  },
-	
-	  // Signal a request or resolve a callback with response.
-	  // TODO: handle notifications.
-	  process: function(data) {
-	    if (data.method) {
-	      try { this.trigger('request', data.id, data.method, data.params); }
-	      catch (e) { this.error(e.code, e.message); }
-	    } else if (data.id) {
-	      var callback = this._callbacks[data.id];
-	      callback(data.result, data.error);
-	      this._callbacks[data.id] = null;
-	    }
-	  },
-	
 	  serialize: function(object) {
 	    return support.structuredClones ? object : JSON.stringify(object);
 	  },
@@ -461,18 +371,50 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  destroy: function() {
 	    this.off();
-	  }
+	  },
+	
+	  _onIncoming: function(message) {
+	    message = this.deserialize(message);
+	    if (!message || message.channel !== this.namespace) return;
+	    if (message.data.error) {
+	      throw new JSONRPCError(message.data.error.code, message.data.error.message);
+	    } else {
+	      this._processRPC(message.data);
+	    }
+	  },
+	
+	  // Signal a request or resolve a callback with response.
+	  // TODO: handle notifications.
+	  _processRPC: function(data) {
+	    if (data.method) {
+	      try {
+	        this.trigger('request', data.id, data.method, data.params);
+	      } catch (e) {
+	        this.respond(data.id, null, {
+	          code: e.code,
+	          message: e.message,
+	          data: {
+	            stack: e.stack
+	          }
+	        });
+	      }
+	    } else if (data.id) {
+	      var callback = this._callbacks[data.id];
+	      callback(data.result, data.error);
+	      this._callbacks[data.id] = null;
+	    }
+	  },
 	
 	});
 
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mixin   = __webpack_require__(1),
+	var mixin   = __webpack_require__(7),
 	    extend  = __webpack_require__(13),
-	    Events  = __webpack_require__(11);
+	    Events  = __webpack_require__(12);
 	
 	// Base class for implementing a service provider or consumer. Provides methods
 	// for sending a request or response to be routed over a given channel.
@@ -486,20 +428,29 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var slice = [].slice;
 	
-	module.exports = function() {
-	  var args = slice.call(arguments);
-	  args.unshift(document.title);
-	  console.log.apply(console, args);
+	// (ref `_.extend`)
+	// Extend a given object with all the properties of the passed-in object(s).
+	var mixin = module.exports = function(obj) {
+	  var args = slice.call(arguments, 1),
+	      props;
+	  for (var i = 0; i < args.length; i++) {
+	    if (props = args[i]) {
+	      for (var prop in props) {
+	        obj[prop] = props[prop];
+	      }
+	    }
+	  }
+	  return obj;
 	};
 
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var support = module.exports = {
@@ -535,7 +486,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var toString = Object.prototype.toString;
@@ -546,7 +497,88 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Events  = __webpack_require__(12),
+	    support = __webpack_require__(8),
+	    mixin   = __webpack_require__(7),
+	    bind    = __webpack_require__(14),
+	    extend  = __webpack_require__(13);
+	
+	// Base class for wrapping `iframe#postMessage`.
+	var Transport = module.exports = function(targetOrigins) {
+	  this.readyState = 0;
+	  this.targetOrigins = targetOrigins || [];
+	  this.onMessage = bind(this.onMessage, this);
+	  this.listen();
+	};
+	
+	mixin(Transport.prototype, Events, {
+	
+	  ready: function(callback, context) {
+	    var transport = this, ready;
+	    context || (context = this);
+	    if (this.isReady()) {
+	      callback.call(context, this);
+	    } else {
+	      this.on('ready', ready = function() {
+	        callback.call(context, transport);
+	        transport.off('ready', ready);
+	      });
+	    }
+	  },
+	
+	  onMessage: function(evt) {
+	    if (this.targetOrigins.indexOf(evt.origin) < 0) return;
+	    this.trigger('incoming', evt.data);
+	  },
+	
+	  // Proxy `window.onmessage` into internal event and verifying security.
+	  listen: function() {
+	    support.on(window, 'message', this.onMessage);
+	  },
+	
+	  // Implemented by subclasses.
+	  send: function() {},
+	
+	  isReady: function() {
+	    return this.readyState === 1;
+	  },
+	
+	  wiretap: function(callback) {
+	    this.on('incoming', function(message) {
+	      callback('incoming', message);
+	    });
+	    this.on('outgoing', function(message) {
+	      callback('outgoing', message);
+	    });
+	  },
+	
+	  destroy: function() {
+	    support.off(window, 'message', this.onMessage);
+	    this.off();
+	  }
+	
+	});
+	
+	Transport.extend = extend;
+
+
+/***/ },
 /* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// (ref `_.uniqueId`)
+	var idCounter = 0;
+	var uniqueId = module.exports = function(prefix) {
+	  var id = ++idCounter + '';
+	  return prefix ? prefix + id : id;
+	};
+
+
+/***/ },
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Events
@@ -597,26 +629,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// (ref `_.bind`)
-	
-	var nativeBind = Function.prototype.bind;
-	
-	module.exports = function (fn, ctx) {
-	  if (nativeBind) return fn.bind(ctx);
-	  return function() {
-	    return fn.apply(ctx, arguments);
-	  }
-	}
-
-
-/***/ },
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mixin = __webpack_require__(1);
+	var mixin = __webpack_require__(7);
 	
 	// (ref Backbone `extend`)
 	// Helper function to correctly set up the prototype chain, for subclasses.
@@ -646,12 +662,16 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// (ref `_.uniqueId`)
-	var idCounter = 0;
-	var uniqueId = module.exports = function(prefix) {
-	  var id = ++idCounter + '';
-	  return prefix ? prefix + id : id;
-	};
+	// (ref `_.bind`)
+	
+	var nativeBind = Function.prototype.bind;
+	
+	module.exports = function (fn, ctx) {
+	  if (nativeBind) return fn.bind(ctx);
+	  return function() {
+	    return fn.apply(ctx, arguments);
+	  }
+	}
 
 
 /***/ }

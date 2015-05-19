@@ -54,10 +54,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Service = __webpack_require__(7),
-	    support = __webpack_require__(9),
-	    isArray = __webpack_require__(10),
-	    mixin   = __webpack_require__(1);
+	var Service = __webpack_require__(6),
+	    support = __webpack_require__(8),
+	    isArray = __webpack_require__(9),
+	    mixin   = __webpack_require__(7);
 	
 	mixin(support, {
 	  storageEventTarget: ('onstorage' in window ? window : document)
@@ -152,7 +152,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 1 */
+/* 1 */,
+/* 2 */,
+/* 3 */,
+/* 4 */,
+/* 5 */,
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var mixin   = __webpack_require__(7),
+	    extend  = __webpack_require__(13),
+	    Events  = __webpack_require__(12);
+	
+	// Base class for implementing a service provider or consumer. Provides methods
+	// for sending a request or response to be routed over a given channel.
+	var Service = module.exports = function(channel) {
+	  this.channel = channel;
+	};
+	
+	mixin(Service.prototype, Events);
+	
+	Service.extend = extend;
+
+
+/***/ },
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var slice = [].slice;
@@ -174,32 +198,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 2 */,
-/* 3 */,
-/* 4 */,
-/* 5 */,
-/* 6 */,
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var mixin   = __webpack_require__(1),
-	    extend  = __webpack_require__(13),
-	    Events  = __webpack_require__(11);
-	
-	// Base class for implementing a service provider or consumer. Provides methods
-	// for sending a request or response to be routed over a given channel.
-	var Service = module.exports = function(channel) {
-	  this.channel = channel;
-	};
-	
-	mixin(Service.prototype, Events);
-	
-	Service.extend = extend;
-
-
-/***/ },
-/* 8 */,
-/* 9 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var support = module.exports = {
@@ -235,7 +234,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var toString = Object.prototype.toString;
@@ -246,7 +245,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 10 */,
+/* 11 */,
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Events
@@ -297,11 +298,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */,
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mixin = __webpack_require__(1);
+	var mixin = __webpack_require__(7);
 	
 	// (ref Backbone `extend`)
 	// Helper function to correctly set up the prototype chain, for subclasses.

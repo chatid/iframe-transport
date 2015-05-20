@@ -32,7 +32,9 @@ var ParentTransport = module.exports = Transport.extend({
 
   destroy: function() {
     Transport.prototype.destroy.apply(this, arguments);
-    this.iframe.parentNode.removeChild(this.iframe);
+    if (this.iframe.parentNode) {
+      this.iframe.parentNode.removeChild(this.iframe);
+    }
   },
 
   _createIframe: function(uri) {

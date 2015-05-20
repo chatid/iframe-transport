@@ -6,7 +6,7 @@ var rewirePlugin = require('rewire-webpack'),
 
 var DEBUG = process.env.DEBUG;
 
-var PARENT_ORIGINS = ['http://localhost:9876', 'http://127.0.0.1:6789'];
+var PARENT_ORIGINS = ['http://localhost:9876', 'http://127.0.0.1:9876'];
 var CHILD_HOST = '127.0.0.1';
 var CHILD_PORT = '6789';
 var CHILD_ORIGIN = 'http://' + CHILD_HOST + ':' + CHILD_PORT;

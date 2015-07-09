@@ -128,13 +128,10 @@ describe('ParentTransport', function() {
 
 describe('ChildTransport', function() {
   it("sends 'ready' message on instantiation", function() {
-    var parent = window.parent;
-    window.parent = {
-      postMessage: sinon.stub()
-    };
+    var postMessage = sinon.stub(window.parent, 'postMessage');
     var transport = new ChildTransport(['http://origin']);
-    sinon.assert.calledOnce(window.parent.postMessage);
-    sinon.assert.calledWith(window.parent.postMessage, 'ready', '*');
-    window.parent = parent;
+    sinon.assert.calledOnce(postMessage);
+    sinon.assert.calledWith(postMessage, 'ready', '*');
+    postMessage.restore();
   });
 });

@@ -4,7 +4,7 @@ var Transport = require('./transport');
 var ChildTransport = module.exports = Transport.extend({
 
   constructor: function() {
-    if (window.parent !== window) this.parent = window.parent;
+    this.parent = window.parent;
     Transport.apply(this, arguments);
   },
 

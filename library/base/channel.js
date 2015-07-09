@@ -66,7 +66,7 @@ mixin(Channel.prototype, Events, {
     var data = {
       id: id
     };
-    if (result) data.result = result;
+    if (typeof result !== 'undefined') data.result = result;
     else data.error = error;
     this.send(data);
   },
@@ -102,7 +102,7 @@ mixin(Channel.prototype, Events, {
       try {
         this.trigger('request', data.id, data.method, data.params);
       } catch (e) {
-        this.respond(data.id, null, {
+        this.respond(data.id, void 0, {
           code: e.code,
           message: e.message,
           data: {

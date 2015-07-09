@@ -96,6 +96,7 @@ module.exports = function (config) {
       require('karma-phantomjs-launcher'),
       require('karma-chrome-launcher'),
       require('karma-firefox-launcher'),
+      require('karma-safari-launcher'),
       require('karma-sourcemap-loader'),
       require('karma-sinon'),
       {'framework:childServer': ['type', ChildServer]}

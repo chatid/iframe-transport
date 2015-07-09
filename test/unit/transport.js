@@ -59,8 +59,9 @@ describe('ParentTransport', function() {
   it("creates an iframe not visible on the page", function() {
     var transport = new ParentTransport(CHILD_ORIGIN, CHILD_PATH);
     assert(transport.iframe.offsetTop < 100);
-    assert.strictEqual(transport.iframe.border, 0);
-    assert.strictEqual(transport.iframe.frameBorder, '0');
+    // Browsers vary between string and number, which we don't care about.
+    assert.strictEqual(transport.iframe.border + '', '0');
+    assert.strictEqual(transport.iframe.frameBorder + '', '0');
   });
 
   describe('#ready', function() {

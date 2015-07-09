@@ -8,8 +8,10 @@ var util = require('../util');
 function dispatchMessageEvent(data, origin) {
   util.dispatchEvent(window, 'message', {
     data: data,
-    origin: origin
-  }, 'MessageEvent', ['data', 'origin']);
+    origin: origin,
+    lastEventId: '',
+    source: window
+  }, 'MessageEvent', ['data', 'origin', 'lastEventId', 'source']);
 }
 
 describe('Transport', function() {

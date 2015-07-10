@@ -16,10 +16,8 @@ var ChildTransport = module.exports = Transport.extend({
   },
 
   send: function(message) {
-    if (this.parent) {
-      this.parent.postMessage(message, '*');
-      this.trigger('outgoing', message);
-    }
+    this.parent.postMessage(message, '*');
+    this.trigger('outgoing', message);
   }
 
 });

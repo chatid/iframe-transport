@@ -1,6 +1,36 @@
 var defaultConfig = require('./karma.conf');
 
 var sauceLaunchers = {
+  chromeMac: {
+    base: 'SauceLabs',
+    browserName: 'chrome',
+    platform: 'OS X 10.10'
+  },
+  firefoxMac: {
+    base: 'SauceLabs',
+    browserName: 'firefox',
+    platform: 'OS X 10.10'
+  },
+  chromeWin7: {
+    base: 'SauceLabs',
+    browserName: 'chrome',
+    platform: 'Windows 7'
+  },
+  firefoxWin7: {
+    base: 'SauceLabs',
+    browserName: 'chrome',
+    platform: 'Windows 7'
+  },
+  chromeWin8_1: {
+    base: 'SauceLabs',
+    browserName: 'chrome',
+    platform: 'Windows 8.1'
+  },
+  firefoxWin8_1: {
+    base: 'SauceLabs',
+    browserName: 'chrome',
+    platform: 'Windows 8.1'
+  },
   ie9: {
     base: 'SauceLabs',
     browserName: 'internet explorer',

@@ -3,6 +3,13 @@ var Service = require('./service'),
     isArray = require('../util/isArray'),
     mixin   = require('../util/mixin');
 
+function construct(ctor, args) {
+  function Surrogate() {
+    return ctor.apply(this, args);
+  }
+  Surrogate.prototype = ctor.prototype;
+  return new Surrogate();
+}
 
 var Manager = module.exports = function(transport, services) {
   this.transport = transport;
@@ -31,12 +38,13 @@ mixin(Manager.prototype, {
     return new Channel(namespace, this.transport);
   },
 
-  service: function(namespace, serviceCtor) {
+  service: function(namespace, serviceCtor, serviceArgs) {
     if (!namespace) throw new Error("Cannot create a service without a namespace");
     serviceCtor || (serviceCtor = Service);
+    serviceArgs || (serviceArgs = []);
 
     var channel = new Channel(namespace, this.transport);
-    var service = new serviceCtor(channel);
+    var service = construct(serviceCtor, [channel, serviceArgs]);
 
     channel.on('request', function(id, method, params) {
       var result, error;

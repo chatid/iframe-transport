@@ -2,26 +2,15 @@ var assert = require('assert');
 var ift = require('../../library/ift');
 var ParentTransport = ift.ParentTransport;
 var Channel = ift.Channel;
-
-var createIframe = sinon.stub(), _createIframe, manager;
-
-// Hook into ParentTransport#_createIframe to attach a `code` query param
-// containing a raw function to execute on the child page for a given test.
-_createIframe = ParentTransport.prototype._createIframe;
-function stubChild(code) {
-  createIframe = sinon.stub(ParentTransport.prototype, '_createIframe', function(uri) {
-    return _createIframe.call(this, uri + '?code=' + encodeURIComponent(code));
-  });
-}
+var Exec = require('../../library/services/exec');
 
 afterEach(function() {
-  createIframe.restore();
   Channel.reset();
   manager.destroy();
 });
 
 it("facilitates multiplexed communication across origins", function(done) {
-  stubChild(function() {
+  var childStub = function(exec, ift) {
     ift.child({
       trustedOrigins: PARENT_ORIGINS
     }).ready(function(manager) {
@@ -35,13 +24,15 @@ it("facilitates multiplexed communication across origins", function(done) {
         channel2.respond(id, 'channel2 response');
       });
     });
-  });
+  };
 
   manager = ift.parent({
     childOrigin: CHILD_ORIGIN,
     childPath: CHILD_PATH
   });
   manager.ready(function() {
+    manager.service('exec', Exec).code(childStub);
+
     var channel1 = manager.channel('channel1');
     channel1.request('method', 'params', function(response) {
       assert.strictEqual(response, 'channel1 response');
@@ -58,7 +49,7 @@ it("facilitates multiplexed communication across origins", function(done) {
 });
 
 it("keeps track of callbacks", function(done) {
-  stubChild(function() {
+  var childStub = function(exec, ift) {
     ift.child({
       trustedOrigins: PARENT_ORIGINS
     }).ready(function(manager) {
@@ -76,13 +67,15 @@ it("keeps track of callbacks", function(done) {
         });
       });
     });
-  });
+  };
 
   manager = ift.parent({
     childOrigin: CHILD_ORIGIN,
     childPath: CHILD_PATH
   });
   manager.ready(function() {
+    manager.service('exec', Exec).code(childStub);
+
     var channel1 = manager.channel('channel1');
     var channel2 = manager.channel('channel2');
 
@@ -111,7 +104,9 @@ it("keeps track of callbacks", function(done) {
 });
 
 it("can handle lots of traffic", function(done) {
-  stubChild(function() {
+  this.timeout(5000);
+
+  var childStub = function(exec, ift) {
     ift.child({
       trustedOrigins: PARENT_ORIGINS
     }).ready(function(manager) {
@@ -129,12 +124,14 @@ it("can handle lots of traffic", function(done) {
         });
       });
     })
-  });
+  };
 
   manager = ift.parent({
     childOrigin: CHILD_ORIGIN,
     childPath: CHILD_PATH
   }).ready(function(manager) {
+    manager.service('exec', Exec).code(childStub);
+
     var channel1 = manager.channel('channel1');
     var channel2 = manager.channel('channel2');
 

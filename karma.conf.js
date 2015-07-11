@@ -48,7 +48,12 @@ var ChildServer = function(config, logger) {
       filename: 'index.js',
       path: __dirname + CHILD_PATH,
       publicPath: CHILD_PATH
-    }
+    },
+    plugins: [
+      new webpack.DefinePlugin({
+        PARENT_ORIGINS: JSON.stringify(PARENT_ORIGINS)
+      })
+    ]
   });
   server.use(webpackDevMiddleware(compiler, {
     publicPath: CHILD_PATH

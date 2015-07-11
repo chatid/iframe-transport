@@ -1,26 +1,5 @@
 module.exports = {
 
-  parseQuery: function(qs){
-    return qs.replace('?', '').split('&').reduce(function(obj, pair) {
-      var i = pair.indexOf('=')
-        , key = pair.slice(0, i)
-        , val = pair.slice(++i);
-
-      obj[key] = decodeURIComponent(val);
-      return obj;
-    }, {});
-  },
-
-  buildQuery: function(url, obj) {
-    var result = url || '';
-    if (result.indexOf('?') > -1) result += '&';
-    else result += '?';
-    var pairs = [];
-    for (key in obj) pairs.push(key + '=' + obj[key]);
-    result += pairs.join('&');
-    return result;
-  },
-
   // When this needs to be tested across browsers:
   //   - https://github.com/ariya/phantomjs/issues/11289#issuecomment-38880333
   //   - http://stackoverflow.com/a/2490876

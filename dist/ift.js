@@ -100,8 +100,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 	
 	  util: {
-	    mixin: __webpack_require__(7),
-	    debug: __webpack_require__(1)
+	    mixin: __webpack_require__(1),
+	    debug: __webpack_require__(7)
 	  }
 	
 	};
@@ -113,10 +113,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var slice = [].slice;
 	
-	module.exports = function() {
-	  var args = slice.call(arguments);
-	  args.unshift(document.title);
-	  console.log.apply(console, args);
+	// (ref `_.extend`)
+	// Extend a given object with all the properties of the passed-in object(s).
+	var mixin = module.exports = function(obj) {
+	  var args = slice.call(arguments, 1),
+	      props;
+	  for (var i = 0; i < args.length; i++) {
+	    if (props = args[i]) {
+	      for (var prop in props) {
+	        obj[prop] = props[prop];
+	      }
+	    }
+	  }
+	  return obj;
 	};
 
 
@@ -127,7 +136,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Service = __webpack_require__(6),
 	    Channel = __webpack_require__(5),
 	    isArray = __webpack_require__(9),
-	    mixin   = __webpack_require__(7);
+	    mixin   = __webpack_require__(1);
 	
 	
 	var Manager = module.exports = function(transport, services) {
@@ -233,7 +242,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  destroy: function() {
 	    Transport.prototype.destroy.apply(this, arguments);
-	    this.iframe.parentNode.removeChild(this.iframe);
+	    if (this.iframe.parentNode) {
+	      this.iframe.parentNode.removeChild(this.iframe);
+	    }
 	  },
 	
 	  _createIframe: function(uri) {
@@ -261,7 +272,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var ChildTransport = module.exports = Transport.extend({
 	
 	  constructor: function() {
-	    if (window.parent !== window) this.parent = window.parent;
+	    this.parent = window.parent;
 	    Transport.apply(this, arguments);
 	  },
 	
@@ -273,10 +284,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 	
 	  send: function(message) {
-	    if (this.parent) {
-	      this.parent.postMessage(message, '*');
-	      this.trigger('outgoing', message);
-	    }
+	    this.parent.postMessage(message, '*');
+	    this.trigger('outgoing', message);
 	  }
 	
 	});
@@ -286,7 +295,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mixin    = __webpack_require__(7),
+	var mixin    = __webpack_require__(1),
 	    support  = __webpack_require__(8),
 	    uniqueId = __webpack_require__(11),
 	    Events   = __webpack_require__(12);
@@ -354,7 +363,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var data = {
 	      id: id
 	    };
-	    if (result) data.result = result;
+	    if (typeof result !== 'undefined') data.result = result;
 	    else data.error = error;
 	    this.send(data);
 	  },
@@ -390,7 +399,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      try {
 	        this.trigger('request', data.id, data.method, data.params);
 	      } catch (e) {
-	        this.respond(data.id, null, {
+	        this.respond(data.id, void 0, {
 	          code: e.code,
 	          message: e.message,
 	          data: {
@@ -412,7 +421,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mixin   = __webpack_require__(7),
+	var mixin   = __webpack_require__(1),
 	    extend  = __webpack_require__(13),
 	    Events  = __webpack_require__(12);
 	
@@ -433,19 +442,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var slice = [].slice;
 	
-	// (ref `_.extend`)
-	// Extend a given object with all the properties of the passed-in object(s).
-	var mixin = module.exports = function(obj) {
-	  var args = slice.call(arguments, 1),
-	      props;
-	  for (var i = 0; i < args.length; i++) {
-	    if (props = args[i]) {
-	      for (var prop in props) {
-	        obj[prop] = props[prop];
-	      }
-	    }
-	  }
-	  return obj;
+	module.exports = function() {
+	  var args = slice.call(arguments);
+	  args.unshift(document.title);
+	  console.log.apply(console, args);
 	};
 
 
@@ -502,7 +502,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var Events  = __webpack_require__(12),
 	    support = __webpack_require__(8),
-	    mixin   = __webpack_require__(7),
+	    mixin   = __webpack_require__(1),
 	    bind    = __webpack_require__(14),
 	    extend  = __webpack_require__(13);
 	
@@ -632,7 +632,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mixin = __webpack_require__(7);
+	var mixin = __webpack_require__(1);
 	
 	// (ref Backbone `extend`)
 	// Helper function to correctly set up the prototype chain, for subclasses.

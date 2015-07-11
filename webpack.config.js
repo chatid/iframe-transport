@@ -2,7 +2,8 @@ module.exports = {
   devtool: 'source-map',
   entry: {
     'ift': './library/ift',
-    'IFTStorageService': './library/services/storage'
+    'IFTStorageService': './library/services/storage',
+    'Exec': './library/services/exec'
   },
   output: {
     path: __dirname + '/dist',

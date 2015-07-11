@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define(factory);
 	else if(typeof exports === 'object')
-		exports["IFTStorageService"] = factory();
+		exports["Exec"] = factory();
 	else
-		root["IFTStorageService"] = factory();
+		root["Exec"] = factory();
 })(this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -54,101 +54,22 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Service = __webpack_require__(6),
-	    support = __webpack_require__(8),
-	    isArray = __webpack_require__(9),
-	    mixin   = __webpack_require__(1);
+	var Service = __webpack_require__(6);
 	
-	mixin(support, {
-	  storageEventTarget: ('onstorage' in window ? window : document)
-	});
+	var Exec = Service.extend({
 	
-	// Implement the LocalStorage service from a provider's perspective.
-	var Provider = Service.extend({
-	
-	  constructor: function(channel, storage) {
-	    this.listen();
-	    Service.apply(this, arguments);
+	  code: function(code) {
+	    this.channel.request('_code', [code.toString()]);
 	  },
 	
-	  listen: function() {
-	    support.on(support.storageEventTarget, 'storage', function(evt) {
-	      this.onStorage(evt);
-	    }, this);
-	  },
-	
-	  get: function(key) {
-	    return this.deserialize(localStorage.getItem(key));
-	  },
-	
-	  set: function(key, value, options) {
-	    return localStorage.setItem(key, this.serialize(value));
-	  },
-	
-	  unset: function(keys) {
-	    if (!(isArray(keys))) keys = [keys];
-	    for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
-	  },
-	
-	  serialize: function(data) {
-	    return JSON.stringify(data);
-	  },
-	
-	  deserialize: function(data) {
-	    try { return JSON.parse(data); }
-	    catch (e) { return data; }
-	  },
-	
-	  onStorage: function(evt) {
-	    if (evt) {
-	      // IE9+: Don't trigger if value didn't change
-	      if (evt.oldValue === evt.newValue) return;
-	    } else {
-	      // IE8: `evt` is undefined
-	      evt = {};
-	    }
-	
-	    this.channel.request('trigger', ['change', {
-	      key: evt.key,
-	      oldValue: this.deserialize(evt.oldValue),
-	      newValue: this.deserialize(evt.newValue)
-	    }]);
-	  },
-	
-	  destroy: function() {
-	    support.off(support.storageEventTarget, 'storage', this.onStorage);
+	  _code: function(code) {
+	    var exec = this;
+	    eval('(' + code + ')(exec)');
 	  }
 	
 	});
 	
-	// Implement the LocalStorage service from a consumer's perspective.
-	var Consumer = Service.extend({
-	
-	  get: function(key, callback) {
-	    this.channel.request('get', [key], callback);
-	  },
-	
-	  set: function(key, value, options, callback) {
-	    if (typeof options === 'function') {
-	      callback = options;
-	      options = {};
-	    } else {
-	      options = options || {};
-	    }
-	
-	    this.channel.request('set', [key, value, options], callback);
-	  },
-	
-	  unset: function(keys, callback) {
-	    this.channel.request('unset', [keys], callback);
-	  }
-	
-	});
-	
-	module.exports = {
-	  Provider: Provider,
-	  Consumer: Consumer
-	};
+	module.exports = Exec;
 
 
 /***/ },
@@ -198,53 +119,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 7 */,
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var support = module.exports = {
-	  // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
-	  has: function(object, property){
-	    var t = typeof object[property];
-	    return t == 'function' || (!!(t == 'object' && object[property])) || t == 'unknown';
-	  },
-	  on: function(target, name, callback) {
-	    support.has(window, 'addEventListener') ?
-	      target.addEventListener(name, callback, false) :
-	      target.attachEvent('on' + name, callback);
-	  },
-	  off: function(target, name, callback) {
-	    support.has(window, 'removeEventListener') ?
-	      target.removeEventListener(name, callback, false) :
-	      target.detachEvent('on' + name, callback);
-	  },
-	  // https://github.com/Modernizr/Modernizr/pull/1250/files
-	  structuredClones: (function() {
-	    var structuredClones = true;
-	    try {
-	      window.postMessage({
-	        toString: function () {
-	          structuredClones = false;
-	          return 'ping';
-	        }
-	      }, '*');
-	    } catch (e) {}
-	    return structuredClones;
-	  })()
-	};
-
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var toString = Object.prototype.toString;
-	
-	module.exports = Array.isArray || function(obj) {
-	  return toString.call(obj) === '[object Array]';
-	}
-
-
-/***/ },
+/* 8 */,
+/* 9 */,
 /* 10 */,
 /* 11 */,
 /* 12 */
@@ -331,4 +207,4 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ ])
 });
 ;
-//# sourceMappingURL=IFTStorageService.js.map
+//# sourceMappingURL=Exec.js.map

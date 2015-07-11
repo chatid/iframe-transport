@@ -4,12 +4,12 @@
     <title>Iframe Storage | Parent</title>
   </head>
   <body>
-    <script type='text/javascript' src='../build/ift.js'></script>
-    <script type='text/javascript' src='../build/IFTStorageService.js'></script>
+    <script type='text/javascript' src='../../dist/ift.js'></script>
+    <script type='text/javascript' src='../../dist/IFTStorageService.js'></script>
     <script type='text/javascript'>
       ift.parent({
         childOrigin: 'http://127.0.0.1:4000',
-        childPath: '/example/child.html'
+        childPath: '/example/storage/child.html'
       }).wiretap(function(direction, message) {
         ift.util.debug(direction, message);
       }).ready(function(manager) {

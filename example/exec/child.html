@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Iframe Storage | Child</title>
+  </head>
+  <body>
+    <script type='text/javascript' src='../../dist/ift.js'></script>
+    <script type='text/javascript' src='../../dist/Exec.js'></script>
+    <script type='text/javascript'>
+      ift.child({
+        trustedOrigins: ['http://127.0.0.1:8000']
+      }).wiretap(function(direction, message) {
+        ift.util.debug(direction, message);
+      }).ready(function(manager) {
+        var exec = manager.service('example', Exec);
+      });
+    </script>
+  </body>
+</html>

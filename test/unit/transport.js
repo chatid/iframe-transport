@@ -108,11 +108,19 @@ describe('ParentTransport', function() {
   describe('#send', function() {
     it("calls postMessage on the iframe with message and childOrigin", function() {
       var transport = new ParentTransport(CHILD_ORIGIN, CHILD_PATH);
-      var postMessage = sinon.stub(transport.iframe.contentWindow, 'postMessage');
+      var iframe = transport.iframe;
+      var postMessage = sinon.spy();
+      // Can't just stub transport.iframe.contentWindow.postMessage
+      // because SauceLabs IE throws "Permission denied"
+      transport.iframe = {
+        contentWindow: {
+          postMessage: postMessage
+        }
+      };
       transport.send('test');
       sinon.assert.calledOnce(postMessage);
       sinon.assert.calledWith(postMessage, 'test', CHILD_ORIGIN);
-      postMessage.restore();
+      transport.iframe = iframe;
     });
   });
 

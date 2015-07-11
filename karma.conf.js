@@ -1,13 +1,21 @@
-var rewirePlugin = require('rewire-webpack'),
+var os = require('os'),
+    rewirePlugin = require('rewire-webpack'),
     webpackConfig = require('./webpack.config'),
     express = require('express'),
     webpack = require('webpack'),
     webpackDevMiddleware = require('webpack-dev-middleware');
 
+var localhost = '127.0.0.1';
+if (process.argv.indexOf('--internal') >= 0) {
+  var nis = os.networkInterfaces();
+  var localIp = nis.en0.filter(function(ni) { return ni.family == 'IPv4' })[0].address;
+  localhost = localIp || '127.0.0.1';
+}
+
 var DEBUG = process.env.DEBUG;
 
-var PARENT_ORIGINS = ['http://localhost:9876', 'http://127.0.0.1:9876'];
-var CHILD_HOST = '127.0.0.1';
+var PARENT_ORIGINS = ['http://localhost:9876', 'http://' + localhost + ':9876'];
+var CHILD_HOST = localhost;
 var CHILD_PORT = '6789';
 var CHILD_ORIGIN = 'http://' + CHILD_HOST + ':' + CHILD_PORT;
 var CHILD_PATH = '/test/child';

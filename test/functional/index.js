@@ -9,7 +9,7 @@ afterEach(function() {
   manager.destroy();
 });
 
-it.only("facilitates multiplexed communication across origins", function(done) {
+it("facilitates multiplexed communication across origins", function(done) {
   var childStub = function(exec, ift) {
     ift.child({
       trustedOrigins: PARENT_ORIGINS

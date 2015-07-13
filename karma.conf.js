@@ -16,7 +16,7 @@ var DEBUG = process.env.DEBUG;
 
 var PARENT_ORIGINS = ['http://localhost:9876', 'http://' + localhost + ':9876'];
 var CHILD_HOST = localhost;
-var CHILD_PORT = '6789';
+var CHILD_PORT = '9877';
 var CHILD_ORIGIN = 'http://' + CHILD_HOST + ':' + CHILD_PORT;
 var CHILD_PATH = '/test/child';
 

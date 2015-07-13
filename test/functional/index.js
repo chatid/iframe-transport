@@ -11,7 +11,6 @@ afterEach(function() {
 
 it.only("facilitates multiplexed communication across origins", function(done) {
   var childStub = function(exec, ift) {
-    exec.log("FROM CHILD TO PARENT", PARENT_ORIGINS);
     ift.child({
       trustedOrigins: PARENT_ORIGINS
     }).ready(function(manager) {
@@ -27,12 +26,10 @@ it.only("facilitates multiplexed communication across origins", function(done) {
     });
   };
 
-  console.log("CREATE CHILD", CHILD_ORIGIN, CHILD_PATH, location.href);
   manager = ift.parent({
     childOrigin: CHILD_ORIGIN,
     childPath: CHILD_PATH
   });
-  console.log("CHILD CREATED", manager.transport.iframe.src);
   manager.ready(function() {
     manager.service('exec', Exec).code(childStub);
 

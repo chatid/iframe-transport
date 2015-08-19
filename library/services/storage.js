@@ -1,7 +1,8 @@
-var Service = require('../base/service'),
-    support = require('../util/support'),
-    isArray = require('../util/isArray'),
-    mixin   = require('../util/mixin');
+var Service   = require('../base/service'),
+    lsWrapper = require('../util/lsWrapper');
+    support   = require('../util/support'),
+    isArray   = require('../util/isArray'),
+    mixin     = require('../util/mixin');
 
 mixin(support, {
   storageEventTarget: ('onstorage' in window ? window : document)
@@ -11,6 +12,7 @@ mixin(support, {
 var Provider = Service.extend({
 
   constructor: function(channel, storage) {
+    this.storage = storage || lsWrapper;
     this.listen();
     Service.apply(this, arguments);
   },
@@ -22,16 +24,15 @@ var Provider = Service.extend({
   },
 
   get: function(key) {
-    return this.deserialize(localStorage.getItem(key));
+    return this.deserialize(this.storage.get(key));
   },
 
   set: function(key, value, options) {
-    return localStorage.setItem(key, this.serialize(value));
+    return this.storage.set(key, this.serialize(value));
   },
 
   unset: function(keys) {
-    if (!(isArray(keys))) keys = [keys];
-    for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
+    this.storage.unset(keys);
   },
 
   serialize: function(data) {

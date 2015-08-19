@@ -11,41 +11,41 @@
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-/******/
+
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/
+
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-/******/
+
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-/******/
+
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
+
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-/******/
+
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
-/******/
+
+
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-/******/
+
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-/******/
+
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-/******/
+
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -54,21 +54,42 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Service = __webpack_require__(6);
-	
+	var Service = __webpack_require__(6),
+	    slice = [].slice;
+
 	var Exec = Service.extend({
-	
+
+	  constructor: function(channel, deps) {
+	    this.deps = deps || [];
+	    Service.apply(this, arguments);
+	  },
+
 	  code: function(code) {
 	    this.channel.request('_code', [code.toString()]);
 	  },
-	
+
+	  log: function() {
+	    this.channel.request('_log', slice.call(arguments));
+	  },
+
 	  _code: function(code) {
-	    var exec = this;
-	    eval('(' + code + ')(exec)');
+	    var exec = this, deps = 'exec';
+	    for (var i = 0; i < this.deps.length; i++) {
+	      deps += ', this.deps[' + i + ']';
+	    }
+	    eval('(' + code + ')(' + deps + ')');
+	  },
+
+	  _log: function() {
+	    try {
+	      console.log.apply(console, arguments);
+	    } catch (e) {
+	      console.log(JSON.stringify(slice.call(arguments)));
+	    }
 	  }
-	
+
 	});
-	
+
 	module.exports = Exec;
 
 
@@ -77,7 +98,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var slice = [].slice;
-	
+
 	// (ref `_.extend`)
 	// Extend a given object with all the properties of the passed-in object(s).
 	var mixin = module.exports = function(obj) {
@@ -105,15 +126,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	var mixin   = __webpack_require__(1),
 	    extend  = __webpack_require__(13),
 	    Events  = __webpack_require__(12);
-	
+
 	// Base class for implementing a service provider or consumer. Provides methods
 	// for sending a request or response to be routed over a given channel.
 	var Service = module.exports = function(channel) {
 	  this.channel = channel;
 	};
-	
+
 	mixin(Service.prototype, Events);
-	
+
 	Service.extend = extend;
 
 
@@ -128,9 +149,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Events
 	// ------
-	
+
 	var slice = [].slice;
-	
+
 	// (ref `Backbone.Events`)
 	// A module that can be mixed in to any object to provide it with custom events.
 	var Events = module.exports = {
@@ -142,7 +163,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	    return this;
 	  },
-	
+
 	  off: function(name, callback) {
 	    if (!this._events) return this;
 	    if (!name) {
@@ -159,11 +180,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	  },
-	
+
 	  trigger: function(name) {
 	    if (!this._events) return this;
 	    var args = slice.call(arguments, 1);
-	
+
 	    var listeners = this._events[name] || [],
 	        i = listeners.length;
 	    while (i--) {
@@ -178,27 +199,27 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var mixin = __webpack_require__(1);
-	
+
 	// (ref Backbone `extend`)
 	// Helper function to correctly set up the prototype chain, for subclasses.
 	module.exports = function(protoProps, staticProps) {
 	  var parent = this;
 	  var child;
-	
+
 	  if (protoProps && protoProps.hasOwnProperty('constructor')) {
 	    child = protoProps.constructor;
 	  } else {
 	    child = function(){ return parent.apply(this, arguments); };
 	  }
-	
+
 	  mixin(child, parent, staticProps);
-	
+
 	  var Surrogate = function(){ this.constructor = child; };
 	  Surrogate.prototype = parent.prototype;
 	  child.prototype = new Surrogate;
-	
+
 	  mixin(child.prototype, protoProps);
-	
+
 	  return child;
 	};
 
@@ -207,4 +228,3 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ ])
 });
 ;
-//# sourceMappingURL=Exec.js.map

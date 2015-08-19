@@ -11,41 +11,41 @@
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-/******/
+
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/
+
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-/******/
+
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-/******/
+
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
+
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-/******/
+
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
-/******/
+
+
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-/******/
+
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-/******/
+
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-/******/
+
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -58,47 +58,47 @@ return /******/ (function(modules) { // webpackBootstrap
 	    support = __webpack_require__(8),
 	    isArray = __webpack_require__(9),
 	    mixin   = __webpack_require__(1);
-	
+
 	mixin(support, {
 	  storageEventTarget: ('onstorage' in window ? window : document)
 	});
-	
+
 	// Implement the LocalStorage service from a provider's perspective.
 	var Provider = Service.extend({
-	
+
 	  constructor: function(channel, storage) {
 	    this.listen();
 	    Service.apply(this, arguments);
 	  },
-	
+
 	  listen: function() {
 	    support.on(support.storageEventTarget, 'storage', function(evt) {
 	      this.onStorage(evt);
 	    }, this);
 	  },
-	
+
 	  get: function(key) {
 	    return this.deserialize(localStorage.getItem(key));
 	  },
-	
+
 	  set: function(key, value, options) {
 	    return localStorage.setItem(key, this.serialize(value));
 	  },
-	
+
 	  unset: function(keys) {
 	    if (!(isArray(keys))) keys = [keys];
 	    for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
 	  },
-	
+
 	  serialize: function(data) {
 	    return JSON.stringify(data);
 	  },
-	
+
 	  deserialize: function(data) {
 	    try { return JSON.parse(data); }
 	    catch (e) { return data; }
 	  },
-	
+
 	  onStorage: function(evt) {
 	    if (evt) {
 	      // IE9+: Don't trigger if value didn't change
@@ -107,27 +107,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // IE8: `evt` is undefined
 	      evt = {};
 	    }
-	
+
 	    this.channel.request('trigger', ['change', {
 	      key: evt.key,
 	      oldValue: this.deserialize(evt.oldValue),
 	      newValue: this.deserialize(evt.newValue)
 	    }]);
 	  },
-	
+
 	  destroy: function() {
 	    support.off(support.storageEventTarget, 'storage', this.onStorage);
 	  }
-	
+
 	});
-	
+
 	// Implement the LocalStorage service from a consumer's perspective.
 	var Consumer = Service.extend({
-	
+
 	  get: function(key, callback) {
 	    this.channel.request('get', [key], callback);
 	  },
-	
+
 	  set: function(key, value, options, callback) {
 	    if (typeof options === 'function') {
 	      callback = options;
@@ -135,16 +135,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else {
 	      options = options || {};
 	    }
-	
+
 	    this.channel.request('set', [key, value, options], callback);
 	  },
-	
+
 	  unset: function(keys, callback) {
 	    this.channel.request('unset', [keys], callback);
 	  }
-	
+
 	});
-	
+
 	module.exports = {
 	  Provider: Provider,
 	  Consumer: Consumer
@@ -156,7 +156,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var slice = [].slice;
-	
+
 	// (ref `_.extend`)
 	// Extend a given object with all the properties of the passed-in object(s).
 	var mixin = module.exports = function(obj) {
@@ -184,15 +184,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	var mixin   = __webpack_require__(1),
 	    extend  = __webpack_require__(13),
 	    Events  = __webpack_require__(12);
-	
+
 	// Base class for implementing a service provider or consumer. Provides methods
 	// for sending a request or response to be routed over a given channel.
 	var Service = module.exports = function(channel) {
 	  this.channel = channel;
 	};
-	
+
 	mixin(Service.prototype, Events);
-	
+
 	Service.extend = extend;
 
 
@@ -238,7 +238,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var toString = Object.prototype.toString;
-	
+
 	module.exports = Array.isArray || function(obj) {
 	  return toString.call(obj) === '[object Array]';
 	}
@@ -252,9 +252,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Events
 	// ------
-	
+
 	var slice = [].slice;
-	
+
 	// (ref `Backbone.Events`)
 	// A module that can be mixed in to any object to provide it with custom events.
 	var Events = module.exports = {
@@ -266,7 +266,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	    return this;
 	  },
-	
+
 	  off: function(name, callback) {
 	    if (!this._events) return this;
 	    if (!name) {
@@ -283,11 +283,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	  },
-	
+
 	  trigger: function(name) {
 	    if (!this._events) return this;
 	    var args = slice.call(arguments, 1);
-	
+
 	    var listeners = this._events[name] || [],
 	        i = listeners.length;
 	    while (i--) {
@@ -302,27 +302,27 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var mixin = __webpack_require__(1);
-	
+
 	// (ref Backbone `extend`)
 	// Helper function to correctly set up the prototype chain, for subclasses.
 	module.exports = function(protoProps, staticProps) {
 	  var parent = this;
 	  var child;
-	
+
 	  if (protoProps && protoProps.hasOwnProperty('constructor')) {
 	    child = protoProps.constructor;
 	  } else {
 	    child = function(){ return parent.apply(this, arguments); };
 	  }
-	
+
 	  mixin(child, parent, staticProps);
-	
+
 	  var Surrogate = function(){ this.constructor = child; };
 	  Surrogate.prototype = parent.prototype;
 	  child.prototype = new Surrogate;
-	
+
 	  mixin(child.prototype, protoProps);
-	
+
 	  return child;
 	};
 
@@ -331,4 +331,3 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ ])
 });
 ;
-//# sourceMappingURL=IFTStorageService.js.map

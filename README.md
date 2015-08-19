@@ -43,3 +43,11 @@ $ http-server -p 4000
 ```
 
 Open `http://127.0.0.1:8000/example/parent.html`
+
+### Tests
+
+    $ npm test
+
+**Sauce Labs**
+
+    $ npm run test-sauce

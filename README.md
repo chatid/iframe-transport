@@ -29,9 +29,13 @@ ift.child({
 
 ### Services
 
-**LocalStorage Service**
+**LocalStorage**
 
 Persist data across domains.
+
+**Exec**
+
+Execute arbitrary code across frames.
 
 ### Example
 

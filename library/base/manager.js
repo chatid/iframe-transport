@@ -1,7 +1,8 @@
 var Service = require('./service'),
     Channel = require('./channel'),
     isArray = require('../util/isArray'),
-    mixin   = require('../util/mixin');
+    mixin   = require('../util/mixin'),
+    slice   = [].slice;
 
 function construct(ctor, args) {
   function Surrogate() {
@@ -41,10 +42,10 @@ mixin(Manager.prototype, {
   service: function(namespace, serviceCtor, serviceArgs) {
     if (!namespace) throw new Error("Cannot create a service without a namespace");
     serviceCtor || (serviceCtor = Service);
-    serviceArgs || (serviceArgs = []);
+    serviceArgs = slice.call(arguments, 2);
 
     var channel = new Channel(namespace, this.transport);
-    var service = construct(serviceCtor, [channel, serviceArgs]);
+    var service = construct(serviceCtor, [channel].concat(serviceArgs));
 
     channel.on('request', function(id, method, params) {
       var result, error;

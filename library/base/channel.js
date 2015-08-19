@@ -92,6 +92,7 @@ mixin(Channel.prototype, Events, {
       throw new JSONRPCError(message.data.error.code, message.data.error.message);
     } else {
       this._processRPC(message.data);
+      this.trigger('incoming', message.data);
     }
   },
 

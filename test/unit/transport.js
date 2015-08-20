@@ -1,6 +1,6 @@
 var assert = require('assert');
 var ift = require('../../library/ift');
-var Transport = require('../../library/base/transport');
+var Transport = require('../../library/transport');
 var ParentTransport = ift.ParentTransport;
 var ChildTransport = ift.ChildTransport;
 var util = require('../util');

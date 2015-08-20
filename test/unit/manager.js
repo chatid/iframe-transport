@@ -1,8 +1,8 @@
 var assert = require('assert');
 var ift = require('../../library/ift');
-var Transport = require('../../library/base/transport');
+var Transport = require('../../library/transport');
 var Channel = ift.Channel;
-var Manager = require('../../library/base/manager');
+var Manager = require('../../library/manager');
 var Service = ift.Service;
 
 describe('Manager', function() {

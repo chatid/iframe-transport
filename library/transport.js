@@ -1,8 +1,8 @@
-var Events  = require('../util/events'),
-    support = require('../util/support'),
-    mixin   = require('../util/mixin'),
-    bind    = require('../util/bind'),
-    extend  = require('../util/extend');
+var Events  = require('./util/events'),
+    support = require('./util/support'),
+    mixin   = require('./util/mixin'),
+    bind    = require('./util/bind'),
+    extend  = require('./util/extend');
 
 // Base class for wrapping `iframe#postMessage`.
 var Transport = module.exports = function(targetOrigins) {

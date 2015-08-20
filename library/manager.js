@@ -1,7 +1,7 @@
 var Service = require('./service'),
     Channel = require('./channel'),
-    isArray = require('../util/isArray'),
-    mixin   = require('../util/mixin'),
+    isArray = require('./util/isArray'),
+    mixin   = require('./util/mixin'),
     slice   = [].slice;
 
 function construct(ctor, args) {

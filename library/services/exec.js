@@ -1,4 +1,4 @@
-var Service = require('../base/service'),
+var Service = require('../service'),
     slice = [].slice;
 
 var Exec = Service.extend({

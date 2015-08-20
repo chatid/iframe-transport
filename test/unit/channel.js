@@ -1,6 +1,6 @@
 var assert = require('assert');
 var ift = require('../../library/ift');
-var Transport = require('../../library/base/transport');
+var Transport = require('../../library/transport');
 var Channel = ift.Channel;
 
 describe('Channel', function() {

@@ -5,9 +5,9 @@
  * Targets modern browsers, IE8+
 */
 
-var Manager = require('./base/manager'),
-    ParentTransport = require('./base/parent-transport'),
-    ChildTransport = require('./base/child-transport');
+var Manager = require('./manager'),
+    ParentTransport = require('./parent-transport'),
+    ChildTransport = require('./child-transport');
 
 module.exports = {
 
@@ -15,9 +15,9 @@ module.exports = {
 
   ChildTransport: ChildTransport,
 
-  Channel: require('./base/channel'),
+  Channel: require('./channel'),
 
-  Service: require('./base/service'),
+  Service: require('./service'),
 
   // Factory function for creating appropriate transport.
   parent: function(options) {

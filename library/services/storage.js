@@ -1,4 +1,4 @@
-var Service   = require('../base/service'),
+var Service   = require('../service'),
     lsWrapper = require('../util/lsWrapper');
     support   = require('../util/support'),
     isArray   = require('../util/isArray'),

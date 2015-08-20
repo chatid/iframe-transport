@@ -1,7 +1,7 @@
 var Service   = require('../service'),
-    lsWrapper = require('../util/lsWrapper');
+    lsWrapper = require('../util/ls-wrapper');
     support   = require('../util/support'),
-    isArray   = require('../util/isArray'),
+    isArray   = require('../util/is-array'),
     mixin     = require('../util/mixin');
 
 mixin(support, {

@@ -1,6 +1,6 @@
 var Service = require('./service'),
     Channel = require('./channel'),
-    isArray = require('./util/isArray'),
+    isArray = require('./util/is-array'),
     mixin   = require('./util/mixin'),
     slice   = [].slice;
 

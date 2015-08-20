@@ -1,6 +1,6 @@
 var mixin   = require('../util/mixin'),
     extend  = require('../util/extend'),
-    Events  = require('../base/events');
+    Events  = require('../util/events');
 
 // Base class for implementing a service provider or consumer. Provides methods
 // for sending a request or response to be routed over a given channel.

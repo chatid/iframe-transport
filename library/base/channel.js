@@ -1,7 +1,7 @@
 var mixin    = require('../util/mixin'),
     support  = require('../util/support'),
     uniqueId = require('../util/uniqueId'),
-    Events   = require('./events');
+    Events   = require('../util/events');
 
 var JSONRPCError = function(code, message) {
   this.code = code;

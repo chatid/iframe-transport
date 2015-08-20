@@ -54,10 +54,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Service = __webpack_require__(6),
-	    support = __webpack_require__(8),
-	    isArray = __webpack_require__(9),
-	    mixin   = __webpack_require__(1);
+	var Service   = __webpack_require__(2),
+	    lsWrapper = __webpack_require__(3);
+	    support   = __webpack_require__(4),
+	    isArray   = __webpack_require__(5),
+	    mixin     = __webpack_require__(6);
 
 	mixin(support, {
 	  storageEventTarget: ('onstorage' in window ? window : document)
@@ -67,6 +68,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Provider = Service.extend({
 
 	  constructor: function(channel, storage) {
+	    this.storage = storage || lsWrapper;
 	    this.listen();
 	    Service.apply(this, arguments);
 	  },
@@ -78,16 +80,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 
 	  get: function(key) {
-	    return this.deserialize(localStorage.getItem(key));
+	    return this.deserialize(this.storage.get(key));
 	  },
 
 	  set: function(key, value, options) {
-	    return localStorage.setItem(key, this.serialize(value));
+	    return this.storage.set(key, this.serialize(value));
 	  },
 
 	  unset: function(keys) {
-	    if (!(isArray(keys))) keys = [keys];
-	    for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
+	    this.storage.unset(keys);
 	  },
 
 	  serialize: function(data) {
@@ -152,37 +153,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 1 */
+/* 1 */,
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var slice = [].slice;
-
-	// (ref `_.extend`)
-	// Extend a given object with all the properties of the passed-in object(s).
-	var mixin = module.exports = function(obj) {
-	  var args = slice.call(arguments, 1),
-	      props;
-	  for (var i = 0; i < args.length; i++) {
-	    if (props = args[i]) {
-	      for (var prop in props) {
-	        obj[prop] = props[prop];
-	      }
-	    }
-	  }
-	  return obj;
-	};
-
-
-/***/ },
-/* 2 */,
-/* 3 */,
-/* 4 */,
-/* 5 */,
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var mixin   = __webpack_require__(1),
-	    extend  = __webpack_require__(13),
+	var mixin   = __webpack_require__(6),
+	    extend  = __webpack_require__(11),
 	    Events  = __webpack_require__(12);
 
 	// Base class for implementing a service provider or consumer. Provides methods
@@ -197,8 +173,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */,
-/* 8 */
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = {
+	  get: function(key) {
+	    return localStorage.getItem(key);
+	  },
+	  set: function(key, value, options) {
+	    return localStorage.setItem(key, value);
+	  },
+	  unset: function(keys) {
+	    if (!(keys instanceof Array)) keys = [keys];
+	    for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
+	  }
+	};
+
+
+/***/ },
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var support = module.exports = {
@@ -234,7 +227,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var toString = Object.prototype.toString;
@@ -245,8 +238,62 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var slice = [].slice;
+
+	// (ref `_.extend`)
+	// Extend a given object with all the properties of the passed-in object(s).
+	var mixin = module.exports = function(obj) {
+	  var args = slice.call(arguments, 1),
+	      props;
+	  for (var i = 0; i < args.length; i++) {
+	    if (props = args[i]) {
+	      for (var prop in props) {
+	        obj[prop] = props[prop];
+	      }
+	    }
+	  }
+	  return obj;
+	};
+
+
+/***/ },
+/* 7 */,
+/* 8 */,
+/* 9 */,
 /* 10 */,
-/* 11 */,
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var mixin = __webpack_require__(6);
+
+	// (ref Backbone `extend`)
+	// Helper function to correctly set up the prototype chain, for subclasses.
+	module.exports = function(protoProps, staticProps) {
+	  var parent = this;
+	  var child;
+
+	  if (protoProps && protoProps.hasOwnProperty('constructor')) {
+	    child = protoProps.constructor;
+	  } else {
+	    child = function(){ return parent.apply(this, arguments); };
+	  }
+
+	  mixin(child, parent, staticProps);
+
+	  var Surrogate = function(){ this.constructor = child; };
+	  Surrogate.prototype = parent.prototype;
+	  child.prototype = new Surrogate;
+
+	  mixin(child.prototype, protoProps);
+
+	  return child;
+	};
+
+
+/***/ },
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -294,36 +341,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      listeners[i].callback.apply(listeners[i].context, args);
 	    }
 	  }
-	};
-
-
-/***/ },
-/* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var mixin = __webpack_require__(1);
-
-	// (ref Backbone `extend`)
-	// Helper function to correctly set up the prototype chain, for subclasses.
-	module.exports = function(protoProps, staticProps) {
-	  var parent = this;
-	  var child;
-
-	  if (protoProps && protoProps.hasOwnProperty('constructor')) {
-	    child = protoProps.constructor;
-	  } else {
-	    child = function(){ return parent.apply(this, arguments); };
-	  }
-
-	  mixin(child, parent, staticProps);
-
-	  var Surrogate = function(){ this.constructor = child; };
-	  Surrogate.prototype = parent.prototype;
-	  child.prototype = new Surrogate;
-
-	  mixin(child.prototype, protoProps);
-
-	  return child;
 	};
 
 

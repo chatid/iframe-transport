@@ -61,9 +61,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Targets modern browsers, IE8+
 	*/
 
-	var Manager = __webpack_require__(2),
-	    ParentTransport = __webpack_require__(3),
-	    ChildTransport = __webpack_require__(4);
+	var Manager = __webpack_require__(7),
+	    ParentTransport = __webpack_require__(1),
+	    ChildTransport = __webpack_require__(8);
 
 	module.exports = {
 
@@ -71,9 +71,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  ChildTransport: ChildTransport,
 
-	  Channel: __webpack_require__(5),
+	  Channel: __webpack_require__(9),
 
-	  Service: __webpack_require__(6),
+	  Service: __webpack_require__(2),
 
 	  // Factory function for creating appropriate transport.
 	  parent: function(options) {
@@ -100,8 +100,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 
 	  util: {
-	    mixin: __webpack_require__(1),
-	    debug: __webpack_require__(7)
+	    mixin: __webpack_require__(6),
+	    debug: __webpack_require__(10)
 	  }
 
 	};
@@ -111,112 +111,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var slice = [].slice;
-
-	// (ref `_.extend`)
-	// Extend a given object with all the properties of the passed-in object(s).
-	var mixin = module.exports = function(obj) {
-	  var args = slice.call(arguments, 1),
-	      props;
-	  for (var i = 0; i < args.length; i++) {
-	    if (props = args[i]) {
-	      for (var prop in props) {
-	        obj[prop] = props[prop];
-	      }
-	    }
-	  }
-	  return obj;
-	};
-
-
-/***/ },
-/* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Service = __webpack_require__(6),
-	    Channel = __webpack_require__(5),
-	    isArray = __webpack_require__(9),
-	    mixin   = __webpack_require__(1);
-
-	function construct(ctor, args) {
-	  function Surrogate() {
-	    return ctor.apply(this, args);
-	  }
-	  Surrogate.prototype = ctor.prototype;
-	  return new Surrogate();
-	}
-
-	var Manager = module.exports = function(transport, services) {
-	  this.transport = transport;
-	  services || (services = []);
-
-	  this.transport.ready(function() {
-	    var service;
-	    this.services = [];
-	    for (var i = 0; i < services.length; i++) {
-	      service = services[i];
-	      this.services.push(this.service(service.namespace, service.ctor));
-	    }
-	  }, this);
-	};
-
-	mixin(Manager.prototype, {
-
-	  ready: function(callback) {
-	    this.transport.ready(function() {
-	      callback.apply(this, [this].concat(this.services));
-	    }, this);
-	    return this;
-	  },
-
-	  channel: function(namespace) {
-	    return new Channel(namespace, this.transport);
-	  },
-
-	  service: function(namespace, serviceCtor, serviceArgs) {
-	    if (!namespace) throw new Error("Cannot create a service without a namespace");
-	    serviceCtor || (serviceCtor = Service);
-	    serviceArgs || (serviceArgs = []);
-
-	    var channel = new Channel(namespace, this.transport);
-	    var service = construct(serviceCtor, [channel, serviceArgs]);
-
-	    channel.on('request', function(id, method, params) {
-	      var result, error;
-	      try {
-	        result = isArray(params) ? service[method].apply(service, params) : service[method](params);
-	      } catch (e) {
-	        error = {
-	          code: -32000,
-	          message: e.message,
-	          data: {
-	            stack: e.stack
-	          }
-	        };
-	      }
-	      if (id) channel.respond(id, result, error);
-	    });
-
-	    return service;
-	  },
-
-	  wiretap: function(callback) {
-	    this.transport.wiretap(callback);
-	    return this;
-	  },
-
-	  destroy: function() {
-	    this.transport.destroy();
-	  }
-
-	});
-
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Transport = __webpack_require__(10);
+	var Transport = __webpack_require__(13);
 
 	// Implement the transport class from the parent's perspective.
 	var ParentTransport = module.exports = Transport.extend({
@@ -271,10 +166,183 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var mixin   = __webpack_require__(6),
+	    extend  = __webpack_require__(11),
+	    Events  = __webpack_require__(12);
+
+	// Base class for implementing a service provider or consumer. Provides methods
+	// for sending a request or response to be routed over a given channel.
+	var Service = module.exports = function(channel) {
+	  this.channel = channel;
+	};
+
+	mixin(Service.prototype, Events);
+
+	Service.extend = extend;
+
+
+/***/ },
+/* 3 */,
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Transport = __webpack_require__(10);
+	var support = module.exports = {
+	  // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
+	  has: function(object, property){
+	    var t = typeof object[property];
+	    return t == 'function' || (!!(t == 'object' && object[property])) || t == 'unknown';
+	  },
+	  on: function(target, name, callback) {
+	    support.has(window, 'addEventListener') ?
+	      target.addEventListener(name, callback, false) :
+	      target.attachEvent('on' + name, callback);
+	  },
+	  off: function(target, name, callback) {
+	    support.has(window, 'removeEventListener') ?
+	      target.removeEventListener(name, callback, false) :
+	      target.detachEvent('on' + name, callback);
+	  },
+	  // https://github.com/Modernizr/Modernizr/pull/1250/files
+	  structuredClones: (function() {
+	    var structuredClones = true;
+	    try {
+	      window.postMessage({
+	        toString: function () {
+	          structuredClones = false;
+	          return 'ping';
+	        }
+	      }, '*');
+	    } catch (e) {}
+	    return structuredClones;
+	  })()
+	};
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var toString = Object.prototype.toString;
+
+	module.exports = Array.isArray || function(obj) {
+	  return toString.call(obj) === '[object Array]';
+	}
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var slice = [].slice;
+
+	// (ref `_.extend`)
+	// Extend a given object with all the properties of the passed-in object(s).
+	var mixin = module.exports = function(obj) {
+	  var args = slice.call(arguments, 1),
+	      props;
+	  for (var i = 0; i < args.length; i++) {
+	    if (props = args[i]) {
+	      for (var prop in props) {
+	        obj[prop] = props[prop];
+	      }
+	    }
+	  }
+	  return obj;
+	};
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Service = __webpack_require__(2),
+	    Channel = __webpack_require__(9),
+	    isArray = __webpack_require__(5),
+	    mixin   = __webpack_require__(6),
+	    slice   = [].slice;
+
+	function construct(ctor, args) {
+	  function Surrogate() {
+	    return ctor.apply(this, args);
+	  }
+	  Surrogate.prototype = ctor.prototype;
+	  return new Surrogate();
+	}
+
+	var Manager = module.exports = function(transport, services) {
+	  this.transport = transport;
+	  services || (services = []);
+
+	  this.transport.ready(function() {
+	    var service;
+	    this.services = [];
+	    for (var i = 0; i < services.length; i++) {
+	      service = services[i];
+	      this.services.push(this.service(service.namespace, service.ctor));
+	    }
+	  }, this);
+	};
+
+	mixin(Manager.prototype, {
+
+	  ready: function(callback) {
+	    this.transport.ready(function() {
+	      callback.apply(this, [this].concat(this.services));
+	    }, this);
+	    return this;
+	  },
+
+	  channel: function(namespace) {
+	    return new Channel(namespace, this.transport);
+	  },
+
+	  service: function(namespace, serviceCtor, serviceArgs) {
+	    if (!namespace) throw new Error("Cannot create a service without a namespace");
+	    serviceCtor || (serviceCtor = Service);
+	    serviceArgs = slice.call(arguments, 2);
+
+	    var channel = new Channel(namespace, this.transport);
+	    var service = construct(serviceCtor, [channel].concat(serviceArgs));
+
+	    channel.on('request', function(id, method, params) {
+	      var result, error;
+	      try {
+	        result = isArray(params) ? service[method].apply(service, params) : service[method](params);
+	      } catch (e) {
+	        error = {
+	          code: -32000,
+	          message: e.message,
+	          data: {
+	            stack: e.stack
+	          }
+	        };
+	      }
+	      if (id) channel.respond(id, result, error);
+	    });
+
+	    return service;
+	  },
+
+	  wiretap: function(callback) {
+	    this.transport.wiretap(callback);
+	    return this;
+	  },
+
+	  destroy: function() {
+	    this.transport.destroy();
+	  }
+
+	});
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Transport = __webpack_require__(13);
 
 	// Implement the transport class from the child's perspective.
 	var ChildTransport = module.exports = Transport.extend({
@@ -300,12 +368,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 5 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mixin    = __webpack_require__(1),
-	    support  = __webpack_require__(8),
-	    uniqueId = __webpack_require__(11),
+	var mixin    = __webpack_require__(6),
+	    support  = __webpack_require__(4),
+	    uniqueId = __webpack_require__(14),
 	    Events   = __webpack_require__(12);
 
 	var JSONRPCError = function(code, message) {
@@ -397,6 +465,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      throw new JSONRPCError(message.data.error.code, message.data.error.message);
 	    } else {
 	      this._processRPC(message.data);
+	      this.trigger('incoming', message.data);
 	    }
 	  },
 
@@ -426,26 +495,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var mixin   = __webpack_require__(1),
-	    extend  = __webpack_require__(13),
-	    Events  = __webpack_require__(12);
-
-	// Base class for implementing a service provider or consumer. Provides methods
-	// for sending a request or response to be routed over a given channel.
-	var Service = module.exports = function(channel) {
-	  this.channel = channel;
-	};
-
-	mixin(Service.prototype, Events);
-
-	Service.extend = extend;
-
-
-/***/ },
-/* 7 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var slice = [].slice;
@@ -458,61 +508,95 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var support = module.exports = {
-	  // http://peter.michaux.ca/articles/feature-detection-state-of-the-art-browser-scripting
-	  has: function(object, property){
-	    var t = typeof object[property];
-	    return t == 'function' || (!!(t == 'object' && object[property])) || t == 'unknown';
-	  },
-	  on: function(target, name, callback) {
-	    support.has(window, 'addEventListener') ?
-	      target.addEventListener(name, callback, false) :
-	      target.attachEvent('on' + name, callback);
-	  },
-	  off: function(target, name, callback) {
-	    support.has(window, 'removeEventListener') ?
-	      target.removeEventListener(name, callback, false) :
-	      target.detachEvent('on' + name, callback);
-	  },
-	  // https://github.com/Modernizr/Modernizr/pull/1250/files
-	  structuredClones: (function() {
-	    var structuredClones = true;
-	    try {
-	      window.postMessage({
-	        toString: function () {
-	          structuredClones = false;
-	          return 'ping';
-	        }
-	      }, '*');
-	    } catch (e) {}
-	    return structuredClones;
-	  })()
+	var mixin = __webpack_require__(6);
+
+	// (ref Backbone `extend`)
+	// Helper function to correctly set up the prototype chain, for subclasses.
+	module.exports = function(protoProps, staticProps) {
+	  var parent = this;
+	  var child;
+
+	  if (protoProps && protoProps.hasOwnProperty('constructor')) {
+	    child = protoProps.constructor;
+	  } else {
+	    child = function(){ return parent.apply(this, arguments); };
+	  }
+
+	  mixin(child, parent, staticProps);
+
+	  var Surrogate = function(){ this.constructor = child; };
+	  Surrogate.prototype = parent.prototype;
+	  child.prototype = new Surrogate;
+
+	  mixin(child.prototype, protoProps);
+
+	  return child;
 	};
 
 
 /***/ },
-/* 9 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toString = Object.prototype.toString;
+	// Events
+	// ------
 
-	module.exports = Array.isArray || function(obj) {
-	  return toString.call(obj) === '[object Array]';
-	}
+	var slice = [].slice;
+
+	// (ref `Backbone.Events`)
+	// A module that can be mixed in to any object to provide it with custom events.
+	var Events = module.exports = {
+	  on: function(name, callback, context) {
+	    this._events || (this._events = {});
+	    (this._events[name] = this._events[name] || []).unshift({
+	      callback: callback,
+	      context: context || this
+	    });
+	    return this;
+	  },
+
+	  off: function(name, callback) {
+	    if (!this._events) return this;
+	    if (!name) {
+	      this._events = void 0;
+	      return this;
+	    }
+	    var listeners = this._events[name],
+	        i = listeners.length,
+	        listener;
+	    while (i--) {
+	      listener = listeners[i];
+	      if (!callback || listener.callback === callback) {
+	        listeners.splice(i, 1);
+	      }
+	    }
+	  },
+
+	  trigger: function(name) {
+	    if (!this._events) return this;
+	    var args = slice.call(arguments, 1);
+
+	    var listeners = this._events[name] || [],
+	        i = listeners.length;
+	    while (i--) {
+	      listeners[i].callback.apply(listeners[i].context, args);
+	    }
+	  }
+	};
 
 
 /***/ },
-/* 10 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Events  = __webpack_require__(12),
-	    support = __webpack_require__(8),
-	    mixin   = __webpack_require__(1),
-	    bind    = __webpack_require__(14),
-	    extend  = __webpack_require__(13);
+	    support = __webpack_require__(4),
+	    mixin   = __webpack_require__(6),
+	    bind    = __webpack_require__(15),
+	    extend  = __webpack_require__(11);
 
 	// Base class for wrapping `iframe#postMessage`.
 	var Transport = module.exports = function(targetOrigins) {
@@ -574,7 +658,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// (ref `_.uniqueId`)
@@ -586,88 +670,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Events
-	// ------
-
-	var slice = [].slice;
-
-	// (ref `Backbone.Events`)
-	// A module that can be mixed in to any object to provide it with custom events.
-	var Events = module.exports = {
-	  on: function(name, callback, context) {
-	    this._events || (this._events = {});
-	    (this._events[name] = this._events[name] || []).unshift({
-	      callback: callback,
-	      context: context || this
-	    });
-	    return this;
-	  },
-
-	  off: function(name, callback) {
-	    if (!this._events) return this;
-	    if (!name) {
-	      this._events = void 0;
-	      return this;
-	    }
-	    var listeners = this._events[name],
-	        i = listeners.length,
-	        listener;
-	    while (i--) {
-	      listener = listeners[i];
-	      if (!callback || listener.callback === callback) {
-	        listeners.splice(i, 1);
-	      }
-	    }
-	  },
-
-	  trigger: function(name) {
-	    if (!this._events) return this;
-	    var args = slice.call(arguments, 1);
-
-	    var listeners = this._events[name] || [],
-	        i = listeners.length;
-	    while (i--) {
-	      listeners[i].callback.apply(listeners[i].context, args);
-	    }
-	  }
-	};
-
-
-/***/ },
-/* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var mixin = __webpack_require__(1);
-
-	// (ref Backbone `extend`)
-	// Helper function to correctly set up the prototype chain, for subclasses.
-	module.exports = function(protoProps, staticProps) {
-	  var parent = this;
-	  var child;
-
-	  if (protoProps && protoProps.hasOwnProperty('constructor')) {
-	    child = protoProps.constructor;
-	  } else {
-	    child = function(){ return parent.apply(this, arguments); };
-	  }
-
-	  mixin(child, parent, staticProps);
-
-	  var Surrogate = function(){ this.constructor = child; };
-	  Surrogate.prototype = parent.prototype;
-	  child.prototype = new Surrogate;
-
-	  mixin(child.prototype, protoProps);
-
-	  return child;
-	};
-
-
-/***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// (ref `_.bind`)

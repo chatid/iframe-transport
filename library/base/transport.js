@@ -1,4 +1,4 @@
-var Events  = require('./events'),
+var Events  = require('../util/events'),
     support = require('../util/support'),
     mixin   = require('../util/mixin'),
     bind    = require('../util/bind'),

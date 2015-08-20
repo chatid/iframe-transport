@@ -54,7 +54,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Service = __webpack_require__(6),
+	var Service = __webpack_require__(2),
 	    slice = [].slice;
 
 	var Exec = Service.extend({
@@ -94,7 +94,30 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 1 */
+/* 1 */,
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var mixin   = __webpack_require__(6),
+	    extend  = __webpack_require__(11),
+	    Events  = __webpack_require__(12);
+
+	// Base class for implementing a service provider or consumer. Provides methods
+	// for sending a request or response to be routed over a given channel.
+	var Service = module.exports = function(channel) {
+	  this.channel = channel;
+	};
+
+	mixin(Service.prototype, Events);
+
+	Service.extend = extend;
+
+
+/***/ },
+/* 3 */,
+/* 4 */,
+/* 5 */,
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var slice = [].slice;
@@ -116,34 +139,40 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 2 */,
-/* 3 */,
-/* 4 */,
-/* 5 */,
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var mixin   = __webpack_require__(1),
-	    extend  = __webpack_require__(13),
-	    Events  = __webpack_require__(12);
-
-	// Base class for implementing a service provider or consumer. Provides methods
-	// for sending a request or response to be routed over a given channel.
-	var Service = module.exports = function(channel) {
-	  this.channel = channel;
-	};
-
-	mixin(Service.prototype, Events);
-
-	Service.extend = extend;
-
-
-/***/ },
 /* 7 */,
 /* 8 */,
 /* 9 */,
 /* 10 */,
-/* 11 */,
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var mixin = __webpack_require__(6);
+
+	// (ref Backbone `extend`)
+	// Helper function to correctly set up the prototype chain, for subclasses.
+	module.exports = function(protoProps, staticProps) {
+	  var parent = this;
+	  var child;
+
+	  if (protoProps && protoProps.hasOwnProperty('constructor')) {
+	    child = protoProps.constructor;
+	  } else {
+	    child = function(){ return parent.apply(this, arguments); };
+	  }
+
+	  mixin(child, parent, staticProps);
+
+	  var Surrogate = function(){ this.constructor = child; };
+	  Surrogate.prototype = parent.prototype;
+	  child.prototype = new Surrogate;
+
+	  mixin(child.prototype, protoProps);
+
+	  return child;
+	};
+
+
+/***/ },
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -191,36 +220,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      listeners[i].callback.apply(listeners[i].context, args);
 	    }
 	  }
-	};
-
-
-/***/ },
-/* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var mixin = __webpack_require__(1);
-
-	// (ref Backbone `extend`)
-	// Helper function to correctly set up the prototype chain, for subclasses.
-	module.exports = function(protoProps, staticProps) {
-	  var parent = this;
-	  var child;
-
-	  if (protoProps && protoProps.hasOwnProperty('constructor')) {
-	    child = protoProps.constructor;
-	  } else {
-	    child = function(){ return parent.apply(this, arguments); };
-	  }
-
-	  mixin(child, parent, staticProps);
-
-	  var Surrogate = function(){ this.constructor = child; };
-	  Surrogate.prototype = parent.prototype;
-	  child.prototype = new Surrogate;
-
-	  mixin(child.prototype, protoProps);
-
-	  return child;
 	};
 
 

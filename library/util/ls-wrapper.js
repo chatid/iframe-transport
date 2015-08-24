@@ -7,6 +7,6 @@ module.exports = {
   },
   unset: function(keys) {
     if (!(keys instanceof Array)) keys = [keys];
-    for (i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
+    for (var i = 0; i < keys.length; i++) localStorage.removeItem(keys[i]);
   }
 };

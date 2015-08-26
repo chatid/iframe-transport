@@ -142,4 +142,12 @@ describe('ChildTransport', function() {
     sinon.assert.calledWith(postMessage, 'ready', '*');
     postMessage.restore();
   });
+
+  it("can be configured with a targetOrigin", function() {
+    var postMessage = sinon.stub(window.parent, 'postMessage');
+    var transport = new ChildTransport(['http://origin'], 'http://target-origin');
+    sinon.assert.calledOnce(postMessage);
+    sinon.assert.calledWith(postMessage, 'ready', 'http://target-origin');
+    postMessage.restore();
+  })
 });

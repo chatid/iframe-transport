@@ -31,7 +31,7 @@ module.exports = {
   child: function(options) {
     options || (options = {});
     return new Manager(
-      new ChildTransport(options.trustedOrigins),
+      new ChildTransport(options.trustedOrigins, options.targetOrigin),
       options.services || []
     );
   },

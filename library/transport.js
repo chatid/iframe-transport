@@ -6,7 +6,7 @@ var Events  = require('./util/events'),
 
 // Base class for wrapping `iframe#postMessage`.
 var Transport = module.exports = function(targetOrigins) {
-  this.readyState = 0;
+  this.isReady = false;
   this.targetOrigins = targetOrigins || [];
   this.onMessage = bind(this.onMessage, this);
   this.listen();
@@ -17,7 +17,7 @@ mixin(Transport.prototype, Events, {
   ready: function(callback, context) {
     var transport = this, ready;
     context || (context = this);
-    if (this.isReady()) {
+    if (this.isReady) {
       callback.call(context, this);
     } else {
       this.on('ready', ready = function() {
@@ -39,10 +39,6 @@ mixin(Transport.prototype, Events, {
 
   // Implemented by subclasses.
   send: function() {},
-
-  isReady: function() {
-    return this.readyState === 1;
-  },
 
   wiretap: function(callback) {
     this.on('incoming', function(message) {

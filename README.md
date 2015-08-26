@@ -16,14 +16,13 @@ ift.parent({
 ```
 
 ```javascript
-ift.child({
+var manager = ift.child({
   trustedOrigins: ['http://parentapp.com']
-}).ready(function(manager) {
-  var channel = manager.channel('test');
-  channel.on('request', function(id, method, params) {
-    console.log(method, params[0]); // hello child!
-    channel.respond(id, 'hello parent!');
-  });
+});
+var channel = manager.channel('test');
+channel.on('request', function(id, method, params) {
+  console.log(method, params[0]); // hello child!
+  channel.respond(id, 'hello parent!');
 });
 ```
 

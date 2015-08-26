@@ -11,18 +11,17 @@ afterEach(function() {
 
 it("facilitates multiplexed communication across origins", function(done) {
   var childStub = function(exec, ift) {
-    ift.child({
+    var manager = ift.child({
       trustedOrigins: PARENT_ORIGINS
-    }).ready(function(manager) {
-      var channel1 = manager.channel('channel1');
-      channel1.on('request', function(id, method, params) {
-        channel1.respond(id, 'channel1 response');
-      });
+    });
+    var channel1 = manager.channel('channel1');
+    channel1.on('request', function(id, method, params) {
+      channel1.respond(id, 'channel1 response');
+    });
 
-      var channel2 = manager.channel('channel2');
-      channel2.on('request', function(id, method, params) {
-        channel2.respond(id, 'channel2 response');
-      });
+    var channel2 = manager.channel('channel2');
+    channel2.on('request', function(id, method, params) {
+      channel2.respond(id, 'channel2 response');
     });
   };
 
@@ -50,21 +49,20 @@ it("facilitates multiplexed communication across origins", function(done) {
 
 it("keeps track of callbacks", function(done) {
   var childStub = function(exec, ift) {
-    ift.child({
+    var manager = ift.child({
       trustedOrigins: PARENT_ORIGINS
-    }).ready(function(manager) {
-      var channel1 = manager.channel('channel1');
-      channel1.on('request', function(id, method, params) {
-        setTimeout(function() {
-          channel1.respond(id, method + params);
-        });
+    });
+    var channel1 = manager.channel('channel1');
+    channel1.on('request', function(id, method, params) {
+      setTimeout(function() {
+        channel1.respond(id, method + params);
       });
+    });
 
-      var channel2 = manager.channel('channel2');
-      channel2.on('request', function(id, method, params) {
-        setTimeout(function() {
-          channel2.respond(id, method + params);
-        });
+    var channel2 = manager.channel('channel2');
+    channel2.on('request', function(id, method, params) {
+      setTimeout(function() {
+        channel2.respond(id, method + params);
       });
     });
   };
@@ -107,23 +105,22 @@ it("can handle lots of traffic", function(done) {
   this.timeout(5000);
 
   var childStub = function(exec, ift) {
-    ift.child({
+    var manager = ift.child({
       trustedOrigins: PARENT_ORIGINS
-    }).ready(function(manager) {
-      var channel1 = manager.channel('channel1');
-      channel1.on('request', function(id, method, params) {
-        setTimeout(function() {
-          channel1.respond(id, params - 2);
-        });
+    });
+    var channel1 = manager.channel('channel1');
+    channel1.on('request', function(id, method, params) {
+      setTimeout(function() {
+        channel1.respond(id, params - 2);
       });
+    });
 
-      var channel2 = manager.channel('channel2');
-      channel2.on('request', function(id, method, params) {
-        setTimeout(function() {
-          channel2.respond(id, params + 4);
-        });
+    var channel2 = manager.channel('channel2');
+    channel2.on('request', function(id, method, params) {
+      setTimeout(function() {
+        channel2.respond(id, params + 4);
       });
-    })
+    });
   };
 
   manager = ift.parent({

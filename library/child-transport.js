@@ -4,13 +4,12 @@ var Transport = require('./transport');
 var ChildTransport = module.exports = Transport.extend({
 
   constructor: function() {
+    this.isReady = true;
     this.parent = window.parent;
     Transport.apply(this, arguments);
   },
 
   listen: function() {
-    this.readyState = 1;
-    this.trigger('ready');
     this.send('ready');
     Transport.prototype.listen.apply(this, arguments);
   },

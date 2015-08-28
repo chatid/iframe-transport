@@ -48,6 +48,8 @@ it("facilitates multiplexed communication across origins", function(done) {
 });
 
 it("keeps track of callbacks", function(done) {
+  this.timeout(4000);
+
   var childStub = function(exec, ift) {
     var manager = ift.child({
       trustedOrigins: PARENT_ORIGINS
@@ -102,7 +104,7 @@ it("keeps track of callbacks", function(done) {
 });
 
 it("can handle lots of traffic", function(done) {
-  this.timeout(5000);
+  this.timeout(10000);
 
   var childStub = function(exec, ift) {
     var manager = ift.child({
@@ -112,14 +114,16 @@ it("can handle lots of traffic", function(done) {
     channel1.on('request', function(id, method, params) {
       setTimeout(function() {
         channel1.respond(id, params - 2);
-      });
+        console.log("ping" + id);
+      }, Math.random() * 10);
     });
 
     var channel2 = manager.channel('channel2');
     channel2.on('request', function(id, method, params) {
       setTimeout(function() {
         channel2.respond(id, params + 4);
-      });
+        console.log("ping" + id);
+      }, Math.random() * 10);
     });
   };
 

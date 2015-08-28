@@ -11,7 +11,7 @@
       var childUrl = location.protocol + '//' + getChildOptions();
       ift.parent({
         childOrigin: childUrl,
-        childPath: location.pathname + '/example/exec/child.html'
+        childPath: getUrlPath('/example/storage/child.html')
       }).wiretap(function(direction, message) {
         ift.util.debug(direction, message);
       }).ready(function(manager) {

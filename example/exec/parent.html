@@ -6,9 +6,10 @@
   <body>
     <script type='text/javascript' src='../../dist/ift.js'></script>
     <script type='text/javascript' src='../../dist/Exec.js'></script>
+    <script type='text/javascript' src='../util.js'></script>
     <script type='text/javascript'>
       ift.parent({
-        childOrigin: 'http://127.0.0.1:4000',
+        childOrigin: location.protocol + '//' + getChildOptions(),
         childPath: '/example/exec/child.html'
       }).wiretap(function(direction, message) {
         ift.util.debug(direction, message);

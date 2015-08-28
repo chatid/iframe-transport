@@ -1,4 +1,5 @@
 var Transport = require('./transport');
+var bind = require('./util/bind');
 
 // Implement the transport class from the child's perspective.
 var ChildTransport = module.exports = Transport.extend({
@@ -7,11 +8,12 @@ var ChildTransport = module.exports = Transport.extend({
     this.isReady = true;
     this.parent = window.parent;
     Transport.apply(this, arguments);
-  },
 
-  listen: function() {
-    this.send('ready');
-    Transport.prototype.listen.apply(this, arguments);
+    // use this setTimeout to ensure child implementation is able define event
+    // listeners before parent is informed of readiness
+    setTimeout(bind(function() {
+      this.send('ready');
+    }, this), 0);
   },
 
   send: function(message) {

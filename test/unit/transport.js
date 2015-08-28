@@ -135,11 +135,14 @@ describe('ParentTransport', function() {
 });
 
 describe('ChildTransport', function() {
-  it("sends 'ready' message on instantiation", function() {
+  it("sends 'ready' message on instantiation", function(done) {
     var postMessage = sinon.stub(window.parent, 'postMessage');
     var transport = new ChildTransport(['http://origin']);
-    sinon.assert.calledOnce(postMessage);
-    sinon.assert.calledWith(postMessage, 'ready', '*');
-    postMessage.restore();
+    setTimeout(function() {
+      sinon.assert.calledOnce(postMessage);
+      sinon.assert.calledWith(postMessage, 'ready', '*');
+      postMessage.restore();
+      done();
+    }, 0);
   });
 });

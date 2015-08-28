@@ -8,9 +8,10 @@
     <script type='text/javascript' src='../../dist/IFTStorageService.js'></script>
     <script type='text/javascript' src='../util.js'></script>
     <script type='text/javascript'>
+      var childUrl = location.protocol + '//' + getChildOptions();
       ift.parent({
-        childOrigin: location.protocol + '//' + getChildOptions(),
-        childPath: '/example/storage/child.html'
+        childOrigin: childUrl,
+        childPath: childUrl + '/example/storage/child.html'
       }).wiretap(function(direction, message) {
         ift.util.debug(direction, message);
       }).ready(function(manager) {

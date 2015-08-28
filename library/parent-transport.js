@@ -15,7 +15,7 @@ var ParentTransport = module.exports = Transport.extend({
     var once;
     this.on('incoming', once = function(message) {
       if (message !== 'ready') return;
-      this.readyState = 1;
+      this.isReady = true;
       this.trigger('ready');
       this.off('incoming', once, this);
     }, this);

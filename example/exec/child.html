@@ -11,9 +11,7 @@
         trustedOrigins: ['http://127.0.0.1:8000']
       }).wiretap(function(direction, message) {
         ift.util.debug(direction, message);
-      }).ready(function(manager) {
-        var exec = manager.service('example', Exec);
-      });
+      }).service('example', Exec);
     </script>
   </body>
 </html>

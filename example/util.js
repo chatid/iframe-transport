@@ -3,9 +3,9 @@ var getChildOptions = function() {
 }
 
 var getUrlPath = function(path) {
-  var firstLocationPath = location.pathname.split("/")[0];
-  var pathArr = path.split("/");
-  if (pathArr[0] !== firstLocationPath)
+  var firstLocationPath = location.pathname.split("/")[1];
+  var firstPath = path.split("/")[1];
+  if (firstPath !== firstLocationPath)
     return "/" + firstLocationPath + path;
   return path;
 }

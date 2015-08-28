@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Iframe Storage | Parent</title>
+  </head>
+  <body>
+    <script type='text/javascript' src='../../dist/ift.js'></script>
+    <script type='text/javascript' src='../../dist/Exec.js'></script>
+    <script type='text/javascript'>
+      ift.parent({
+        childOrigin: 'http://127.0.0.1:4000',
+        childPath: '/example/exec/child.html'
+      }).wiretap(function(direction, message) {
+        ift.util.debug(direction, message);
+      }).ready(function(manager) {
+        var exec = manager.service('example', Exec);
+        exec.code(function(exec) {
+          console.log("parent telling child to log hello!");
+          exec.code(function() {
+            console.log("parent telling child to tell parent to log hello!");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

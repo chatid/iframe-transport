@@ -8,8 +8,8 @@ var Exec = Service.extend({
     Service.apply(this, arguments);
   },
 
-  code: function(code) {
-    this.channel.request('_code', [code.toString()]);
+  code: function(code, callback) {
+    this.channel.request('_code', [code.toString()], callback);
   },
 
   log: function() {

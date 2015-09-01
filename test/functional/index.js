@@ -114,7 +114,6 @@ it("can handle lots of traffic", function(done) {
     channel1.on('request', function(id, method, params) {
       setTimeout(function() {
         channel1.respond(id, params - 2);
-        console.log("ping" + id);
       }, Math.random() * 10);
     });
 
@@ -122,7 +121,6 @@ it("can handle lots of traffic", function(done) {
     channel2.on('request', function(id, method, params) {
       setTimeout(function() {
         channel2.respond(id, params + 4);
-        console.log("ping" + id);
       }, Math.random() * 10);
     });
   };

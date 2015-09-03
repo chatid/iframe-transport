@@ -1,7 +1,8 @@
 var mixin    = require('./util/mixin'),
     support  = require('./util/support'),
     uniqueId = require('./util/unique-id'),
-    Events   = require('./util/events');
+    Events   = require('./util/events'),
+    indexOf  = require('./util/index-of');
 
 var JSONRPCError = function(code, message) {
   this.code = code;
@@ -12,7 +13,7 @@ JSONRPCError.prototype = Error.prototype;
 
 // Facilitate multiplexed JSON-RPC.
 var Channel = module.exports = function(namespace, transport) {
-  if (Channel._namespaces.indexOf(namespace) >= 0) {
+  if (indexOf(Channel._namespaces, namespace) >= 0) {
     throw new Error("Channel with namespace '" + namespace + "' already exists");
   }
   Channel._namespaces.push(namespace);

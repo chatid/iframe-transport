@@ -2,7 +2,8 @@ var Events  = require('./util/events'),
     support = require('./util/support'),
     mixin   = require('./util/mixin'),
     bind    = require('./util/bind'),
-    extend  = require('./util/extend');
+    extend  = require('./util/extend'),
+    indexOf = require('./util/index-of');
 
 // Base class for wrapping `iframe#postMessage`.
 var Transport = module.exports = function(targetOrigins) {
@@ -28,7 +29,7 @@ mixin(Transport.prototype, Events, {
   },
 
   onMessage: function(evt) {
-    if (this.targetOrigins.indexOf(evt.origin) < 0) return;
+    if (indexOf(this.targetOrigins, evt.origin) < 0) return;
     this.trigger('incoming', evt.data);
   },
 

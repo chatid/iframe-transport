@@ -8,6 +8,12 @@ var Service = module.exports = function(channel) {
   this.channel = channel;
 };
 
-mixin(Service.prototype, Events);
+mixin(Service.prototype, Events, {
+
+  destroy: function() {
+    this.channel.destroy();
+  }
+
+});
 
 Service.extend = extend;

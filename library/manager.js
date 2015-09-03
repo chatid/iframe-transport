@@ -14,6 +14,7 @@ function construct(ctor, args) {
 
 var Manager = module.exports = function(transport, services) {
   this.transport = transport;
+  this.channels = [];
   services || (services = []);
 
   this.transport.ready(function() {
@@ -36,7 +37,9 @@ mixin(Manager.prototype, {
   },
 
   channel: function(namespace) {
-    return new Channel(namespace, this.transport);
+    var channel = new Channel(namespace, this.transport);
+    this.channels.push(channel);
+    return channel;
   },
 
   service: function(namespace, serviceCtor, serviceArgs) {
@@ -72,6 +75,13 @@ mixin(Manager.prototype, {
   },
 
   destroy: function() {
+    var channel, service;
+    while (channel = this.channels.shift()) {
+      channel.destroy();
+    }
+    while (service = this.services.shift()) {
+      service.destroy();
+    }
     this.transport.destroy();
   }
 

@@ -83,6 +83,7 @@ mixin(Channel.prototype, Events, {
   },
 
   destroy: function() {
+    Channel._namespaces.splice(indexOf(Channel._namespaces, this.namespace), 1);
     this.off();
   },
 

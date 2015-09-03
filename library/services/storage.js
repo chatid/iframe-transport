@@ -11,9 +11,10 @@ mixin(support, {
 // Implement the LocalStorage service from a provider's perspective.
 var Provider = Service.extend({
 
-  constructor: function(channel, storage) {
+  constructor: function(channel, storage, options) {
     this.storage = storage || lsWrapper;
-    this.listen();
+    options || (options = {});
+    if (options.listen !== false) this.listen();
     Service.apply(this, arguments);
   },
 

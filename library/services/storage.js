@@ -14,7 +14,7 @@ var Provider = Service.extend({
   constructor: function(channel, storage, options) {
     this.storage = storage || lsWrapper;
     options || (options = {});
-    if (options.listen !== false) this.listen();
+    if (options.handleEvents !== false) this.listen();
     Service.apply(this, arguments);
   },
 
@@ -29,7 +29,7 @@ var Provider = Service.extend({
   },
 
   set: function(key, value, options) {
-    return this.storage.set(key, this.serialize(value));
+    return this.storage.set(key, this.serialize(value), options);
   },
 
   unset: function(keys) {

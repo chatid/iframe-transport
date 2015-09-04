@@ -29,7 +29,7 @@ var Provider = Service.extend({
   },
 
   set: function(key, value, options) {
-    return this.storage.set(key, this.serialize(value));
+    return this.storage.set(key, this.serialize(value), options);
   },
 
   unset: function(keys) {

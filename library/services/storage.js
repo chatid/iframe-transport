@@ -14,7 +14,7 @@ var Provider = Service.extend({
   constructor: function(channel, storage, options) {
     this.storage = storage || lsWrapper;
     options || (options = {});
-    if (options.listen !== false) this.listen();
+    if (options.handleEvents !== false) this.listen();
     Service.apply(this, arguments);
   },
 

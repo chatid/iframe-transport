@@ -1,10 +1,13 @@
 var webpack = require('webpack');
 
 module.exports = {
-    entry: "./src/main",
+    entry: {
+      "main": "./src/main",
+      "IFT": "./lib/IFT"
+    },
     output: {
         path: "./build",
-        filename: 'main.js',
+        filename: '[name].js',
         publicPath: '/build/'
     },
     module: {

@@ -1,13 +1,23 @@
+var webpack = require('webpack');
+
 module.exports = {
-  entry: {
-    'ift': './library/ift',
-    'IFTStorageService': './library/services/storage',
-    'Exec': './library/services/exec'
-  },
-  output: {
-    path: __dirname + '/dist',
-    filename: '[name].js',
-    library: '[name]',
-    libraryTarget: 'umd'
-  }
+    entry: "./src/main",
+    output: {
+        path: "./build",
+        filename: 'main.js',
+        publicPath: '/build/'
+    },
+    module: {
+        loaders: [
+            {
+              test: /\.js?$/,
+              exclude: /(node_modules)/,
+              loader: 'babel?presets[]=es2015&presets[]=react&presets[]=stage-0'
+            },
+            {
+              test: /\.json?$/,
+              loader: 'json'
+            }
+        ]
+    }
 };

@@ -1,48 +1,30 @@
 {
   "name": "iframe-transport",
-  "version": "0.0.1",
-  "description": "Thin postMessage wrapper for processing method calls, callbacks, and events",
-  "main": "library/ift.js",
-  "directories": {
-    "example": "example",
-    "test": "test"
-  },
+  "version": "1.0.0",
+  "main": "lib/IFT.js",
   "scripts": {
-    "test": "karma start --single-run",
-    "test-sauce": "karma start karma-sauce.conf.js"
-  },
-  "devDependencies": {
-    "express": "^4.12.3",
-    "karma": "^0.12.31",
-    "karma-chrome-launcher": "^0.1.8",
-    "karma-cli": "0.0.4",
-    "karma-firefox-launcher": "^0.1.4",
-    "karma-mocha": "^0.1.10",
-    "karma-phantomjs-launcher": "^0.1.4",
-    "karma-safari-launcher": "^0.1.1",
-    "karma-sauce-launcher": "^0.2.14",
-    "karma-sinon": "^1.0.4",
-    "karma-sourcemap-loader": "^0.3.4",
-    "karma-webpack": "^1.5.0",
-    "rewire": "^2.3.3",
-    "rewire-webpack": "^1.0.0",
-    "webpack": "^1.8.10",
-    "webpack-dev-middleware": "^1.0.11"
+    "start": "webpack-dev-server -d --colors --cache --hot --config webpack.config.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/chatid/iframe-transport.git"
+    "url": "https://github.com/chatid/iframe-transport.git"
   },
-  "keywords": [
-    "postMessage",
-    "iframe",
-    "cross domain messaging"
-  ],
-  "author": "Misha Ponizil <misha.ponizil@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/chatid/iframe-transport/issues"
+  "devDependencies": {
+    "babel-loader": "^6.1.0",
+    "file-loader": "^0.8.4",
+    "request": "^2.65.0",
+    "webpack": "^1.12.2",
+    "webpack-dev-server": "1.12.1"
   },
-  "homepage": "https://github.com/chatid/iframe-transport",
-  "dependencies": {}
+  "dependencies": {
+    "babel-core": "^6.2.0",
+    "babel-polyfill": "^6.5.0",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-react": "^6.3.13",
+    "babel-preset-stage-0": "^6.3.13",
+    "ima.js-babel6-polyfill": "^0.1.1",
+    "json-loader": "^0.5.4",
+    "pouchdb": "^5.2.1",
+    "requirejs": "^2.2.0"
+  }
 }

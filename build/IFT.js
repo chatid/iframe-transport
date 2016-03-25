@@ -46,11 +46,17 @@
 
 	'use strict';
 
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	// [I][F]rame [T]ranspot
 
 	var IFRAME_SRC = '/iframe.html';
+
+	var iftInstance = null;
 
 	var IFT = function IFT() {
 	  var _this = this;
@@ -117,20 +123,24 @@
 	    return _this.iframe_send({ action: "reset" });
 	  };
 
-	  this.iframe_domain = chatid_domain; // No trailing slash
-	  this.create_iframe();
-	  this.start_listening();
-	  this.cbs = {};
+	  if (iftInstance) {
+	    return iftInstance;
+	  } else {
+	    this.iframe_domain = chatid_domain; // No trailing slash
+	    this.create_iframe();
+	    this.start_listening();
+	    this.cbs = {};
+	    iftInstance = this;
+	    return iftInstance;
+	  }
 	}
 
 	// API
 
 	;
 
+	exports.default = IFT;
 	;
-
-	var iftInstance = new IFT();
-	module.exports = iftInstance;
 
 /***/ }
 /******/ ]);

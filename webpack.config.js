@@ -6,9 +6,11 @@ module.exports = {
       "IFT": "./lib/IFT"
     },
     output: {
-        path: "./build",
-        filename: '[name].js',
-        publicPath: '/build/'
+      libraryTarget: 'commonjs2',
+      library: 'iframe-transport',
+      path: "./build",
+      filename: '[name].js',
+      publicPath: '/build/'
     },
     module: {
         loaders: [

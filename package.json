@@ -1,7 +1,7 @@
 {
   "name": "iframe-transport",
   "version": "1.0.1",
-  "main": "lib/IFT.js",
+  "main": "build/IFT.js",
   "scripts": {
     "start": "webpack-dev-server -d --colors --cache --hot --config webpack.config.js"
   },

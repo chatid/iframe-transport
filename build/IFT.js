@@ -57,8 +57,6 @@ module.exports =
 
 	var IFRAME_SRC = '/iframe.html';
 
-	var iftInstance = null;
-
 	var IFT = function IFT() {
 	  var _this = this;
 
@@ -124,24 +122,20 @@ module.exports =
 	    return _this.iframe_send({ action: "reset" });
 	  };
 
-	  if (iftInstance) {
-	    return iftInstance;
-	  } else {
-	    this.iframe_domain = chatid_domain; // No trailing slash
-	    this.create_iframe();
-	    this.start_listening();
-	    this.cbs = {};
-	    iftInstance = this;
-	    return iftInstance;
-	  }
+	  this.iframe_domain = chatid_domain; // No trailing slash
+	  this.create_iframe();
+	  this.start_listening();
+	  this.cbs = {};
 	}
 
 	// API
 
 	;
 
-	exports.default = IFT;
 	;
+
+	var iftInstance = new IFT();
+	exports.default = iftInstance;
 
 /***/ }
 /******/ ]);

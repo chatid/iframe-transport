@@ -10673,6 +10673,9 @@ module.exports =
 	  };
 	}
 
+	// in the browser, use a prefix. in Node, don't bother having one
+	WebSqlPouch.use_prefix = !!(typeof process === 'undefined' || process.browser);
+
 	WebSqlPouch.valid = valid;
 
 	var adapters = {
@@ -10685,7 +10688,7 @@ module.exports =
 	PouchDB.Errors = allErrors;
 	PouchDB.replicate = replication.replicate;
 	PouchDB.sync = sync;
-	PouchDB.version = '5.3.0'; // will be automatically supplied by build.sh
+	PouchDB.version = '5.3.1'; // will be automatically supplied by build.sh
 	PouchDB.adapter('http', HttpPouch);
 	PouchDB.adapter('https', HttpPouch);
 
@@ -24962,7 +24965,7 @@ module.exports =
 		"_args": [
 			[
 				"levelup@1.3.1",
-				"/Users/pjacobs/projects/iframe-transport/node_modules/pouchdb"
+				"/Users/Nathan/Workspaces/ChatID/iframe-transport/node_modules/pouchdb"
 			]
 		],
 		"_from": "levelup@1.3.1",
@@ -24991,7 +24994,7 @@ module.exports =
 		"_shasum": "8030758bb1b1dafdb71bfb55fff0caa2740cb846",
 		"_shrinkwrap": null,
 		"_spec": "levelup@1.3.1",
-		"_where": "/Users/pjacobs/projects/iframe-transport/node_modules/pouchdb",
+		"_where": "/Users/Nathan/Workspaces/ChatID/iframe-transport/node_modules/pouchdb",
 		"browser": {
 			"leveldown": false,
 			"leveldown/package": false,

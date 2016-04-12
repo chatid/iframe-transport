@@ -6,11 +6,11 @@ module.exports = {
       "IFT": "./lib/IFT"
     },
     output: {
-      libraryTarget: 'commonjs2',
+      libraryTarget: 'umd',
       library: 'iframe-transport',
       path: "./build",
       filename: '[name].js',
-      publicPath: '/build/'
+      publicPath: '/'
     },
     module: {
         loaders: [
@@ -24,5 +24,8 @@ module.exports = {
               loader: 'json'
             }
         ]
+    },
+    externals: {
+      IFTmap: "IFTmap"
     }
 };

@@ -1,4 +1,4 @@
-import map from './map';
+const map = require("IFTmap");
 
 const PouchDB = require('pouchdb');
 require('pouchdb/extras/localstorage');

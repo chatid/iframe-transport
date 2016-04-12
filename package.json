@@ -3,7 +3,9 @@
   "version": "1.0.1",
   "main": "build/IFT.js",
   "scripts": {
-    "start": "webpack-dev-server -d --colors --cache --hot --config webpack.config.js"
+    "start": "webpack-dev-server -d --colors --cache --hot --config webpack.config.js",
+    "build": "webpack --config webpack.config.js",
+    "deploy": "node ./tasks/deploy.js"
   },
   "repository": {
     "type": "git",
@@ -11,8 +13,10 @@
   },
   "devDependencies": {
     "babel-loader": "^6.1.0",
+    "cli-color": "^1.1.0",
     "file-loader": "^0.8.4",
     "request": "^2.65.0",
+    "shelljs": "^0.6.0",
     "webpack": "^1.12.2",
     "webpack-dev-server": "1.12.1"
   },

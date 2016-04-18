@@ -64,12 +64,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// [I][F]rame [T]ranspot
 
-	var IFRAME_SRC = '/iframe.html';
+	var IFRAME_SRC = '/build/iframe.html';
 
 	var IFT = function IFT() {
 	  var _this = this;
 
-	  var chatid_domain = arguments.length <= 0 || arguments[0] === undefined ? 'https://iframe.chatid.com' : arguments[0];
+	  var chatid_domain = arguments.length <= 0 || arguments[0] === undefined ? 'http://localhost:8081' : arguments[0];
 
 	  _classCallCheck(this, IFT);
 
@@ -131,6 +131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return _this.iframe_send({ action: "reset" });
 	  };
 
+	  // constructor(chatid_domain='https://iframe.chatid.com') {
 	  this.iframe_domain = chatid_domain; // No trailing slash
 	  this.create_iframe();
 	  this.start_listening();

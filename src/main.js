@@ -1,9 +1,12 @@
 const map = require("IFTmap");
 
-const PouchDB = require('pouchdb');
-require('pouchdb/extras/localstorage');
+import localforage from 'localforage';
+import TabEmitter from 'tab-emitter';
+let emitter = TabEmitter();
 
-const db = new PouchDB('chatid', {adapter: 'localstorage'});
+localforage.ready(() => {
+  tell_parent({action: "loaded"});
+});
 
 function filterOrigin(x) {
   let a = document.createElement('a');
@@ -41,21 +44,20 @@ let once = false;
 function registerChanges(event) {
   if (once) return;
   once = true;
-  db.changes({
-    since: 'now',
-    live: true,
-    include_docs: true,
-    doc_ids: [filterOrigin(event.origin)]
-  }).on('change', function(info) {
+
+  emitter.on('changes', (change) => {
     if (wasme) {
       wasme = false;
-    } else if (info.hasOwnProperty('deleted') && info.deleted === true) {
-      tell_parent({action: "reset"}, event);
     } else {
-      tell_parent({action: "broadcast", data: info.doc}, event);
+      switch (change.type) {
+        case 'update':
+          tell_parent({action: "broadcast", data: change.data}, event);
+        break;
+        case 'delete':
+          tell_parent({action: "reset"}, event);
+        break;
+      }
     }
-  }).on('error', function(error) {
-    console.log(error);
   });
 }
 
@@ -67,35 +69,27 @@ function broadcast(data, event) {
 }
 
 var debouncedPut = debounce((data, event) => {
-  db.get(filterOrigin(event.origin), (err, doc) => {
+  localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
     wasme = true;
     if (err) {
-      if (err.status === 404) { //save first doc
-        return db.put(data, filterOrigin(event.origin), (err, response) => {
-          if (err) { return console.log(err); }
-        });
-      }
-      return console.log(err);
+      return console.log(err, doc, data);
     }
-    db.put(data, filterOrigin(event.origin), doc._rev, (err, response) => {
-      if (err) {
-        return console.log(err, doc, data);
-      }
-    });
+    emitter.emit('changes', {type: 'update', data});
   });
 }, 300);
 
 var debouncedRemove = debounce((event) => {
-  db.get(filterOrigin(event.origin), (err, doc) => {
-    doc && db.remove(doc, () => {
-      db.destroy();
+  localforage.removeItem(filterOrigin(event.origin), (err) => {
+    localforage.clear(function(err) {
+      console.log('Database is now empty.');
     });
+    emitter.emit('changes', {type: 'delete'});
   });
 }, 0);
 
 function get(event) {
   registerChanges(event);
-  db.get(filterOrigin(event.origin), function(err, doc) {
+  localforage.getItem(filterOrigin(event.origin), function(err, doc) {
     tell_parent({action: "get", data: {doc: doc, err: err}}, event);
   });
 }
@@ -115,6 +109,7 @@ function on_message(event) {
       break;
     }
   } catch (e) {
+    console.log(e);
     tell_parent({action: "error", error: e, req: data}, event);
   }
 }
@@ -130,10 +125,3 @@ function tell_parent(data, event) {
 window.addEventListener("message", function(event) {
   on_message(event);
 }, false);
-
-// We might as well use onload for compatability
-// Normally you don't want to, as it waits for images to load - but we don't have any on this page!
-// DOMContentLoaded doesn't work in IE<9
-window.onload = function() {
-  tell_parent({action: "loaded"});
-};

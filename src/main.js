@@ -1,9 +1,18 @@
 const map = require("IFTmap");
 
-const PouchDB = require('pouchdb');
-require('pouchdb/extras/localstorage');
+import Dexie from 'dexie';
+import 'dexie-observable';
 
-const db = new PouchDB('chatid', {adapter: 'localstorage'});
+Dexie.Promise.on('error', (err) => {
+  console.log('dexieErr:', err);
+});
+
+let db = new Dexie('chatid');
+db.version(1).stores({
+  state: '_id, data'
+});
+
+db.open();
 
 function filterOrigin(x) {
   let a = document.createElement('a');
@@ -41,21 +50,23 @@ let once = false;
 function registerChanges(event) {
   if (once) return;
   once = true;
-  db.changes({
-    since: 'now',
-    live: true,
-    include_docs: true,
-    doc_ids: [filterOrigin(event.origin)]
-  }).on('change', function(info) {
-    if (wasme) {
-      wasme = false;
-    } else if (info.hasOwnProperty('deleted') && info.deleted === true) {
-      tell_parent({action: "reset"}, event);
-    } else {
-      tell_parent({action: "broadcast", data: info.doc}, event);
-    }
-  }).on('error', function(error) {
-    console.log(error);
+  db.on('changes', function (changes) {
+    changes.forEach(function (change) {
+      switch (change.type) {
+        case 1: // CREATED
+        case 2: // UPDATED
+          if (wasme) {
+            wasme = false;
+          } else {
+            let data = change.obj.data;
+            tell_parent({action: "broadcast", data}, event);
+          }
+          break;
+        case 3: // DELETED
+          tell_parent({action: "reset"}, event);
+          break;
+      }
+    });
   });
 }
 
@@ -67,36 +78,28 @@ function broadcast(data, event) {
 }
 
 var debouncedPut = debounce((data, event) => {
-  db.get(filterOrigin(event.origin), (err, doc) => {
-    wasme = true;
+  wasme = true;
+  db.state.put({_id: filterOrigin(event.origin), data}).catch((err) => {
     if (err) {
-      if (err.status === 404) { //save first doc
-        return db.put(data, filterOrigin(event.origin), (err, response) => {
-          if (err) { return console.log(err); }
-        });
-      }
-      return console.log(err);
+      return console.log(err, data);
     }
-    db.put(data, filterOrigin(event.origin), doc._rev, (err, response) => {
-      if (err) {
-        return console.log(err, doc, data);
-      }
-    });
   });
 }, 300);
 
 var debouncedRemove = debounce((event) => {
-  db.get(filterOrigin(event.origin), (err, doc) => {
-    doc && db.remove(doc, () => {
-      db.destroy();
-    });
+  db.delete().then(() => {
+      console.log("Database successfully deleted");
+  }).catch((err) => {
+      console.log("Could not delete database");
   });
 }, 0);
 
 function get(event) {
   registerChanges(event);
-  db.get(filterOrigin(event.origin), function(err, doc) {
-    tell_parent({action: "get", data: {doc: doc, err: err}}, event);
+  db.state.where('_id').equals(filterOrigin(event.origin)).toArray((docs) => {
+    tell_parent({action: "get", data: {doc: docs[0].data, err: null}}, event);
+  }).catch((err) => {
+    tell_parent({action: "get", data: {doc: null, err: err}}, event);
   });
 }
 

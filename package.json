@@ -3,8 +3,9 @@
   "version": "1.0.1",
   "main": "build/IFT.js",
   "scripts": {
-    "start": "webpack-dev-server -d --colors --cache --hot --config webpack.config.js",
+    "start": "webpack-dev-server --port 8081 -d --colors --cache --hot --config webpack.config.js",
     "build": "webpack --config webpack.config.js",
+    "build_watch": "webpack --watch --config webpack.config.js",
     "deploy": "node ./tasks/deploy.js"
   },
   "repository": {
@@ -26,9 +27,10 @@
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-react": "^6.3.13",
     "babel-preset-stage-0": "^6.3.13",
+    "dexie": "^1.3.6",
+    "dexie-observable": "^0.1.8",
     "ima.js-babel6-polyfill": "^0.1.1",
     "json-loader": "^0.5.4",
-    "pouchdb": "^5.2.1",
     "requirejs": "^2.2.0"
   }
 }

@@ -54,7 +54,10 @@ function registerChanges(event) {
           tell_parent({action: "broadcast", data: change.data}, event);
         break;
         case 'delete':
-          tell_parent({action: "reset"}, event);
+          localforage.clear((err) => {
+            console.log('Database is now empty.', err);
+            tell_parent({action: "reset"}, event);
+          });
         break;
       }
     }
@@ -78,18 +81,21 @@ var debouncedPut = debounce((data, event) => {
   });
 }, 300);
 
-var debouncedRemove = debounce((event) => {
-  localforage.removeItem(filterOrigin(event.origin), (err) => {
-    localforage.clear(function(err) {
-      console.log('Database is now empty.');
-    });
-    emitter.emit('changes', {type: 'delete'});
-  });
-}, 0);
+// var debouncedRemove = debounce((event) => {
+//   localforage.clear((err) => {
+//     console.log('Database is now empty.');
+//     emitter.emit('changes', { type: 'delete' });
+//   });
+// }, 0);
+
+function handleReset() {
+  emitter.emit('changes', { type: 'delete' });
+}
 
 function get(event) {
   registerChanges(event);
   localforage.getItem(filterOrigin(event.origin), function(err, doc) {
+    console.log("After registerChanges: ", err, doc);
     tell_parent({action: "get", data: {doc: doc, err: err}}, event);
   });
 }
@@ -102,7 +108,7 @@ function on_message(event) {
         get(event);
       break;
       case "reset":
-        debouncedRemove(event);
+        handleReset();
       break;
       case "broadcast":
         broadcast(data.data, event);

@@ -123,7 +123,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	          tell_parent({ action: "broadcast", data: change.data }, event);
 	          break;
 	        case 'delete':
-	          tell_parent({ action: "reset" }, event);
+	          _localforage2.default.clear(function (err) {
+	            console.log('Database is now empty.', err);
+	            tell_parent({ action: "reset" }, event);
+	          });
 	          break;
 	      }
 	    }
@@ -147,18 +150,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}, 300);
 
-	var debouncedRemove = debounce(function (event) {
-	  _localforage2.default.removeItem(filterOrigin(event.origin), function (err) {
-	    _localforage2.default.clear(function (err) {
-	      console.log('Database is now empty.');
-	    });
-	    emitter.emit('changes', { type: 'delete' });
-	  });
-	}, 0);
+	// var debouncedRemove = debounce((event) => {
+	//   localforage.clear((err) => {
+	//     console.log('Database is now empty.');
+	//     emitter.emit('changes', { type: 'delete' });
+	//   });
+	// }, 0);
+
+	function handleReset() {
+	  emitter.emit('changes', { type: 'delete' });
+	}
 
 	function get(event) {
 	  registerChanges(event);
 	  _localforage2.default.getItem(filterOrigin(event.origin), function (err, doc) {
+	    console.log("After registerChanges: ", err, doc);
 	    tell_parent({ action: "get", data: { doc: doc, err: err } }, event);
 	  });
 	}
@@ -171,7 +177,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        get(event);
 	        break;
 	      case "reset":
-	        debouncedRemove(event);
+	        handleReset();
 	        break;
 	      case "broadcast":
 	        broadcast(data.data, event);

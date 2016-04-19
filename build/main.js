@@ -158,6 +158,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	// }, 0);
 
 	function handleReset() {
+	  wasme = false;
+	  once = false;
 	  emitter.emit('changes', { type: 'delete' });
 	}
 

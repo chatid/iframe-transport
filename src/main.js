@@ -89,6 +89,8 @@ var debouncedPut = debounce((data, event) => {
 // }, 0);
 
 function handleReset() {
+  wasme = false;
+  once = false;
   emitter.emit('changes', { type: 'delete' });
 }
 

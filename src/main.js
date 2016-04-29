@@ -68,10 +68,6 @@ function broadcast(data, event) {
   if (typeof data !== 'object') {
     return;
   }
-  debouncedPut(data, event);
-}
-
-var debouncedPut = debounce((data, event) => {
   localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
     wasme = true;
     if (err) {
@@ -79,7 +75,17 @@ var debouncedPut = debounce((data, event) => {
     }
     emitter.emit('changes', {type: 'update', data});
   });
-}, 300);
+}
+
+// var debouncedPut = debounce((data, event) => {
+//   localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
+//     wasme = true;
+//     if (err) {
+//       return;
+//     }
+//     emitter.emit('changes', {type: 'update', data});
+//   });
+// }, 300);
 
 // var debouncedRemove = debounce((event) => {
 //   localforage.clear((err) => {

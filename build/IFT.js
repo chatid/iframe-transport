@@ -1,1 +1,152 @@
-!function(e,t){"object"==typeof exports&&"object"==typeof module?module.exports=t():"function"==typeof define&&define.amd?define([],t):"object"==typeof exports?exports["iframe-transport"]=t():e["iframe-transport"]=t()}(this,function(){return function(e){function t(n){if(i[n])return i[n].exports;var a=i[n]={exports:{},id:n,loaded:!1};return e[n].call(a.exports,a,a.exports,t),a.loaded=!0,a.exports}var i={};return t.m=e,t.c=i,t.p="/",t(0)}([function(e,t){"use strict";function i(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}Object.defineProperty(t,"__esModule",{value:!0});var n="/iframe.html",a=function o(){var e=this,t=arguments.length<=0||void 0===arguments[0]?"https://iframe.chatid.com":arguments[0];i(this,o),this.create_iframe=function(){e.iframe_loaded=!1,e.iframe=document.createElement("iframe"),e.iframe.src=e.iframe_domain+n,e.iframe.sandbox="allow-scripts allow-same-origin",e.iframe.height=0,e.iframe.width=0,document.body.appendChild(e.iframe)},this.on=function(t,i){e.cbs[t]=i},this.start_listening=function(){var t=e,i=function(i){var n=i.data;if("loaded"==n.action)t.iframe_loaded=!0;else if(i.origin!==t.iframe_domain)return;n.action in e.cbs&&e.cbs[n.action](n.data)};window.addEventListener?window.addEventListener("message",i,!1):window.attachEvent("onmessage",function(){return i(window.event)})},this.iframe_send=function(t){if(!e.iframe_loaded)throw"not ready";e.iframe.contentWindow.postMessage(t,e.iframe_domain)},this.get=function(){return e.iframe_send({action:"get"})},this.broadcast=function(t){return e.iframe_send({action:"broadcast",data:t})},this.reset=function(){return e.iframe_send({action:"reset"})},this.iframe_domain=t,this.create_iframe(),this.start_listening(),this.cbs={}},r=new a;t["default"]=r}])});
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define([], factory);
+	else if(typeof exports === 'object')
+		exports["iframe-transport"] = factory();
+	else
+		root["iframe-transport"] = factory();
+})(this, function() {
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
+
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			exports: {},
+/******/ 			id: moduleId,
+/******/ 			loaded: false
+/******/ 		};
+
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+
+
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "/";
+
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	// [I][F]rame [T]ranspot
+
+	var IFRAME_SRC = '/iframe.html';
+
+	var IFT = function IFT() {
+	  var _this = this;
+
+	  var chatid_domain = arguments.length <= 0 || arguments[0] === undefined ? 'https://iframe.chatid.com' : arguments[0];
+
+	  _classCallCheck(this, IFT);
+
+	  this.create_iframe = function () {
+	    _this.iframe_loaded = false;
+	    _this.iframe = document.createElement("iframe");
+	    _this.iframe.src = _this.iframe_domain + IFRAME_SRC;
+	    _this.iframe.sandbox = 'allow-scripts allow-same-origin';
+	    // this.iframe.frameborder = 0; // HTML 4 only
+	    _this.iframe.height = 0;
+	    _this.iframe.width = 0;
+	    document.body.appendChild(_this.iframe);
+	  };
+
+	  this.on = function (e, cb) {
+	    _this.cbs[e] = cb;
+	  };
+
+	  this.start_listening = function () {
+	    var that = _this;
+	    var cb = function cb(event) {
+	      var data = event.data;
+	      if (data.action == "loaded") {
+	        // can be from any origin
+	        that.iframe_loaded = true;
+	        // that.retry_queued();
+	      } else if (event.origin !== that.iframe_domain) {
+	          return;
+	        }
+	      // Call handler
+	      if (data.action in _this.cbs) {
+	        _this.cbs[data.action](data.data);
+	      }
+	    };
+
+	    if (window.addEventListener) {
+	      window.addEventListener("message", cb, false);
+	    } else {
+	      window.attachEvent("onmessage", function () {
+	        return cb(window.event);
+	      });
+	    }
+	  };
+
+	  this.iframe_send = function (data) {
+	    if (!_this.iframe_loaded) throw "not ready";
+	    _this.iframe.contentWindow.postMessage(data, _this.iframe_domain);
+	  };
+
+	  this.get = function () {
+	    return _this.iframe_send({ action: "get" });
+	  };
+
+	  this.broadcast = function (data) {
+	    return _this.iframe_send({ action: "broadcast", data: data });
+	  };
+
+	  this.reset = function () {
+	    return _this.iframe_send({ action: "reset" });
+	  };
+
+	  this.iframe_domain = chatid_domain; // No trailing slash
+	  this.create_iframe();
+	  this.start_listening();
+	  this.cbs = {};
+	}
+
+	// API
+
+	;
+
+	;
+
+	var iftInstance = new IFT();
+	exports.default = iftInstance;
+
+/***/ }
+/******/ ])
+});
+;

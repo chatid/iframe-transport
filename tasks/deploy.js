@@ -6,7 +6,7 @@ const exec = shell.exec;
 const clc = require('cli-color');
 
 console.log(clc.blue('build stuff ...'));
-exec('npm run build');
+exec('npm run build_prod');
 
 console.log(clc.blue('gzip stuff ...'));
 exec('gzip build/main.js');

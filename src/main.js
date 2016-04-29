@@ -47,8 +47,10 @@ function registerChanges(event) {
 
   emitter.on('changes', (change) => {
     if (wasme) {
+      console.log("wasme");
       wasme = false;
     } else {
+      console.log("change");
       switch (change.type) {
         case 'update':
           tell_parent({action: "broadcast", data: change.data}, event);
@@ -69,11 +71,13 @@ function broadcast(data, event) {
     return;
   }
   localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
+    console.log("setItem");
     debouncedPut(data, event, err);
   });
 }
 
 var debouncedPut = debounce((data, event, err) => {
+  console.log("debounce");
   wasme = true;
   if (err) {
     return;

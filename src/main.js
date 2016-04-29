@@ -75,7 +75,7 @@ var debouncedPut = debounce((data, event) => {
   localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
     wasme = true;
     if (err) {
-      return console.log(err, doc, data);
+      return;
     }
     emitter.emit('changes', {type: 'update', data});
   });
@@ -97,7 +97,6 @@ function handleReset() {
 function get(event) {
   registerChanges(event);
   localforage.getItem(filterOrigin(event.origin), function(err, doc) {
-    console.log("After registerChanges: ", err, doc);
     tell_parent({action: "get", data: {doc: doc, err: err}}, event);
   });
 }
@@ -117,7 +116,6 @@ function on_message(event) {
       break;
     }
   } catch (e) {
-    console.log(e);
     tell_parent({action: "error", error: e, req: data}, event);
   }
 }

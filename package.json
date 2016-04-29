@@ -5,6 +5,7 @@
   "scripts": {
     "start": "webpack-dev-server --port 8081 -d --colors --cache --hot --config webpack.config.js",
     "build": "webpack --config webpack.config.js",
+    "build_prod": "webpack -p --optimize-minimize --config webpack.config.js",
     "build_watch": "webpack --watch --config webpack.config.js",
     "deploy": "node ./tasks/deploy.js"
   },

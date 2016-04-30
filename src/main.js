@@ -4,6 +4,11 @@ import localforage from 'localforage';
 import TabEmitter from '../lib/tab-emitter';
 let emitter = TabEmitter();
 
+localforage.config({
+    driver : localforage.localStorage, // Force WebSQL; same as using setDriver()
+    name : 'chatid'
+});
+
 localforage.ready(() => {
   tell_parent({action: "loaded"});
 });

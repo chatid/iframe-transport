@@ -1,13 +1,13 @@
 const map = require("IFTmap");
 
 import localforage from 'localforage';
-import TabEmitter from '../lib/tab-emitter';
-let emitter = TabEmitter();
+// import TabEmitter from '../lib/tab-emitter';
+import crosstab from 'crosstab';
 
-localforage.config({
-    driver : localforage.LOCALSTORAGE, // Force WebSQL; same as using setDriver()
-    name : 'chatid'
-});
+// localforage.config({
+//     driver : localforage.LOCALSTORAGE, // Force WebSQL; same as using setDriver()
+//     name : 'chatid'
+// });
 
 localforage.ready(() => {
   tell_parent({action: "loaded"});
@@ -50,15 +50,15 @@ function registerChanges(event) {
   if (once) return;
   once = true;
 
-  emitter.on('changes', (change) => {
+  crosstab.on('changes', (change) => {
     if (wasme) {
       console.log("wasme");
       wasme = false;
     } else {
       console.log("change");
-      switch (change.type) {
+      switch (change.data.type) {
         case 'update':
-          tell_parent({action: "broadcast", data: change.data}, event);
+          tell_parent({action: "broadcast", data: change.data.data}, event);
         break;
         case 'delete':
           localforage.clear((err) => {
@@ -87,20 +87,20 @@ var debouncedPut = debounce((data, event, err) => {
   if (err) {
     return;
   }
-  emitter.emit('changes', {type: 'update', data});
+  crosstab.broadcast('changes', {type: 'update', data});
 }, 600);
 
 // var debouncedRemove = debounce((event) => {
 //   localforage.clear((err) => {
 //     console.log('Database is now empty.');
-//     emitter.emit('changes', { type: 'delete' });
+//     crosstab.emit('changes', { type: 'delete' });
 //   });
 // }, 0);
 
 function handleReset() {
   wasme = false;
   once = false;
-  emitter.emit('changes', { type: 'delete' });
+  crosstab.broadcast('changes', { type: 'delete' });
 }
 
 function get(event) {

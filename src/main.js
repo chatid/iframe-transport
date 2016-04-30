@@ -1,7 +1,7 @@
 const map = require("IFTmap");
 
 import localforage from 'localforage';
-import TabEmitter from 'tab-emitter';
+import TabEmitter from '../lib/tab-emitter';
 let emitter = TabEmitter();
 
 localforage.ready(() => {

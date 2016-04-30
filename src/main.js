@@ -5,7 +5,7 @@ import TabEmitter from '../lib/tab-emitter';
 let emitter = TabEmitter();
 
 localforage.config({
-    driver : localforage.localStorage, // Force WebSQL; same as using setDriver()
+    driver : localforage.LOCALSTORAGE, // Force WebSQL; same as using setDriver()
     name : 'chatid'
 });
 

@@ -110,6 +110,12 @@ function get(event) {
   });
 }
 
+function poll(event) {
+  localforage.getItem(filterOrigin(event.origin), function(err, doc) {
+    tell_parent({action: "poll", data: {doc: doc, err: err}}, event);
+  });
+}
+
 function on_message(event) {
   var data = event.data;
   try {
@@ -122,6 +128,9 @@ function on_message(event) {
       break;
       case "broadcast":
         broadcast(data.data, event);
+      break;
+      case "poll":
+        poll(event);
       break;
     }
   } catch (e) {

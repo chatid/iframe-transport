@@ -114,7 +114,7 @@ function get(event) {
 
 function poll(event) {
   localforage.getItem(filterOrigin(event.origin), function(err, doc) {
-    if (doc.tabId !== tabId) {
+    if (doc && doc.tabId && doc.tabId !== tabId) {
       tell_parent({action: "poll", data: {doc: doc, err: err}}, event);
     }
   });

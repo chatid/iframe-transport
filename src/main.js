@@ -98,7 +98,7 @@ var debouncedPut = debounce((data, event) => {
     }
     crosstab.broadcast('changes', {type: 'update', data});
   });
-}, 300);
+}, 100);
 
 function handleReset() {
   once = false;

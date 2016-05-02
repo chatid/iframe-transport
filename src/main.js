@@ -25,6 +25,7 @@ function b(a) {      // a is a placeholder
 }
 
 const tabId = b();
+let isWritting = false;
 
 localforage.ready(() => {
   tell_parent({action: "loaded"});
@@ -87,6 +88,7 @@ function broadcast(data, event) {
   if (typeof data !== 'object') {
     return;
   }
+  isWritting = true;
   debouncedPut(data, event);
 }
 
@@ -97,6 +99,7 @@ var debouncedPut = debounce((data, event) => {
       return;
     }
     crosstab.broadcast('changes', {type: 'update', data});
+    isWritting = false;
   });
 }, 100);
 
@@ -113,11 +116,13 @@ function get(event) {
 }
 
 function poll(event) {
-  localforage.getItem(filterOrigin(event.origin), function(err, doc) {
-    if (doc && doc.tabId && doc.tabId !== tabId) {
-      tell_parent({action: "poll", data: {doc: doc, err: err}}, event);
-    }
-  });
+  if (!isWritting) {
+    localforage.getItem(filterOrigin(event.origin), function(err, doc) {
+      if (doc && doc.tabId && doc.tabId !== tabId) {
+        tell_parent({action: "poll", data: {doc: doc, err: err}}, event);
+      }
+    });
+  }
 }
 
 function on_message(event) {

@@ -1,13 +1,30 @@
 const map = require("IFTmap");
 
 import localforage from 'localforage';
-// import TabEmitter from '../lib/tab-emitter';
 import crosstab from 'crosstab';
 
-// localforage.config({
-//     driver : localforage.LOCALSTORAGE, // Force WebSQL; same as using setDriver()
-//     name : 'chatid'
-// });
+// https://gist.github.com/jed/982883
+function genId(a) {      // a is a placeholder
+  return a           // if the placeholder was passed, return
+    ? (              // a random number from 0 to 15
+      a ^            // unless b is 8,
+      Math.random()  // in which case
+      * 16           // a random number from
+      >> a / 4       // 8 to 11
+      ).toString(16) // in hexadecimal
+    : (              // or otherwise a concatenated string:
+      [1e7] +        // 10000000 +
+      -1e3 +         // -1000 +
+      -4e3 +         // -4000 +
+      -8e3 +         // -80000000 +
+      -1e11          // -100000000000,
+      ).replace(     // replacing
+        /[018]/g,    // zeroes, ones, and eights with
+        b            // random hex digits
+      );
+}
+
+const tabId = genId();
 
 localforage.ready(() => {
   tell_parent({action: "loaded"});
@@ -44,16 +61,13 @@ function debounce(func, wait) {
   };
 };
 
-let wasme = false;
 let once = false;
 function registerChanges(event) {
   if (once) return;
   once = true;
 
   crosstab.on('changes', (change) => {
-    if (wasme) {
-      wasme = false;
-    } else {
+    if (change.data.data.tabId !== tabId) {
       switch (change.data.type) {
         case 'update':
           tell_parent({action: "broadcast", data: change.data.data}, event);
@@ -77,8 +91,8 @@ function broadcast(data, event) {
 }
 
 var debouncedPut = debounce((data, event) => {
+  data.tabId = tabId;
   localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
-    wasme = true;
     if (err) {
       return;
     }
@@ -87,7 +101,6 @@ var debouncedPut = debounce((data, event) => {
 }, 300);
 
 function handleReset() {
-  wasme = false;
   once = false;
   crosstab.broadcast('changes', { type: 'delete' });
 }
@@ -101,7 +114,9 @@ function get(event) {
 
 function poll(event) {
   localforage.getItem(filterOrigin(event.origin), function(err, doc) {
-    tell_parent({action: "poll", data: {doc: doc, err: err}}, event);
+    if (doc.data.tabId !== tabId) {
+      tell_parent({action: "poll", data: {doc: doc, err: err}}, event);
+    }
   });
 }
 

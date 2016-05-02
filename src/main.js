@@ -89,18 +89,18 @@ function broadcast(data, event) {
     return;
   }
   isWritting = true;
-  debouncedPut(data, event);
-}
-
-var debouncedPut = debounce((data, event) => {
   data.tabId = tabId;
   localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
-    if (err) {
-      return;
-    }
-    crosstab.broadcast('changes', {type: 'update', data});
-    isWritting = false;
+    debouncedPut(data, event, err);
   });
+}
+
+var debouncedPut = debounce((data, event, err) => {
+  if (err) {
+    return;
+  }
+  crosstab.broadcast('changes', {type: 'update', data});
+  isWritting = false;
 }, 100);
 
 function handleReset() {

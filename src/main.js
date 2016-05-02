@@ -4,7 +4,7 @@ import localforage from 'localforage';
 import crosstab from 'crosstab';
 
 // https://gist.github.com/jed/982883
-function genId(a) {      // a is a placeholder
+function b(a) {      // a is a placeholder
   return a           // if the placeholder was passed, return
     ? (              // a random number from 0 to 15
       a ^            // unless b is 8,
@@ -24,7 +24,7 @@ function genId(a) {      // a is a placeholder
       );
 }
 
-const tabId = genId();
+const tabId = b();
 
 localforage.ready(() => {
   tell_parent({action: "loaded"});

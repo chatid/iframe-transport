@@ -96,11 +96,11 @@ function broadcast(data, event) {
 }
 
 var debouncedPut = debounce((data, event, err) => {
+  isWritting = false;
   if (err) {
     return;
   }
   crosstab.broadcast('changes', {type: 'update', data});
-  isWritting = false;
 }, 100);
 
 function handleReset() {

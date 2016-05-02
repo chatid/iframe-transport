@@ -73,25 +73,18 @@ function broadcast(data, event) {
   if (typeof data !== 'object') {
     return;
   }
-  localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
-    debouncedPut(data, event, err);
-  });
+  debouncedPut(data, event);
 }
 
-var debouncedPut = debounce((data, event, err) => {
-  wasme = true;
-  if (err) {
-    return;
-  }
-  crosstab.broadcast('changes', {type: 'update', data});
-}, 600);
-
-// var debouncedRemove = debounce((event) => {
-//   localforage.clear((err) => {
-//     console.log('Database is now empty.');
-//     crosstab.emit('changes', { type: 'delete' });
-//   });
-// }, 0);
+var debouncedPut = debounce((data, event) => {
+  localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
+    wasme = true;
+    if (err) {
+      return;
+    }
+    crosstab.broadcast('changes', {type: 'update', data});
+  });
+}, 300);
 
 function handleReset() {
   wasme = false;

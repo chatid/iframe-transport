@@ -13,7 +13,7 @@ exec('gzip build/main.js');
 exec('mv build/main.js.gz build/main.js');
 
 console.log(clc.blue('s3cmd put stuff ...'));
-const headers = "--add-header='Content-Type':'application/javascript' --add-header='Content-Encoding':'gzip'";
+const headers = "--mime-type='application/javascript' --add-header='Content-Encoding':'gzip'";
 
 exec('s3cmd put -P build/iframe.html s3://iframe.chatid.com/');
 exec(`s3cmd put -P ${headers} build/main.js s3://iframe.chatid.com/`);

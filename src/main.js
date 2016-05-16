@@ -1,7 +1,9 @@
 const map = require("IFTmap");
 
 import localforage from 'localforage';
-import crosstab from 'crosstab';
+// import crosstab from 'crosstab';
+import TabEmitter from 'tab-emitter';
+let emitter = TabEmitter();
 
 // https://gist.github.com/jed/982883
 function b(a) {      // a is a placeholder
@@ -25,7 +27,8 @@ function b(a) {      // a is a placeholder
 }
 
 const tabId = b();
-let isWritting = false;
+let pollingStrategy = false;
+let isWriting = false;
 
 localforage.ready(() => {
   tell_parent({action: "loaded"});
@@ -67,11 +70,11 @@ function registerChanges(event) {
   if (once) return;
   once = true;
 
-  crosstab.on('changes', (change) => {
-    if (change.data.data.tabId !== tabId) {
-      switch (change.data.type) {
+  emitter.on('changes', (change) => {
+    if (change.data.tabId !== tabId) {
+      switch (change.type) {
         case 'update':
-          tell_parent({action: "broadcast", data: change.data.data}, event);
+          tell_parent({action: "broadcast", data: change.data}, event);
         break;
         case 'delete':
           localforage.clear((err) => {
@@ -88,7 +91,7 @@ function broadcast(data, event) {
   if (typeof data !== 'object') {
     return;
   }
-  isWritting = true;
+  isWriting = true;
   data.tabId = tabId;
   localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
     debouncedPut(data, event, err);
@@ -96,16 +99,18 @@ function broadcast(data, event) {
 }
 
 var debouncedPut = debounce((data, event, err) => {
-  isWritting = false;
+  isWriting = false;
   if (err) {
     return;
   }
-  crosstab.broadcast('changes', {type: 'update', data});
+  if (!pollingStrategy) {
+    emitter.emit('changes', {type: 'update', data});
+  }
 }, 100);
 
 function handleReset() {
   once = false;
-  crosstab.broadcast('changes', { type: 'delete' });
+  emitter.emit('changes', { type: 'delete' });
 }
 
 function get(event) {
@@ -116,7 +121,7 @@ function get(event) {
 }
 
 function poll(event) {
-  if (!isWritting) {
+  if (!isWriting) {
     localforage.getItem(filterOrigin(event.origin), function(err, doc) {
       if (doc && doc.tabId && doc.tabId !== tabId) {
         tell_parent({action: "poll", data: {doc: doc, err: err}}, event);
@@ -139,6 +144,7 @@ function on_message(event) {
         broadcast(data.data, event);
       break;
       case "poll":
+        pollingStrategy = true;
         poll(event);
       break;
     }

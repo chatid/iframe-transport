@@ -29,6 +29,7 @@ function b(a) {      // a is a placeholder
 const tabId = b();
 let pollingStrategy = false;
 let isWriting = false;
+let originalOrigin;
 
 localforage.ready(() => {
   tell_parent({action: "loaded"});
@@ -69,6 +70,7 @@ let once = false;
 function registerChanges(event) {
   if (once) return;
   once = true;
+  originalOrigin = filterOrigin(event.origin);
 
   emitter.on('changes', (change) => {
     if (change.data.tabId !== tabId) {
@@ -133,6 +135,7 @@ function poll(event) {
 function on_message(event) {
   var data = event.data;
   try {
+    if (originalOrigin !== filterOrigin(event.origin)) throw `msg from other origin: ${event.origin}`;
     switch(data.action) {
       case "get":
         get(event);

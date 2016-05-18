@@ -135,7 +135,8 @@ function poll(event) {
 function on_message(event) {
   var data = event.data;
   try {
-    if (originalOrigin !== filterOrigin(event.origin)) throw `msg from other origin: ${event.origin}`;
+    if (originalOrigin.length > 0 && originalOrigin !== filterOrigin(event.origin))
+      throw `msg from other origin: ${event.origin}`;
     switch(data.action) {
       case "get":
         get(event);

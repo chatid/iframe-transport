@@ -6,7 +6,7 @@ import crosstab from 'crosstab';
 
 function randomValue() {
   if (cryptoObj && !!cryptoObj.getRandomValues) {
-    return crypto.getRandomValues(new Uint8Array(1))[0] % 16;
+    return cryptoObj.getRandomValues(new Uint8Array(1))[0] % 16;
   } else {
     return Math.random() * 16;
   }

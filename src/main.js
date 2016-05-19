@@ -76,7 +76,8 @@ function registerChanges(event) {
     if (change.data.tabId !== tabId) {
       switch (change.type) {
         case 'update':
-          tell_parent({action: "broadcast", data: change.data}, event);
+          if (originalOrigin === filterOrigin(change.event.origin))
+            tell_parent({action: "broadcast", data: change.data}, event);
         break;
         case 'delete':
           localforage.clear((err) => {
@@ -106,7 +107,7 @@ var debouncedPut = debounce((data, event, err) => {
     return;
   }
   if (!pollingStrategy) {
-    emitter.emit('changes', {type: 'update', data});
+    emitter.emit('changes', {type: 'update', data, event});
   }
 }, 100);
 
@@ -135,8 +136,6 @@ function poll(event) {
 function on_message(event) {
   var data = event.data;
   try {
-    if (originalOrigin && originalOrigin.length && originalOrigin !== filterOrigin(event.origin))
-      throw `msg from other origin: ${event.origin}`;
     switch(data.action) {
       case "get":
         get(event);

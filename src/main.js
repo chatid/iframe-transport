@@ -76,7 +76,7 @@ function registerChanges(event) {
     if (change.data.tabId !== tabId) {
       switch (change.type) {
         case 'update':
-          if (originalOrigin === filterOrigin(change.event.origin))
+          if (originalOrigin === filterOrigin(change.data.origin))
             tell_parent({action: "broadcast", data: change.data}, event);
         break;
         case 'delete':
@@ -96,6 +96,7 @@ function broadcast(data, event) {
   }
   isWriting = true;
   data.tabId = tabId;
+  data.origin = event.origin;
   localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
     debouncedPut(data, event, err);
   });
@@ -107,7 +108,7 @@ var debouncedPut = debounce((data, event, err) => {
     return;
   }
   if (!pollingStrategy) {
-    emitter.emit('changes', {type: 'update', data, event});
+    emitter.emit('changes', {type: 'update', data});
   }
 }, 100);
 

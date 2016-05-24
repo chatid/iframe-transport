@@ -158,7 +158,7 @@ function on_message(event) {
 }
 
 function tell_parent(data, event) {
-  if (event && event.hasOwnProperty('origin')) {
+  if (event && 'origin' in event) {
     window.parent.postMessage(data, event.origin);
   } else {
     window.parent.postMessage(data, '*');

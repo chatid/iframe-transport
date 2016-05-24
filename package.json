@@ -4,11 +4,14 @@
   "main": "build/IFT.js",
   "scripts": {
     "start": "webpack-dev-server --port 8081 -d --colors --cache --hot --config webpack.config.js",
-    "build": "webpack --config webpack.config.js",
+    "build": "TEST=test webpack --config webpack.config.js",
     "build_prod": "webpack -p --optimize-minimize --config webpack.config.js",
-    "build_watch": "webpack --watch --config webpack.config.js",
+    "build_watch": "TEST=test webpack --watch --config webpack.config.js",
+    "build_test": "npm run build_watch | npm start",
     "deploy": "node ./tasks/deploy.js",
-    "deploy_staging": "node ./tasks/demo.js"
+    "deploy_staging": "node ./tasks/demo.js",
+    "postinstall": "selenium-standalone install",
+    "test": "selenium-standalone start >> /dev/null | npm run build_watch | ./node_modules/.bin/wdio wdio.conf.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +22,11 @@
     "cli-color": "^1.1.0",
     "file-loader": "^0.8.4",
     "request": "^2.65.0",
+    "selenium-standalone": "^5.1.0",
     "shelljs": "^0.6.0",
+    "wdio-dot-reporter": "0.0.5",
+    "wdio-jasmine-framework": "^0.1.9",
+    "webdriverio": "^4.0.7",
     "webpack": "^1.12.2",
     "webpack-dev-server": "1.12.1"
   },

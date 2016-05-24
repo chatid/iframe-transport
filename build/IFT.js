@@ -1,1 +1,156 @@
-!function(e,t){"object"==typeof exports&&"object"==typeof module?module.exports=t():"function"==typeof define&&define.amd?define([],t):"object"==typeof exports?exports["iframe-transport"]=t():e["iframe-transport"]=t()}(this,function(){return function(e){function t(i){if(n[i])return n[i].exports;var a=n[i]={exports:{},id:i,loaded:!1};return e[i].call(a.exports,a,a.exports,t),a.loaded=!0,a.exports}var n={};return t.m=e,t.c=n,t.p="/",t(0)}([function(e,t){"use strict";function n(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}Object.defineProperty(t,"__esModule",{value:!0});var i="/iframe.html",a=function r(){var e=this,t=arguments.length<=0||void 0===arguments[0]?"https://iframe.chatid.com":arguments[0];n(this,r),this.create_iframe=function(){e.iframe_loaded=!1,e.iframe=document.createElement("iframe"),e.iframe.src=e.iframe_domain+i,e.iframe.sandbox="allow-scripts allow-same-origin",e.iframe.height=0,e.iframe.width=0,document.body.appendChild(e.iframe)},this.on=function(t,n){e.cbs[t]=n},this.start_listening=function(){var t=e,n=function(n){var i=n.data;if("loaded"==i.action)t.iframe_loaded=!0;else if(n.origin!==t.iframe_domain)return;i.action in e.cbs&&e.cbs[i.action](i.data)};window.addEventListener?window.addEventListener("message",n,!1):window.attachEvent("onmessage",function(){return n(window.event)})},this.iframe_send=function(t){if(!e.iframe_loaded)throw"not ready";e.iframe.contentWindow.postMessage(t,e.iframe_domain)},this.get=function(){return e.iframe_send({action:"get"})},this.broadcast=function(t){return e.iframe_send({action:"broadcast",data:t})},this.poll=function(){setInterval(function(){return e.iframe_send({action:"poll"})},300)},this.reset=function(){return e.iframe_send({action:"reset"})},this.iframe_domain=t,this.create_iframe(),this.start_listening(),this.cbs={}};t["default"]=a}])});
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define([], factory);
+	else if(typeof exports === 'object')
+		exports["iframe-transport"] = factory();
+	else
+		root["iframe-transport"] = factory();
+})(this, function() {
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
+
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			exports: {},
+/******/ 			id: moduleId,
+/******/ 			loaded: false
+/******/ 		};
+
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+
+
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "/";
+
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	// [I][F]rame [T]ranspot
+
+	var IFRAME_SRC =  true ? '/build/iframe.html' : '/iframe.html';
+
+	var IFT = function IFT() {
+	  var _this = this;
+
+	  var chatid_domain = arguments.length <= 0 || arguments[0] === undefined ? 'https://iframe.chatid.com' : arguments[0];
+
+	  _classCallCheck(this, IFT);
+
+	  this.create_iframe = function () {
+	    _this.iframe_loaded = false;
+	    _this.iframe = document.createElement("iframe");
+	    _this.iframe.src = _this.iframe_domain + IFRAME_SRC;
+	    _this.iframe.sandbox = 'allow-scripts allow-same-origin';
+	    // this.iframe.frameborder = 0; // HTML 4 only
+	    _this.iframe.height = 0;
+	    _this.iframe.width = 0;
+	    document.body.appendChild(_this.iframe);
+	  };
+
+	  this.on = function (e, cb) {
+	    _this.cbs[e] = cb;
+	  };
+
+	  this.start_listening = function () {
+	    var that = _this;
+	    var cb = function cb(event) {
+	      var data = event.data;
+	      if (data.action == "loaded") {
+	        // can be from any origin
+	        that.iframe_loaded = true;
+	        // that.retry_queued();
+	      } else if (event.origin !== that.iframe_domain) {
+	          return;
+	        }
+	      // Call handler
+	      if (data.action in _this.cbs) {
+	        _this.cbs[data.action](data.data);
+	      }
+	    };
+
+	    if (window.addEventListener) {
+	      window.addEventListener("message", cb, false);
+	    } else {
+	      window.attachEvent("onmessage", function () {
+	        return cb(window.event);
+	      });
+	    }
+	  };
+
+	  this.iframe_send = function (data) {
+	    if (!_this.iframe_loaded) throw "not ready";
+	    _this.iframe.contentWindow.postMessage(data, _this.iframe_domain);
+	  };
+
+	  this.get = function () {
+	    return _this.iframe_send({ action: "get" });
+	  };
+
+	  this.broadcast = function (data) {
+	    return _this.iframe_send({ action: "broadcast", data: data });
+	  };
+
+	  this.poll = function () {
+	    setInterval(function () {
+	      return _this.iframe_send({ action: "poll" });
+	    }, 300);
+	  };
+
+	  this.reset = function () {
+	    return _this.iframe_send({ action: "reset" });
+	  };
+
+	  this.iframe_domain = chatid_domain; // No trailing slash
+	  this.create_iframe();
+	  this.start_listening();
+	  this.cbs = {};
+	}
+
+	// API
+
+	;
+
+	exports.default = IFT;
+	;
+
+/***/ }
+/******/ ])
+});
+;

@@ -3,7 +3,8 @@ var webpack = require('webpack');
 module.exports = {
     entry: {
       "main": "./src/main",
-      "IFT": "./lib/IFT"
+      "IFT": "./lib/IFT",
+      "example": "./example/example.js"
     },
     output: {
       libraryTarget: 'umd',
@@ -27,5 +28,10 @@ module.exports = {
     },
     externals: {
       IFTmap: "IFTmap"
-    }
+    },
+    plugins: [
+      new webpack.DefinePlugin({
+        __TEST__: JSON.stringify(process.env.TEST)
+      })
+    ]
 };

@@ -1,17 +1,25 @@
 const map = require("IFTmap");
+const cryptoObj = window.crypto || window.msCrypto; // for IE 11
 
 import localforage from 'localforage';
 // import crosstab from 'crosstab';
 import TabEmitter from 'tab-emitter';
 let emitter = TabEmitter();
 
+function randomValue() {
+  if (cryptoObj && !!cryptoObj.getRandomValues) {
+    return cryptoObj.getRandomValues(new Uint8Array(1))[0] % 16;
+  } else {
+    return Math.random() * 16;
+  }
+}
+
 // https://gist.github.com/jed/982883
 function b(a) {      // a is a placeholder
   return a           // if the placeholder was passed, return
     ? (              // a random number from 0 to 15
       a ^            // unless b is 8,
-      Math.random()  // in which case
-      * 16           // a random number from
+      randomValue()
       >> a / 4       // 8 to 11
       ).toString(16) // in hexadecimal
     : (              // or otherwise a concatenated string:

@@ -96,6 +96,7 @@ function broadcast(data, event) {
   }
   isWriting = true;
   data.tabId = tabId;
+  data.lastInteraction = Date.now();
   data.origin = event.origin;
   localforage.setItem(filterOrigin(event.origin), data, (err, doc) => {
     debouncedPut(data, event, err);

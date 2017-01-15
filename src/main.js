@@ -33,6 +33,7 @@ let originalOrigin;
 
 localforage.ready(() => {
   tell_parent({action: "loaded"});
+  //pixelLog("localforage", { driver: localforage._driver + "" });
 });
 
 function filterOrigin(x) {

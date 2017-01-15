@@ -12,6 +12,7 @@ module.exports = {
       filename: '[name].js',
       publicPath: '/'
     },
+    //devtool: 'source-map',
     module: {
         loaders: [
             {

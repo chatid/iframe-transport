@@ -1,6 +1,36 @@
 <html>
 <head>
   <title>ChatID Communication Stub</title>
+  <script>
+
+var LOGGING_PIXEL_URL = 'https://ls.chatid.com/p.gif';
+
+function pixelLog(code, properties) {
+  var data = {
+    code: code,
+    properties: properties,
+    channel: 'ift.qa',
+    timestamp: +new Date() / 1000
+  };
+  var encoded = encodeURIComponent(JSON.stringify(data));
+  (new Image()).src = LOGGING_PIXEL_URL + "?data=" + encoded;
+}
+
+window.onerror = function(message, url, line, character, error) {
+  var trace = url + ":" + line;
+  trace += character ? ":" + character : '';
+  var data = {
+    message: message,
+    trace: trace,
+    error: error
+  };
+
+  pixelLog('exception', data);
+
+  return true;
+};
+
+  </script>
   <script src='https://iframe.chatid.com/map.js'></script>
   <script src='/main.js'></script>
 </head>
